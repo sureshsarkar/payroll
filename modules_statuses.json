@@ -30,5 +30,6 @@
     "BkashPG": true,
     "CryptoPayment": true,
     "MercadoPagoPG": true,
-    "Marquee": true
+    "Marquee": true,
+    "Attendance": true
 }
