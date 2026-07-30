@@ -1,0 +1,573 @@
+{
+  "info": {
+    "_postman_id": "45bf3a6b-6cf8-4794-bad1-a96b9803726d",
+    "name": "MBS Coach 05-may",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "38109425"
+  },
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"sureshs.dhs@gmail.com\",\r\n    \"password\": \"123456\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/login",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Register",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Avneesh Patel\",\r\n  \"email\": \"avneesh.p1@gmail.com\",\r\n  \"password\": \"123456\",\r\n//   \"role\":\"student\",\r\n  \"role\":\"instructor\",\r\n  \"password_confirmation\": \"123456\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/register",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Dashboard",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/instructor/dashboard",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "instructor",
+            "dashboard"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "My Courses",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/instructor/courses",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "instructor",
+            "courses"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Batches",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/instructor/course-batches",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "instructor",
+            "course-batches"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Batches Create",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"course_id\": 2,\r\n    \"title\": \"Morning Batch11\",\r\n    \"start_date\": \"2026-05-10\",\r\n    \"end_date\": \"2026-06-10\",\r\n    \"start_time\": \"19:00:00\",\r\n    \"end_time\": \"21:00:00\",\r\n    \"days\": [\"Mon\", \"Tue\", \"Wed\", \"Sat\"],\r\n    \"capacity\": 30,\r\n    \"status\": \"active\"\r\n}"
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/instructor/batches-create",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "instructor",
+            "batches-create"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Batches get",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/instructor/batches/768",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "instructor",
+            "batches",
+            "768"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Batches update",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \r\n        \"course_id\": 2,\r\n        \"title\": \"Morning Batch1122\",\r\n        \"start_date\": \"2026-05-09T18:30:00.000000Z\",\r\n        \"end_date\": \"2026-06-09T18:30:00.000000Z\",\r\n        \"start_time\": \"19:00:00\",\r\n        \"end_time\": \"21:00:00\",\r\n        \"days\": [\r\n            \"Mon\",\r\n            \"Tue\",\r\n            \"Wed\",\r\n            \"Thu\"\r\n        ],\r\n        \"capacity\": 30,\r\n        \"status\": \"active\",\r\n        \"created_at\": \"2026-05-04T12:14:16.000000Z\",\r\n        \"updated_at\": \"2026-05-04T12:14:16.000000Z\"\r\n    }"
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/instructor/batches/768",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "instructor",
+            "batches",
+            "768"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Student List",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://mbsguru.com/api/instructor/students",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "instructor",
+            "students"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Students",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"avneesh11\",\r\n    \"email\": \"sureshs11.dhs.d@gmail.com\",\r\n    \"password\": \"123456\",\r\n    \"status\": \"active\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/instructor/students",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "instructor",
+            "students"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Students",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/instructor/students/1134",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "instructor",
+            "students",
+            "1134"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Students",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"avneesh\",\r\n    \"email\": \"sureshs11.dhs.d@gmail.com\", \r\n    \"status\": \"active\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/instructor/students/1134",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "instructor",
+            "students",
+            "1134"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Students",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/instructor/students/1136",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "instructor",
+            "students",
+            "1136"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "My Orders",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/instructor/orders",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "instructor",
+            "orders"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

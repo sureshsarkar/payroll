@@ -1,0 +1,11 @@
+{
+    "name": "CryptoPayment",
+    "alias": "cryptopayment",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\CryptoPayment\\app\\Providers\\CryptoPaymentServiceProvider"
+    ],
+    "files": []
+}

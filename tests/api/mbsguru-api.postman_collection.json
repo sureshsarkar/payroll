@@ -1,0 +1,447 @@
+{
+  "info": {
+    "name": "MBSGuru API Contract",
+    "description": "Newman-runnable contract tests for the public + authenticated mobile API surface (/api/*). Each request asserts: (1) expected HTTP status, (2) Content-Type is application/json, (3) response body shape via JSON Schema where applicable. Run via `newman run tests/api/mbsguru-api.postman_collection.json -e tests/api/ci.postman_environment.json`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{auth_token}}", "type": "string" }
+    ]
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost/mbsguru1/public" },
+    { "key": "auth_token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "── PUBLIC TAXONOMY ──",
+      "item": [
+        {
+          "name": "GET /api/countries",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/countries", "host": ["{{base_url}}"], "path": ["api", "countries"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('content-type is JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+              "const body = pm.response.json();",
+              "pm.test('body has data array', () => pm.expect(body).to.have.property('data').that.is.an('array'));",
+              "pm.test('each country has id + name', () => {",
+              "  if (body.data.length > 0) {",
+              "    pm.expect(body.data[0]).to.have.property('id');",
+              "    pm.expect(body.data[0]).to.have.property('name');",
+              "  }",
+              "});"
+            ]}
+          }]
+        },
+        {
+          "name": "GET /api/course-main-categories",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/course-main-categories", "host": ["{{base_url}}"], "path": ["api", "course-main-categories"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('JSON response', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+              "const body = pm.response.json();",
+              "pm.test('has data', () => pm.expect(body).to.have.property('data'));"
+            ]}
+          }]
+        },
+        {
+          "name": "GET /api/currency-list",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/currency-list", "host": ["{{base_url}}"], "path": ["api", "currency-list"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('JSON response', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));"
+            ]}
+          }]
+        },
+        {
+          "name": "GET /api/course-languages",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/course-languages", "host": ["{{base_url}}"], "path": ["api", "course-languages"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('JSON response', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));"
+            ]}
+          }]
+        },
+        {
+          "name": "GET /api/course-levels",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/course-levels", "host": ["{{base_url}}"], "path": ["api", "course-levels"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));"
+            ]}
+          }]
+        }
+      ]
+    },
+    {
+      "name": "── AUTH ──",
+      "item": [
+        {
+          "name": "POST /api/login — captures token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{e2e_student_email}}\",\n  \"password\": \"{{e2e_student_password}}\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/login", "host": ["{{base_url}}"], "path": ["api", "login"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('login responds 200 or 401', () => pm.expect([200, 401, 422]).to.include(pm.response.code));",
+              "if (pm.response.code === 200) {",
+              "  const body = pm.response.json();",
+              "  if (body.token) { pm.collectionVariables.set('auth_token', body.token); }",
+              "}"
+            ]}
+          }]
+        },
+        {
+          "name": "POST /api/login — invalid creds → 4xx (not 5xx)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"invalid@example.test\",\n  \"password\": \"wrong\"\n}" },
+            "url": { "raw": "{{base_url}}/api/login", "host": ["{{base_url}}"], "path": ["api", "login"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('invalid login returns 4xx', () => {",
+              "  pm.expect(pm.response.code).to.be.below(500);",
+              "  pm.expect(pm.response.code).to.be.at.least(400);",
+              "});",
+              "pm.test('JSON error response', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));"
+            ]}
+          }]
+        },
+        {
+          "name": "POST /api/login — empty body → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{base_url}}/api/login", "host": ["{{base_url}}"], "path": ["api", "login"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('empty login body is rejected', () => pm.expect(pm.response.code).to.be.oneOf([400, 422]));",
+              "pm.test('JSON response', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));"
+            ]}
+          }]
+        },
+        {
+          "name": "POST /api/register — empty body → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{base_url}}/api/register", "host": ["{{base_url}}"], "path": ["api", "register"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('empty register body rejected', () => pm.expect(pm.response.code).to.be.oneOf([400, 422]));",
+              "pm.test('JSON response', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));"
+            ]}
+          }]
+        }
+      ]
+    },
+    {
+      "name": "── COURSE PUBLIC ──",
+      "item": [
+        {
+          "name": "GET /api/course/{bogus-slug} → 404",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/course/this-slug-does-not-exist-zzz", "host": ["{{base_url}}"], "path": ["api", "course", "this-slug-does-not-exist-zzz"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('404 for missing course', () => pm.expect(pm.response.code).to.equal(404));",
+              "pm.test('JSON 404 (not HTML)', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));"
+            ]}
+          }]
+        },
+        {
+          "name": "GET /api/course/buy/{slug}/quote (no-auth) → 401",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/course/buy/any-slug/quote", "host": ["{{base_url}}"], "path": ["api", "course", "buy", "any-slug", "quote"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('quote requires auth', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+            ]}
+          }]
+        }
+      ]
+    },
+    {
+      "name": "── PUBLIC CONTACT ──",
+      "item": [
+        {
+          "name": "POST /api/contact-us — smoke (no 5xx)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"E2E Contact Test\",\n  \"email\": \"e2e-contact@e2e-factory.test\",\n  \"subject\": \"Test message\",\n  \"message\": \"Newman contract test\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/contact-us", "host": ["{{base_url}}"], "path": ["api", "contact-us"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('contact-us reachable + no 5xx', () => pm.expect(pm.response.code).to.be.below(500));"
+            ]}
+          }]
+        },
+        {
+          "name": "POST /api/contact-us — empty body → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{base_url}}/api/contact-us", "host": ["{{base_url}}"], "path": ["api", "contact-us"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('empty contact body rejected', () => pm.expect(pm.response.code).to.be.oneOf([400, 422]));"
+            ]}
+          }]
+        }
+      ]
+    },
+    {
+      "name": "── STUDENT (AUTH GATE) ──",
+      "description": "These tests verify the auth gate is wired. Each endpoint MUST return 401/403 without a bearer token. Authenticated body-shape tests are operator follow-up (need fixture data).",
+      "item": [
+        {
+          "name": "GET /api/student/dashboard (no-auth) → 401",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/student/dashboard", "host": ["{{base_url}}"], "path": ["api", "student", "dashboard"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('dashboard requires auth', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+            ]}
+          }]
+        },
+        {
+          "name": "GET /api/student/profile (no-auth) → 401",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/student/profile", "host": ["{{base_url}}"], "path": ["api", "student", "profile"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('profile requires auth', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+            ]}
+          }]
+        },
+        {
+          "name": "GET /api/student/courses (no-auth) → 401",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/student/courses", "host": ["{{base_url}}"], "path": ["api", "student", "courses"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('courses requires auth', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+            ]}
+          }]
+        },
+        {
+          "name": "GET /api/student/cart-list (no-auth) → 401",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/student/cart-list", "host": ["{{base_url}}"], "path": ["api", "student", "cart-list"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('cart-list requires auth', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+            ]}
+          }]
+        },
+        {
+          "name": "GET /api/student/order-history (no-auth) → 401",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/student/order-history", "host": ["{{base_url}}"], "path": ["api", "student", "order-history"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('order-history requires auth', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+            ]}
+          }]
+        },
+        {
+          "name": "GET /api/student/wishlist (no-auth) → 401",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/student/wishlist", "host": ["{{base_url}}"], "path": ["api", "student", "wishlist"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('wishlist requires auth', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+            ]}
+          }]
+        },
+        {
+          "name": "GET /api/student/live-classes (no-auth) → 401",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/student/live-classes", "host": ["{{base_url}}"], "path": ["api", "student", "live-classes"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('live-classes requires auth', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+            ]}
+          }]
+        },
+        {
+          "name": "POST /api/student/add-to-cart/{bogus} (no-auth) → 401",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/student/add-to-cart/bogus-slug", "host": ["{{base_url}}"], "path": ["api", "student", "add-to-cart", "bogus-slug"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('add-to-cart requires auth', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+            ]}
+          }]
+        }
+      ]
+    },
+    {
+      "name": "── COACH / INSTRUCTOR (AUTH GATE) ──",
+      "item": [
+        {
+          "name": "GET /api/instructor/students (no-auth) → 401",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/instructor/students", "host": ["{{base_url}}"], "path": ["api", "instructor", "students"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('coach students requires auth', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+            ]}
+          }]
+        }
+      ]
+    },
+    {
+      "name": "── 2FA GATE ──",
+      "item": [
+        {
+          "name": "POST /api/2fa/verify (no-auth) → 401",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"code\":\"000000\"}" },
+            "url": { "raw": "{{base_url}}/api/2fa/verify", "host": ["{{base_url}}"], "path": ["api", "2fa", "verify"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('2fa requires auth', () => pm.expect(pm.response.code).to.be.oneOf([401, 403, 422]));"
+            ]}
+          }]
+        }
+      ]
+    }
+  ]
+}

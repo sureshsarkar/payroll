@@ -1,0 +1,31 @@
+{
+    "name": "nwidart/pagetemplatebuilder",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\PageTemplateBuilder\\": "",
+            "Modules\\PageTemplateBuilder\\App\\": "app/",
+            "Modules\\PageTemplateBuilder\\Database\\Factories\\": "database/factories/",
+            "Modules\\PageTemplateBuilder\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\PageTemplateBuilder\\Tests\\": "tests/"
+        }
+    }
+}

@@ -1,0 +1,31 @@
+{
+    "name": "nwidart/marquee",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Marquee\\": "",
+            "Modules\\Marquee\\App\\": "app/",
+            "Modules\\Marquee\\Database\\Factories\\": "database/factories/",
+            "Modules\\Marquee\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Marquee\\Tests\\": "tests/"
+        }
+    }
+}

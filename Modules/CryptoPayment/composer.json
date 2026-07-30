@@ -1,0 +1,32 @@
+{
+    "name": "nwidart/cryptopayment",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\CryptoPayment\\": "",
+            "Modules\\CryptoPayment\\App\\": "app/",
+            "Modules\\CryptoPayment\\Database\\Factories\\": "database/factories/",
+            "Modules\\CryptoPayment\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\CryptoPayment\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "coingate/coingate-php": "^4.1"
+    }
+}

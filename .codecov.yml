@@ -1,0 +1,119 @@
+# Codecov configuration for MBSGuru.
+#
+# The coverage data flow:
+#   1. .github/workflows/e2e.yml runs `phpunit --coverage-clover`
+#   2. The clover.xml is uploaded via codecov-action@v4
+#   3. Codecov compares against this config
+#   4. PR comment surfaces the diff
+#
+# Floors are conservative — they don't reflect what we WANT (high 80%);
+# they reflect what we already have (where we've measured one run).
+# Ratchet up the targets as coverage grows. Never lower a target
+# without explicit PR review.
+
+# Spec reference: https://docs.codecov.com/docs/codecov-yaml
+
+codecov:
+  # Wait up to 10 minutes for all uploads to complete before comparing.
+  # We only have one upload (PHPUnit Feature) so a much shorter wait
+  # would be fine in theory, but the wait is per-PR and 10 minutes is
+  # invisible to the developer.
+  notify:
+    after_n_builds: 1
+    wait_for_ci: true
+  require_ci_to_pass: true
+
+coverage:
+  # Round to 2 decimal places — meaningful precision without noise.
+  precision: 2
+  round: down
+  range: "50...90"          # color gradient: red < 50, green > 90
+
+  status:
+    # Project-level — overall coverage across the whole codebase.
+    project:
+      default:
+        # Currently we ship without a measured baseline. The first
+        # green build establishes it. After that, every PR must hold
+        # OR improve the project number. `auto` makes Codecov use the
+        # last main-branch coverage as the target.
+        target: auto
+        # 1% drop tolerated — refactors that legitimately move
+        # coverage between files shouldn't block a PR. Anything
+        # bigger needs deliberate review.
+        threshold: 1%
+        if_ci_failed: error
+
+      # Tighter target on the Services layer — that's where business
+      # logic lives, lower test cost-per-line.
+      services:
+        paths: ["app/Services/**"]
+        target: 70%
+        threshold: 2%
+
+      # FormRequests + Rules — easy to test in isolation, should be
+      # high coverage.
+      validators:
+        paths:
+          - "app/Http/Requests/**"
+          - "app/Rules/**"
+        target: 80%
+        threshold: 1%
+
+      # Middleware — small surface, security-critical.
+      middleware:
+        paths: ["app/Http/Middleware/**"]
+        target: 75%
+        threshold: 1%
+
+    # Per-PR patch coverage — the lines this PR changes must be
+    # covered. Most expensive thing to enforce but also most
+    # valuable: it prevents coverage rot from "I'll add tests
+    # later" PRs that never come back.
+    patch:
+      default:
+        target: 70%
+        threshold: 5%      # forgiving for refactors / pure renames
+        if_ci_failed: error
+        only_pulls: true   # don't apply to direct main pushes
+
+# Files / paths to exclude from coverage entirely. Mirrors the
+# excludePaths in phpstan.neon for consistency.
+ignore:
+  - "database/migrations/**"
+  - "database/seeders/**"
+  - "Modules/*/database/**"
+  - "Modules/*/resources/**"
+  - "vendor/**"
+  - "storage/**"
+  - "bootstrap/cache/**"
+  - "node_modules/**"
+  - "public/**"
+  - "tests/**"               # tests testing themselves is noise
+  - "app/Console/Commands/AuditSmoke.php"
+  - "app/Console/Commands/AuditDbIntegrity.php"
+  - "app/Helpers/helper.php" # 2,000+ line legacy file; burn down separately
+
+# PR comment configuration.
+comment:
+  layout: "header, diff, files, footer"
+  behavior: default
+  require_changes: false   # post comment even if no coverage change
+  require_base: false
+  require_head: true
+
+# Flags partition uploads — currently we only have one (`feature`)
+# but documenting the convention here for the eventual k6/Newman/
+# audit-smoke result uploads (most can't produce coverage, but
+# leaving the structure in place).
+flag_management:
+  default_rules:
+    carryforward: true
+    statuses:
+      - type: project
+        target: auto
+        threshold: 1%
+  individual_flags:
+    - name: feature
+      paths: ["app/**", "Modules/**"]
+      carryforward: true

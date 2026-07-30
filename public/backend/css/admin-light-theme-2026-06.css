@@ -1,0 +1,618 @@
+/* ==========================================================================
+   MBSGuru Super-Admin — LIGHT premium theme   (2026-06-25, Phase 1)
+
+   Additive override loaded LAST (after style.css + ui-audit-2026-05.css), so
+   it wins by cascade order. Converts the dark #0A1628 sidebar into a clean,
+   corporate, light SaaS sidebar. STRICTLY scoped to .main-sidebar and
+   .main-navbar (+ the sidebar scrollbar) — no other admin surface is
+   touched. Fully reversible: remove
+   the single <link> in admin/partials/styles.blade.php to restore the dark
+   theme. No vendor file is edited.
+   ========================================================================== */
+
+/* 2026-07-20 — palette retuned to the approved super-admin design: one emerald
+   accent shared with the coach + student panels, cooler neutrals. Tokens only,
+   so every rule below inherits the new look without changing a selector. */
+:root {
+    --adm-side-bg:       #ffffff;
+    --adm-side-border:   #e3e8ee;
+    --adm-side-text:     #525c6a;
+    --adm-side-icon:     #94a1b2;
+    --adm-side-muted:    #94a1b2;
+    --adm-side-hover-bg: #f7f9fb;
+    --adm-side-hover-tx: #101828;
+    --adm-accent:        #0e7c62;
+    --adm-accent-bg:     #e9f6f2;
+}
+
+/* ── Sidebar surface ───────────────────────────────────────────────────── */
+.main-sidebar {
+    background-color: var(--adm-side-bg) !important;
+    border-right: 1px solid var(--adm-side-border);
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+/* ── Brand / logo — drop the white-invert so a normal logo reads on white ── */
+.main-sidebar .sidebar-brand {
+    border-bottom: 1px solid var(--adm-side-border);
+}
+.main-sidebar .sidebar-brand a img {
+    filter: none !important;
+}
+.main-sidebar .sidebar-brand a {
+    color: #0b1220;
+}
+
+/* ── Section headers ───────────────────────────────────────────────────── */
+.main-sidebar .sidebar-menu li.menu-header {
+    color: var(--adm-side-muted);
+    font-weight: 700;
+}
+
+/* ── Top-level links ───────────────────────────────────────────────────── */
+.main-sidebar .sidebar-menu li a {
+    color: var(--adm-side-text);
+    border-radius: 10px;
+}
+.main-sidebar .sidebar-menu li a i {
+    color: var(--adm-side-icon);
+    transition: color .15s ease;
+}
+
+/* Hover */
+.main-sidebar .sidebar-menu li a:hover {
+    color: var(--adm-side-hover-tx) !important;
+    background-color: var(--adm-side-hover-bg) !important;
+    border-radius: 10px;
+}
+.main-sidebar .sidebar-menu li a:hover i {
+    color: var(--adm-side-hover-tx);
+}
+
+/* Active (parent / single) */
+.main-sidebar .sidebar-menu li.active > a,
+.main-sidebar .sidebar-menu li.active a {
+    color: var(--adm-accent) !important;
+    background-color: var(--adm-accent-bg) !important;
+    font-weight: 600;
+    border-radius: 10px;
+}
+.main-sidebar .sidebar-menu li.active > a i,
+.main-sidebar .sidebar-menu li.active a i {
+    color: var(--adm-accent);
+}
+
+/* ── Dropdown children ─────────────────────────────────────────────────── */
+.main-sidebar .sidebar-menu li ul.dropdown-menu li a {
+    color: var(--adm-side-text);
+}
+.main-sidebar .sidebar-menu li ul.dropdown-menu li a:hover,
+.main-sidebar .sidebar-menu li.active > ul.dropdown-menu li a:hover {
+    color: var(--adm-side-hover-tx) !important;
+    background-color: var(--adm-side-hover-bg) !important;
+}
+.main-sidebar .sidebar-menu li ul.dropdown-menu li.active a,
+.main-sidebar .sidebar-menu li ul.dropdown-menu li.active > a {
+    color: var(--adm-accent) !important;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   2026-07-20 — typography / spacing refinement to match the approved design.
+   Still strictly scoped to .main-sidebar; no markup, dropdown JS, module
+   include or permission gate is affected.
+   ========================================================================== */
+
+/* Brand block — mark tile + wordmark, matching the approved design.
+   White-label: tile = tenant favicon or app-name initial; wordmark = app_name.
+   The vendor's own .sidebar-brand blocks are hidden and replaced by .mbs-brand. */
+.main-sidebar .sidebar-brand {
+    display: none !important;
+}
+.main-sidebar .mbs-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 15px;
+    border-bottom: 1px solid var(--adm-side-border);
+    text-decoration: none;
+    line-height: 1;
+}
+.main-sidebar .mbs-brand .mbs-brand-tile {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: var(--adm-accent);
+    color: #fff;
+    font-weight: 800;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.main-sidebar .mbs-brand .mbs-brand-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.main-sidebar .mbs-brand .mbs-brand-txt {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+.main-sidebar .mbs-brand .mbs-brand-name {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #0b1220;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.main-sidebar .mbs-brand .sidebar-brand-role {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--adm-side-muted);
+    letter-spacing: .01em;
+}
+/* The collapsed rail shows the favicon only — no room for the subtitle. */
+.main-sidebar .sidebar-brand-sm .sidebar-brand-role {
+    display: none;
+}
+
+/* Section headers — small, spaced, quiet. */
+.main-sidebar .sidebar-menu li.menu-header {
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 16px 14px 6px;
+    margin: 0;
+}
+
+/* Items — tighter rhythm, calmer weight. */
+.main-sidebar .sidebar-menu li a {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 12px;
+    margin: 1px 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    line-height: 1.3;
+}
+.main-sidebar .sidebar-menu li a i {
+    width: 18px;
+    text-align: center;
+    font-size: 14px;
+}
+
+/* Active — soft emerald wash, no heavy fill. */
+.main-sidebar .sidebar-menu li.active > a,
+.main-sidebar .sidebar-menu li.active a {
+    font-weight: 600;
+}
+
+/* Dropdown children — indent under the parent icon, lighter type. */
+.main-sidebar .sidebar-menu li ul.dropdown-menu {
+    padding: 2px 0 4px;
+}
+.main-sidebar .sidebar-menu li ul.dropdown-menu li a {
+    font-size: 12.5px;
+    font-weight: 500;
+    padding: 7px 12px 7px 40px;
+    margin: 1px 8px;
+}
+
+/* ── Count badges ──────────────────────────────────────────────────────────
+   The approved design shows counts as quiet right-aligned figures, not as
+   filled pills. `.mbs-cb` is the new badge; the `.badge` rules re-skin the
+   ones the module partials already emitted (Orders, Courses, Withdrawals,
+   Instructor Requests) so the whole menu reads as one system.
+   -------------------------------------------------------------------------- */
+.main-sidebar .sidebar-menu li a .mbs-cb,
+.main-sidebar .sidebar-menu li a .badge,
+.main-sidebar .sidebar-menu li a small.badge {
+    margin-left: auto !important;
+    padding: 0 !important;
+    background: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    font-size: 10.5px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    color: var(--adm-side-muted) !important;
+}
+
+/* Queues that need action read in the danger colour, as in the design.
+   NOTE the element qualifier: the re-skin rule above matches `small.badge`
+   (0,4,2), which outranks a plain `.badge-danger` (0,4,1) — without matching
+   that weight the module badges stayed grey. */
+.main-sidebar .sidebar-menu li a .mbs-cb.al,
+.main-sidebar .sidebar-menu li a small.badge-danger,
+.main-sidebar .sidebar-menu li a span.badge-danger,
+.main-sidebar .sidebar-menu li a .badge.badge-danger {
+    color: #b42318 !important;
+    font-weight: 600 !important;
+}
+
+/* The vendor "beep" pulse on a parent row is redundant now the child carries
+   a number — keep the row, drop the animated dot. */
+.main-sidebar .sidebar-menu li a .beep::after,
+.main-sidebar .sidebar-menu li a .beep::before {
+    display: none !important;
+}
+
+/* ==========================================================================
+   2026-07-20 — TOPBAR, restyled to match the approved super-admin design.
+
+   VISUAL ONLY. Every control in the navbar keeps working and keeps its
+   permission gate: sidebar toggle, page title, admin menu-search (+ its
+   results dropdown), the Language switcher (rendered only when >1 language
+   is enabled), Visit Website, the notification bell and the avatar dropdown.
+   The approved mockup showed a bare icon row; the search and language
+   controls are real features, so they are restyled rather than removed.
+
+   Strictly scoped to .main-navbar. No markup, JS or Blade guard is touched.
+   ========================================================================== */
+
+/* Surface — flat white, hairline rule, no heavy chrome. */
+.main-navbar {
+    background: #ffffff;
+    border-bottom: 1px solid var(--adm-side-border);
+    box-shadow: none;
+    padding: 0 20px;
+    min-height: 60px;
+}
+
+/* Page title — hidden to match the approved design, whose topbar carries no
+   page name (the page's own <h1> already states it). The sidebar toggle stays.
+   Not removed from markup, just hidden — reversible. */
+.main-navbar .page-title-new {
+    display: none;
+}
+
+/* Visit Website — the approved topbar is a bare icon row and doesn't carry it.
+   Target ONLY the li whose link opens the public site (target="_blank"); the
+   notification bell shares the .dropdown-list-toggle class and must stay. */
+.main-navbar ul.navbar-right li.dropdown-list-toggle:has(> a[target="_blank"]) {
+    display: none;
+}
+/* Fallback for engines without :has() — the Visit Website li is the only one
+   whose direct anchor targets a new tab. */
+.main-navbar ul.navbar-right li.dropdown-list-toggle > a[target="_blank"] {
+    display: none;
+}
+
+/* Sidebar toggle — quiet square button, same rhythm as the icon row. */
+.main-navbar ul.navbar-nav li a.nav-link[data-toggle="sidebar"] {
+    color: var(--adm-side-icon);
+    padding: 0;
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+.main-navbar ul.navbar-nav li a.nav-link[data-toggle="sidebar"]:hover {
+    color: var(--adm-side-hover-tx);
+    background: var(--adm-side-hover-bg);
+}
+
+/* Menu search — collapses to just the magnifier icon (like the approved
+   design's clean icon row) and expands to a full pill on focus. Pure CSS, so
+   the search stays a real, working control — nothing is removed. */
+.main-navbar .search-box .form-control {
+    height: 36px;
+    width: 40px;                 /* collapsed = icon only */
+    font-size: 13px;
+    color: var(--adm-side-hover-tx);
+    background: #f7f9fb;
+    border: 1px solid var(--adm-side-border);
+    /* !important — the vendor theme pills this input to 50px. */
+    border-radius: 8px !important;
+    box-shadow: none;
+    cursor: pointer;
+    transition: width .22s ease;
+}
+.main-navbar .search-box .form-control::placeholder {
+    color: transparent;          /* hidden while collapsed */
+}
+.main-navbar .search-box:focus-within .form-control,
+.main-navbar .search-box .form-control:focus {
+    width: 240px;                /* expands on focus */
+    cursor: text;
+    background: #ffffff;
+    border-color: var(--adm-accent);
+    box-shadow: 0 0 0 3px var(--adm-accent-bg);
+}
+.main-navbar .search-box:focus-within .form-control::placeholder {
+    color: var(--adm-side-muted);
+}
+/* Results dropdown — align it to the new pill. */
+.main-navbar .search-box #admin_menu_list {
+    top: 42px;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid var(--adm-side-border);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(16, 24, 40, .1);
+    overflow: hidden;
+}
+.main-navbar .search-box #admin_menu_list a {
+    font-size: 13px;
+    color: var(--adm-side-text);
+    padding: 9px 12px;
+    display: block;
+}
+.main-navbar .search-box #admin_menu_list a:hover {
+    color: var(--adm-side-hover-tx);
+    background: var(--adm-side-hover-bg);
+}
+
+/* Right-hand control row. */
+.main-navbar ul.navbar-right {
+    align-items: center;
+    gap: 4px;
+}
+
+/* Icon-style links (bell, Visit Website) — 34px hit target, muted glyph. */
+.main-navbar ul.navbar-right > li > a.nav-link-lg {
+    color: var(--adm-side-text);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0 10px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border-radius: 8px;
+}
+.main-navbar ul.navbar-right > li > a.nav-link-lg i {
+    color: var(--adm-side-icon);
+    font-size: 15px;
+}
+.main-navbar ul.navbar-right > li > a.nav-link-lg:hover {
+    color: var(--adm-side-hover-tx);
+    background: var(--adm-side-hover-bg);
+}
+.main-navbar ul.navbar-right > li > a.nav-link-lg:hover i {
+    color: var(--adm-side-hover-tx);
+}
+
+/* Language switcher — compact pill, matches the approved design's tidy row. */
+.main-navbar #setLanguageHeader .form-control-sm,
+.main-navbar #setLanguageHeader select,
+.main-navbar .set-currency-header select {
+    height: 34px;
+    font-size: 12.5px;
+    color: var(--adm-side-text);
+    background: #f7f9fb !important;
+    border: 1px solid var(--adm-side-border) !important;
+    border-radius: 8px;
+    padding: 0 6px;
+    max-width: 92px;
+}
+
+/* Visit Website — icon only, so the right side reads as a clean icon row like
+   the approved design (the label showed as clutter next to the other icons). */
+.main-navbar ul.navbar-right .dropdown-list-toggle > a.nav-link-lg {
+    font-size: 0;
+}
+.main-navbar ul.navbar-right .dropdown-list-toggle > a.nav-link-lg i {
+    font-size: 15px;
+}
+
+/* Avatar — flat accent circle with the admin's initial, matching the design.
+   The photo + name are hidden; the initial span (added in master_layout) shows. */
+.main-navbar ul.navbar-right .nav-link-user img.rounded-circle,
+.main-navbar ul.navbar-right .nav-link-user > div {
+    display: none !important;
+}
+.main-navbar ul.navbar-right .nav-link-user .mbs-av-initial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--adm-accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 12.5px;
+    line-height: 1;
+}
+/* Drop the dropdown caret so it's just a circle, as in the design. */
+.main-navbar ul.navbar-right .nav-link-user.dropdown-toggle::after {
+    display: none;
+}
+
+/* Language — globe-style compact pill (a glyph prefix reads as the design's
+   globe icon while keeping the real switcher). */
+.main-navbar #setLanguageHeader {
+    position: relative;
+}
+.main-navbar #setLanguageHeader::before {
+    content: "\f0ac";                 /* FontAwesome globe */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--adm-side-icon);
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1;
+}
+.main-navbar #setLanguageHeader select {
+    padding-left: 26px !important;
+}
+
+/* …and the Select2 widget that actually replaces that <select> at runtime.
+   Only the inline selection box is styled; Select2 appends its dropdown panel
+   to <body>, which is outside this file's scope and is left untouched. */
+.main-navbar .select2-container--default .select2-selection--single {
+    height: 34px;
+    background: #f7f9fb;
+    border: 1px solid var(--adm-side-border);
+    border-radius: 8px;
+}
+.main-navbar .select2-container--default .select2-selection--single
+    .select2-selection__rendered {
+    color: var(--adm-side-text);
+    font-size: 13px;
+    line-height: 32px;
+}
+.main-navbar .select2-container--default .select2-selection--single
+    .select2-selection__arrow {
+    height: 32px;
+}
+
+/* Avatar — circular, hairline ring, calm name label. */
+.main-navbar ul.navbar-right .nav-link-user img.rounded-circle {
+    /* !important — the vendor theme hard-sizes this avatar to 30px. */
+    width: 32px !important;
+    height: 32px !important;
+    object-fit: cover;
+    border: 1px solid var(--adm-side-border);
+}
+.main-navbar ul.navbar-right .nav-link-user {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--adm-side-hover-tx);
+}
+
+/* Account dropdown — same card treatment as the search results. */
+.main-navbar ul.navbar-right .dropdown-menu {
+    border: 1px solid var(--adm-side-border);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(16, 24, 40, .1);
+    padding: 6px;
+}
+.main-navbar ul.navbar-right .dropdown-menu .dropdown-item {
+    font-size: 13px;
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+.main-navbar ul.navbar-right .dropdown-menu .dropdown-item:hover {
+    background: var(--adm-side-hover-bg);
+}
+
+/* ==========================================================================
+   2026-07-20 Phase 2b — collapsible group accordion.
+
+   The markup these rules style is created client-side from the flat
+   `menu-header` + sibling list the Blade renders (see admin/sidebar.blade.php).
+   Until that script runs the old flat list shows, which is why nothing here
+   hides menu items by default — a CSS-first collapse would blank the whole
+   sidebar if the script ever failed to load.
+   ========================================================================== */
+
+.main-sidebar .sidebar-menu li.nav-group {
+    list-style: none;
+}
+
+/* The vendor sheet pads the menu 16px each side. At a 250px rail that left the
+   group labels only 98px of usable width, so "Students & Users" (108px) always
+   ellipsised. Reclaiming 8px a side is enough for every label. */
+.main-sidebar .sidebar-menu {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+/* Group header — a real row now, not a micro-label. */
+/* Density matched to the approved design (measured against the mockup):
+   group row 32px, item row 30px, 12.5px type. The vendor sheet gives
+   `.sidebar-menu li a` a fixed height/line-height that made every row 50px,
+   which is why only 6 of the 9 groups fitted on screen. */
+.main-sidebar .sidebar-menu li.nav-group > .nav-group-toggle {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 9px;
+    margin: 1px 0;
+    height: auto !important;
+    min-height: 0 !important;
+    line-height: 1.25 !important;
+    border-radius: 7px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--adm-side-text);
+    cursor: pointer;
+}
+.main-sidebar .sidebar-menu li.nav-group > .nav-group-toggle:hover {
+    color: var(--adm-side-hover-tx);
+    background: var(--adm-side-hover-bg);
+}
+.main-sidebar .sidebar-menu li.nav-group > .nav-group-toggle > i:first-child {
+    width: 18px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--adm-side-icon);
+}
+/* flex-basis 0 + min-width 0: with `auto` the vendor sheet's sizing on
+   `.sidebar-menu li a span` won the used width and clipped the longest label
+   ("Students & Users") even though the row had spare space. */
+.main-sidebar .sidebar-menu li.nav-group > .nav-group-toggle > span {
+    flex: 1 1 0 !important;
+    min-width: 0;
+    width: auto !important;
+    max-width: none !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Chevron — rotates when the group is open. */
+.main-sidebar .sidebar-menu li.nav-group > .nav-group-toggle .chev {
+    font-size: 10px;
+    flex: 0 0 auto;
+    color: var(--adm-side-muted);
+    transition: transform .18s ease;
+}
+.main-sidebar .sidebar-menu li.nav-group.open > .nav-group-toggle .chev {
+    transform: rotate(180deg);
+}
+
+/* An open group's header reads as the current section. */
+.main-sidebar .sidebar-menu li.nav-group.open > .nav-group-toggle {
+    color: var(--adm-side-hover-tx);
+}
+.main-sidebar .sidebar-menu li.nav-group.open > .nav-group-toggle > i:first-child {
+    color: var(--adm-accent);
+}
+
+/* Items — collapsed by default once the script has grouped them. */
+.main-sidebar .sidebar-menu li.nav-group > .nav-group-items {
+    display: none;
+    padding: 0 0 4px;
+    margin: 0;
+    list-style: none;
+}
+.main-sidebar .sidebar-menu li.nav-group.open > .nav-group-items {
+    display: block;
+}
+/* Item rows — 30px, 12.5px, indented under the group icon (mockup metrics). */
+.main-sidebar .sidebar-menu li.nav-group > .nav-group-items > li > a {
+    padding: 5px 9px 5px 34px !important;
+    margin: 1px 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    line-height: 1.25 !important;
+    font-size: 12.5px !important;
+    border-radius: 7px;
+}
+/* Third level (module dropdowns nested inside a group) — one step deeper. */
+.main-sidebar .sidebar-menu li.nav-group > .nav-group-items ul.dropdown-menu > li > a {
+    padding: 6px 9px 6px 46px !important;
+    font-size: 12px !important;
+}
+
+/* ── Scrollbar — light + thin ──────────────────────────────────────────── */
+#sidebar-wrapper::-webkit-scrollbar { width: 6px; }
+#sidebar-wrapper::-webkit-scrollbar-thumb { background: #d7dbe5; border-radius: 6px; }
+#sidebar-wrapper::-webkit-scrollbar-track { background: transparent; }

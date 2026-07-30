@@ -1,0 +1,120 @@
+{
+  "info": {
+    "_postman_id": "9f2bbd26-7c56-4646-ba6e-d1d5481ebed5",
+    "name": "MBS Teacher-(Coach) APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "38109425"
+  },
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    // \"email\": \"Nitu.Yadav@digitalhubsolution.com\",\r\n    // \"password\": \"12345678\"\r\n    // \"email\": \"avneeshpatel.dhs@gmail.com\",\r\n    // \"password\": \"12345678\"\r\n    // \"email\": \"kapil@gmail.com\",\r\n    // \"password\": \"123456\"\r\n       \"email\":\"sureshs.dhs@gmail.com\",\r\n       \"password\":\"123456\"\r\n    //    \"email\":\"dada@gmail.com\",\r\n    //    \"password\":\"123456\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/login",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Register",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Avneesh Patel\",\r\n  \"email\": \"avneesh.p1@gmail.com\",\r\n  \"password\": \"12345678\",\r\n//   \"role\":\"student\",\r\n  \"role\":\"instructor\",\r\n  \"password_confirmation\": \"12345678\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/register",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "My Courses",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "71|nx1b3j9Gmg9mLmGsRH3vsVEv06H47SDOmqwNl9Xu0e85d38f",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/instructor-courses",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "instructor-courses"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

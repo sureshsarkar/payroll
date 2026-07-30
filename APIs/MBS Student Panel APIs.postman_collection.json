@@ -1,0 +1,859 @@
+{
+  "info": {
+    "_postman_id": "98d0568c-9b3b-4bd6-ae00-1039aa27fc35",
+    "name": "MBS Student Panel APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "20783426"
+  },
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    // \"email\": \"Nitu.Yadav@digitalhubsolution.com\",\r\n    // \"password\": \"12345678\"\r\n    // \"email\": \"avneeshpatel.dhs@gmail.com\",\r\n    // \"password\": \"12345678\"\r\n    // \"email\": \"kapil@gmail.com\",\r\n    // \"password\": \"123456\"\r\n    //    \"email\":\"studentpanel@gmail.com\",\r\n    //    \"password\":\"123456\"\r\n    //    \"email\":\"dada@gmail.com\",\r\n    //    \"password\":\"123456\",\r\n    \"email\":\"studentpanel@gmail.com\",\r\n    \"password\":\"123456\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/login",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Register",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Avneesh Patel\",\r\n  \"email\": \"avneesh.p1@gmail.com\",\r\n  \"password\": \"12345678\",\r\n//   \"role\":\"student\",\r\n  \"role\":\"instructor\",\r\n  \"password_confirmation\": \"12345678\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/register",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Order History List",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/student/show-order-history/38",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "student",
+            "show-order-history",
+            "38"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Show Order History",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/student/order-history",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "student",
+            "order-history"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Order Invoice",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/student/order-invoice/38",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "student",
+            "order-invoice",
+            "38"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "My Courses",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/student/courses",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "student",
+            "courses"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Learn Course",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/student/learn-course/weight-loss-classes",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "student",
+            "learn-course",
+            "weight-loss-classes"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Wishlist",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/student/wishlist",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "student",
+            "wishlist"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Profile",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/student/profile",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "student",
+            "profile"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Profile Update",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n            \"name\": \"Student Panel\",\r\n            \"email\": \"studentpanel@gmail.com\",\r\n            \"phone\": \"9876543234\",\r\n            \"gender\": \"male\",\r\n            \"age\": 23\r\n}\r\n\r\n"
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/student/profile-update",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "student",
+            "profile-update"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Profile Bio Update",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"bio\": \"dddI am a dedicated and goal-oriented learner passionate about enhancing my knowledge and skills through continuous learning. I actively participate in online courses to improve my technical expertise and practical understanding. My aim is to apply what I learn in real-world projects and build a strong professional career.\",\r\n    \"short_bio\": \"I am a dedicated and goal-oriented learner passionate about enhancing\",\r\n    \"designation\": \"I am a dedicated and goal-oriented learner passionate.\"\r\n}\r\n\r\n"
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/student/profile-bio-update",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "student",
+            "profile-bio-update"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Profile Address Update",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n   \"address\": \"Noida Sector 63 D 247/4A\",\r\n    \"city\": \"Noida\",\r\n    \"country\": 1,\r\n      \"state\": \"Uttar Pradesh\"\r\n       \r\n}\r\n\r\n"
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/student/profile-address-update",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "student",
+            "profile-address-update"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Add Remove Wishlist",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n   \"address\": \"Noida Sector 63 D 247/4A\",\r\n    \"city\": \"Noida\",\r\n    \"country\": 1,\r\n      \"state\": \"Uttar Pradesh\"\r\n       \r\n}\r\n\r\n"
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/student/add-remove-wishlist/laravel-course",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "student",
+            "add-remove-wishlist",
+            "laravel-course"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Cart List",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n   \"address\": \"Noida Sector 63 D 247/4A\",\r\n    \"city\": \"Noida\",\r\n    \"country\": 1,\r\n      \"state\": \"Uttar Pradesh\"\r\n       \r\n}\r\n\r\n"
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/student/cart-list",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "student",
+            "cart-list"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Add To Cart",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n   \"address\": \"Noida Sector 63 D 247/4A\",\r\n    \"city\": \"Noida\",\r\n    \"country\": 1,\r\n      \"state\": \"Uttar Pradesh\"\r\n       \r\n}\r\n\r\n"
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/student/add-to-cart/maths",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "student",
+            "add-to-cart",
+            "maths"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Remove From Cart",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n   \"address\": \"Noida Sector 63 D 247/4A\",\r\n    \"city\": \"Noida\",\r\n    \"country\": 1,\r\n      \"state\": \"Uttar Pradesh\"\r\n       \r\n}\r\n\r\n"
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/student/remove-from-cart/maths",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "student",
+            "remove-from-cart",
+            "maths"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Country List",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n   \"address\": \"Noida Sector 63 D 247/4A\",\r\n    \"city\": \"Noida\",\r\n    \"country\": 1,\r\n      \"state\": \"Uttar Pradesh\"\r\n       \r\n}\r\n\r\n"
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/countries",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "countries"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Reviews",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n   \"address\": \"Noida Sector 63 D 247/4A\",\r\n    \"city\": \"Noida\",\r\n    \"country\": 1,\r\n      \"state\": \"Uttar Pradesh\"\r\n       \r\n}\r\n\r\n"
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/reviews",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "reviews"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Show Reviews",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n   \"address\": \"Noida Sector 63 D 247/4A\",\r\n    \"city\": \"Noida\",\r\n    \"country\": 1,\r\n      \"state\": \"Uttar Pradesh\"\r\n       \r\n}\r\n\r\n"
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/reviews/3",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "reviews",
+            "3"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Reviews",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "120|1ebimpebBsqUhlpfp46DsiIAhXIhfbJtfOYYsNKF6b291500",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n   \"address\": \"Noida Sector 63 D 247/4A\",\r\n    \"city\": \"Noida\",\r\n    \"country\": 1,\r\n      \"state\": \"Uttar Pradesh\"\r\n       \r\n}\r\n\r\n"
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/reviews/2",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "reviews",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

@@ -1,0 +1,201 @@
+/* ============================================================================
+ * MBS Typography System
+ * ----------------------------------------------------------------------------
+ * One font family across the entire platform — Plus Jakarta Sans.
+ * Modern, geometric, neutral; reads great in dashboards and marketing alike.
+ *
+ * IMPORTANT: this file ONLY sets font-family + font-feature-settings + font
+ *            smoothing. It does NOT change font-size, line-height, padding,
+ *            margins or any other layout-affecting property. Existing
+ *            component CSS continues to control its own dimensions.
+ *
+ * Loaded by: frontend/layouts/styles.blade.php  AND  admin/partials/styles.blade.php
+ * Override:  any component can still override with its own `font-family:` —
+ *            this just sets the cascade default.
+ * ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+/* ----- CSS variables (modern font stack with safe system fallbacks) ----- */
+:root {
+    --mbs-font-sans:
+        'Plus Jakarta Sans',
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        'Roboto',
+        'Helvetica Neue',
+        Arial,
+        sans-serif,
+        'Apple Color Emoji',
+        'Segoe UI Emoji';
+
+    --mbs-font-mono:
+        'JetBrains Mono',
+        ui-monospace,
+        SFMono-Regular,
+        'Cascadia Code',
+        'Roboto Mono',
+        Consolas,
+        Menlo,
+        monospace;
+}
+
+/* ----- Apply to root + form controls (form controls don't inherit by default) ----- */
+html,
+body {
+    font-family: var(--mbs-font-sans);
+    /* Crisper rendering on retina + Windows ClearType — no layout impact. */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Tabular numbers off by default; opt-in via .mbs-num */
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+}
+
+button,
+input,
+optgroup,
+select,
+textarea {
+    font-family: inherit;
+}
+
+/* Explicit headings — some legacy themes wired display fonts here.
+   We unify but don't touch size/weight/spacing. */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: var(--mbs-font-sans);
+    /* Tighten letter-spacing slightly on large headings without affecting
+       layout — body widths stay the same. */
+    letter-spacing: -0.01em;
+}
+
+/* Code blocks + inline code keep the mono stack. */
+code, kbd, pre, samp,
+.code, .mono {
+    font-family: var(--mbs-font-mono);
+}
+
+/* ----- Number rendering helper (opt-in, doesn't change defaults) -----
+   Add class="mbs-num" to tables, dashboard counters, prices etc. for
+   tabular-figure alignment so 0–9 are all the same width. Pure visual. */
+.mbs-num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+}
+
+/* ============================================================================
+ * SaaS-grade type scale
+ * ----------------------------------------------------------------------------
+ * Calibrated heading scale + body weight conventions that match the look of
+ * modern SaaS dashboards (Linear / Stripe / Notion). Each size is paired with
+ * a weight + letter-spacing that's been chosen to read as "premium" rather
+ * than the default Bootstrap "browser-rendered" look.
+ *
+ * We intentionally do NOT change body font-size globally (Bootstrap's 1rem
+ * baseline stays) so existing layouts don't reflow. We do set tighter
+ * letter-spacing on display sizes which is barely-perceptible at small
+ * sizes but lifts the headings. Layout impact: zero.
+ * ========================================================================== */
+
+/* Page-level heading. Reserve for main page titles. */
+h1, .h1 {
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    line-height: 1.2;
+}
+
+/* Section / dialog title. */
+h2, .h2 {
+    font-weight: 700;
+    letter-spacing: -0.018em;
+    line-height: 1.25;
+}
+
+/* Card title — most common in dashboards. */
+h3, .h3 {
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    line-height: 1.3;
+}
+
+/* Sub-section / panel title. */
+h4, .h4 {
+    font-weight: 600;
+    letter-spacing: -0.008em;
+    line-height: 1.35;
+}
+
+h5, .h5 {
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    line-height: 1.4;
+}
+
+h6, .h6 {
+    font-weight: 600;
+    letter-spacing: -0.002em;
+    line-height: 1.45;
+}
+
+/* Body weight conventions — Plus Jakarta Sans 700 is the right "bold" weight
+   (more readable than the variable axis at 800+ for body bold). */
+strong, b {
+    font-weight: 700;
+}
+
+/* Tables — universally apply tabular numerics so numeric columns align by
+   default. Doesn't change widths; only the digit glyphs are picked from the
+   tabular-figure set. */
+table {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+}
+
+/* Uppercase labels (table headers, eyebrow text, captions) get a touch of
+   tracking so they don't feel cramped. Targets the common Bootstrap
+   `.text-uppercase` utility + small <th> elements. */
+.text-uppercase,
+small.text-uppercase,
+th[class*="uppercase"],
+.eyebrow,
+.label,
+.section-title,
+.text-overline,
+.lbl {
+    letter-spacing: 0.04em;
+    font-weight: 600;
+}
+
+/* Small / caption text — pick the medium weight so it remains readable when
+   shrunk. Doesn't change Bootstrap's `.small` size; just refines weight. */
+small,
+.small,
+.caption {
+    font-weight: 500;
+}
+
+/* Native form-control inheritance lift — Bootstrap's .form-control has its
+   own font-family of `inherit` already, but sets font-size: 1rem with no
+   weight refinement. Without changing size, give inputs a tiny crispness
+   bump (no layout impact). */
+.form-control,
+.form-select,
+.btn {
+    letter-spacing: -0.005em;
+}
+
+/* Button labels read better with weight 500 when the theme defaults to 400.
+   Bootstrap's .btn doesn't set font-weight, so this fills the gap. */
+.btn {
+    font-weight: 500;
+}
+
+/* Code / inline tech values (transaction IDs, slugs) shouldn't compete
+   visually with body text — slightly smaller + monospaced. */
+:not(pre) > code {
+    font-size: 0.875em;
+    padding: 0.1em 0.35em;
+    border-radius: 0.25em;
+    background-color: rgba(0, 0, 0, 0.04);
+}

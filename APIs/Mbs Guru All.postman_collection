@@ -1,0 +1,2266 @@
+{
+  "info": {
+    "_postman_id": "9c78aee8-8f3f-4ca8-87a0-b1e67ac56280",
+    "name": "Mbs Guru",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "38109425"
+  },
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"studentpanel@gmail.com\",\r\n    \"password\": \"123456\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/login",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Register",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Avneesh Patel\",\r\n  \"email\": \"avneesh.p1@gmail.com\",\r\n  \"password\": \"12345678\",\r\n  \"role\":\"student\",\r\n  \"password_confirmation\": \"12345678\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/register",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Forget Password",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"avneeshpatel.dhs@gmail.com\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/forget-password",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "forget-password"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Reset Password",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"forget_password_token\":\"aBmRxxNmhpzGdLtnBzKTnycrl7ZdWMmRMABV3sH61ka9hwe9NXvMqJqbj5Jh0vJc4HqZyG0Ug2fgWnOamzgp7BwJz8SK0ravasfb\",\r\n    \"email\": \"sureshs.dhs@gmail.com\",\r\n    \"password\": \"1234567\",\r\n    \"password_confirmation\" : \"1234567\"\r\n\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/reset-password",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "reset-password"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Logout",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "19|a4stbETP1dsejHenKsDdZSbW4VPTXaNKnVIcCjoU44106c89",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"forget_password_token\":\"JK6Wp5z5t7HafzHXjaPBOjcvvz7xe3HjSbxZcAo1w17UslnDJ6tJOAMv3Jqnn5DFhD2bAyOFRyNytjvIgiUmoBHaB23ARzmmqxKr\",\r\n    \"email\": \"avneeshpatel.dhs@gmail.com\",\r\n    \"password\": \"1234567\",\r\n    \"password_confirmation\" : \"1234567\"\r\n\r\n}"
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/logout",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "logout"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Logout All App",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "50|n0giJmONnfZ4cdSf0eSoWzJ0vJ11wfSmFUCssYkh90be4b61",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/logout/all-app",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "logout",
+            "all-app"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Fresh Courses",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/fresh-courses",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "fresh-courses"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Enrolled Courses",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/enrolled-courses",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "enrolled-courses"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Wishlist Courses",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/wishlist-courses",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "wishlist-courses"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Add Remove Wishlist",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "class",
+            "value": "test-class",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": " "
+        },
+        "url": {
+          "raw": "{{token}}/api/add-remove-wishlist/online-business-and-passive-income-strategies",
+          "host": [
+            "{{token}}"
+          ],
+          "path": [
+            "api",
+            "add-remove-wishlist",
+            "online-business-and-passive-income-strategies"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Quiz Attempts",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/quiz-attempts",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "quiz-attempts"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Learning",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "class",
+            "value": "test-class",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/learning/customer-relationship-management",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "learning",
+            "customer-relationship-management"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "orders",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/orders",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "orders"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Profile",
+      "protocolProfileBehavior": {
+        "disabledSystemHeaders": {}
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/profile",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "profile"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Profile Picture",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"image\": \"https://aardysprop.com/uploads/cms/690dd28ec017a.jpg\"\r\n}"
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/update-profile-picture",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "update-profile-picture"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Profile",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Avneesh Patel\",\r\n    \"email\": \"avneeshpatel.dhs@gmail.com\",\r\n    \"phone\": \"\"\r\n    // \"age\" : \r\n}"
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/update-profile",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "update-profile"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Bio",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"job_title\": \"Laravel Developer\",\r\n    \"bio\": \"test bio\",\r\n    \"short_bio\": \"test\"\r\n}"
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/update-bio",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "update-bio"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Password",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"current_password\": \"1234567\",\r\n    \"password\": \"12345678\",\r\n    \"password_confirmation\": \"12345678\"\r\n    // \"address\": \"\"\r\n}"
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/update-password",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "update-password"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Address",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "23|vHON7zAqzBkBJrCJIhnVtGbDptBTKI6O1atccy3U8ff67730",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"country_id\": \"2\"\r\n    // \"state\": \"\"\r\n    // \"city\": \"\"\r\n    // \"address\": \"\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://mbsguru.com/api/update-address",
+          "protocol": "https",
+          "host": [
+            "mbsguru",
+            "com"
+          ],
+          "path": [
+            "api",
+            "update-address"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Social Links",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"country_id\": \"2\"\r\n    // \"state\": \"\"\r\n    // \"city\": \"\"\r\n    // \"address\": \"\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/update-address",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "update-address"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Settings",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/settings",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "settings"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Countries",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/countries",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "countries"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Social Links",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/social-links",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "social-links"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Language List",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/language-list",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "language-list"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Currency List",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/currency-list",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "currency-list"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Static Language",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "code",
+            "value": "en",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/static-language/en",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "static-language",
+            "en"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Contact Us",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "code",
+            "value": "en",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Test user\",\r\n    \"email\": \"testuser@gmail.com\",\r\n    \"subject\": \"Testing\",\r\n    \"message\": \"Testing messages\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/contact-us",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "contact-us"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Subscribe Us",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "code",
+            "value": "en",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"testuser123@gmail.com\"\r\n}"
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/subscribe-us",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "subscribe-us"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Course Main Categories",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "code",
+            "value": "en",
+            "type": "text",
+            "disabled": true
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/course-main-categories",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "course-main-categories"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Course Sub Categories",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "code",
+            "value": "en",
+            "type": "text",
+            "disabled": true
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/course-sub-categories/breathing-techniques",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "course-sub-categories",
+            "breathing-techniques"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Course Languages",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/course-languages",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "course-languages"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Course Levels",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/course-levels",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "course-levels"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Popular Courses",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/popular-courses",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "popular-courses"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Fresh Courses",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/fresh-courses",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "fresh-courses"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Search Courses",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/search-courses",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "search-courses"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Course",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/course/online-business-and-passive-income-strategies",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "course",
+            "online-business-and-passive-income-strategies"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Free Lesson Info",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/course/free-lesson-info/5",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "course",
+            "free-lesson-info",
+            "5"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "course_reviews",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/course/reviews/online-business-and-passive-income-strategies",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "course",
+            "reviews",
+            "online-business-and-passive-income-strategies"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Privacy Policy",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/privacy-policy",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "privacy-policy"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Terms And Conditions",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/terms-and-conditions",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "terms-and-conditions"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Faqs",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/faqs?language=en",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "faqs"
+          ],
+          "query": [
+            {
+              "key": "language",
+              "value": "en"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "On Boarding Screen",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/on-boarding-screen",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "on-boarding-screen"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Reviews",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/reviews",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "reviews"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "make_lesson_complete",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/learning/make-lesson-complete/3",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "learning",
+            "make-lesson-complete",
+            "3"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "quiz_index",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/learning/online-business-and-passive-income-strategies/quiz/1",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "learning",
+            "online-business-and-passive-income-strategies",
+            "quiz",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "get_lesson_info",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "class",
+            "value": "test-class",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/learning/online-business-and-passive-income-strategies/get-file-info/document/3",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "learning",
+            "online-business-and-passive-income-strategies",
+            "get-file-info",
+            "document",
+            "3"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "quiz_store",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"answers\": [\r\n    {\r\n      \"question_id\": 1,\r\n      \"answer_id\": 1\r\n    }\r\n  ]\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/learning/online-business-and-passive-income-strategies/quiz/3",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "learning",
+            "online-business-and-passive-income-strategies",
+            "quiz",
+            "3"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "quiz_results",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"answers\": [\r\n    {\r\n      \"question_id\": 1,\r\n      \"answer_id\": 1\r\n    }\r\n  ]\r\n}\r\n"
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/learning/online-business-and-passive-income-strategies/quiz-results/1",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "learning",
+            "online-business-and-passive-income-strategies",
+            "quiz-results",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "fetch_lesson_questions",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/questions/customer-relationship-management/5190",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "questions",
+            "customer-relationship-management",
+            "5190"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "create_lesson_questions",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"question\":\"What is GBS Guru?\",\r\n    \"description\":\"MBS Guru is an online LMS or CRM\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/questions-create/customer-relationship-management/5190",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "questions-create",
+            "customer-relationship-management",
+            "5190"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "destroyQuestion",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/questions-destroy/30",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "questions-destroy",
+            "30"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "create_replay_questions",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"reply\" : \"test\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/questions/replay/3/2",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "questions",
+            "replay",
+            "3",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "destroyReply",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{token}}/api/questions/replay/1",
+          "host": [
+            "{{token}}"
+          ],
+          "path": [
+            "api",
+            "questions",
+            "replay",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "course_announcements",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/learning/corporate-career-advancement/announcements",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "learning",
+            "corporate-career-advancement",
+            "announcements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "show_order",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/orders/pTZJBMiLIM",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "orders",
+            "pTZJBMiLIM"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "show_quiz_attempt",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/quiz-attempts/3",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "quiz-attempts",
+            "3"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "destroy_review",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/reviews/1",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "reviews",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseURL",
+      "value": "",
+      "type": "default"
+    }
+  ]
+}

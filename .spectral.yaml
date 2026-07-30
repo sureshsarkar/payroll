@@ -1,0 +1,26 @@
+# Spectral linting config for docs/openapi.yaml.
+#
+# We start with the spectral:oas ruleset (OpenAPI 3 best practices) and
+# tune three rules that the existing API doesn't follow yet — better to
+# document the gap as INFO than fail CI on day one.
+
+extends: [[spectral:oas, all]]
+
+rules:
+  # All operations should have a description. We have summaries only on
+  # most endpoints — fine for now. Downgrade to warn so it surfaces in
+  # the report without failing the build.
+  operation-description: warn
+
+  # Operation tags should be present. We tag at the path level rather
+  # than the operation level for cleanliness — Spectral expects per-op.
+  operation-tag-defined: warn
+
+  # info.contact.url is recommended. We have name + email; URL can wait.
+  info-contact: warn
+
+  # All operations should have an operationId. Optional in OpenAPI 3,
+  # required by client-generation tooling. Warn until we generate
+  # mobile SDK code from this spec.
+  operation-operationId: warn
+

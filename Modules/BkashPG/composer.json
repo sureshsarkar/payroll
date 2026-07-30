@@ -1,0 +1,25 @@
+{
+    "name": "nwidart/bkashpg",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\BkashPG\\": "",
+            "Modules\\BkashPG\\App\\": "app/",
+            "Modules\\BkashPG\\Database\\Seeders\\": "database/seeders/"
+        }
+    }
+}

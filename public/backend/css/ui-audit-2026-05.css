@@ -1,0 +1,666 @@
+/* ─────────────────────────────────────────────────────────────────
+ * UI/UX Audit Fixes — 2026-05-29
+ *
+ * Single dedicated stylesheet bundling pure-CSS fixes from the
+ * 2026-05-29 corporate UI/UX audit. Loaded last in admin/frontend
+ * style chains so the rules override Bootstrap defaults where needed.
+ *
+ * What's in here:
+ *   P0-3  — Touch-target enlargement for icon-only buttons on mobile
+ *   P0-7  — Visual scroll indicator for .table-responsive containers
+ *
+ * Why a single file (not inline edits):
+ *   - Easy to remove if needed (no Blade churn)
+ *   - One cache-busting query string covers all audit CSS
+ *   - Visible in network panel as a single "ui-audit-2026-05.css"
+ *     line — auditable
+ *
+ * No CSS-preprocessor required. Plain CSS + custom properties.
+ * ───────────────────────────────────────────────────────────────── */
+
+/* ============================================================
+ * P0-3 — Mobile touch targets
+ *
+ * Audit finding: icon-only action buttons (.btn-sm with a single
+ * <i class="fa-*"> child) render at ~24×24 px on mobile, below the
+ * WCAG 2.5.5 Level AAA minimum of 44×44 px (we target 36 px as the
+ * practical floor without breaking dense admin tables).
+ *
+ * Scope: applies only at mobile breakpoint (≤768 px) — desktop UX
+ * preserved.
+ * ============================================================ */
+
+@media (max-width: 768px) {
+  /* All small buttons get a 36-px minimum height + tap-friendly
+   * padding. Affects icon-only and text-bearing equally — icon-only
+   * is the most visible win. */
+  .btn.btn-sm {
+    min-height: 36px;
+    min-width: 36px;
+    padding: 6px 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Icon-only buttons specifically — :has() supported on all modern
+   * mobile browsers (Chrome 105+, Safari 15.4+, Firefox 121+). The
+   * base .btn.btn-sm rule above is the fallback for any browser that
+   * doesn't support :has(). */
+  .btn.btn-sm:has(> i:only-child) {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 6px;
+  }
+
+  /* Pagination tap targets — same 36-px floor. */
+  .pagination .page-link {
+    min-width: 36px;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+  }
+
+  /* Action column spacing — buttons crammed together in dense tables
+   * need a bit of breathing room on mobile so each tap target is
+   * distinct. */
+  .table td .btn + .btn,
+  .table td a.btn + a.btn {
+    margin-left: 4px;
+  }
+
+  /* Native form controls — iOS triggers viewport zoom on focus when
+   * input font-size is below 16 px. Force 16 px on all text-type
+   * inputs to prevent the unwanted zoom. */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="time"],
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* ============================================================
+ * P0-7 — Scroll indicator for .table-responsive
+ *
+ * Audit finding: Bootstrap 4's .table-responsive wraps wide tables
+ * in horizontal scroll, but provides NO visual cue that more content
+ * exists past the right edge. Mobile users see the first 3 columns
+ * and assume that's everything.
+ *
+ * Fix: right-edge gradient mask + a small "swipe →" hint icon on the
+ * far right when the container is wider than its viewport. Pure CSS,
+ * no JS required.
+ *
+ * Implementation:
+ *   .table-responsive — relative positioning so we can pin the cue
+ *   .table-responsive::after — gradient mask + arrow
+ *
+ * The gradient is a fixed visual overlay; it does NOT change DOM
+ * order or scroll behavior. Users can still swipe past it.
+ * ============================================================ */
+
+.table-responsive {
+  position: relative;
+}
+
+/* Right-edge fade gradient — only visible when there's content to
+ * scroll to (we use ::after with right:0; if the table fits, it sits
+ * over the table edge invisibly; if the table overflows, it cues the
+ * user). On very wide tables we also show a small chevron. */
+.table-responsive::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 32px;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.85) 70%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  pointer-events: none;          /* don't block the table's scroll */
+  z-index: 1;
+  /* Show only on mobile where the cue actually matters; desktop
+   * users see the scrollbar by default and don't need the hint. */
+  opacity: 0;
+}
+
+@media (max-width: 768px) {
+  .table-responsive::after {
+    opacity: 1;
+  }
+}
+
+/* For dark-themed admin chrome (if the operator switches to dark
+ * mode), the gradient needs to fade to the dark background, not
+ * white. Use color-scheme to switch. */
+@media (prefers-color-scheme: dark) {
+  .table-responsive::after {
+    background: linear-gradient(
+      to right,
+      rgba(15, 23, 42, 0) 0%,
+      rgba(15, 23, 42, 0.85) 70%,
+      rgba(15, 23, 42, 0.95) 100%
+    );
+  }
+}
+
+/* Inline "swipe →" cue at the right edge — pinned to the top of the
+ * container, small enough not to be intrusive. Uses Unicode arrow
+ * (no fontawesome dependency required). */
+@media (max-width: 768px) {
+  .table-responsive::before {
+    content: '→';
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 2;
+    font-size: 14px;
+    line-height: 1;
+    color: rgba(0, 0, 0, 0.45);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 6px;
+    border-radius: 999px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+    pointer-events: none;
+    /* Animation: gentle nudge to draw the eye. */
+    animation: ui-audit-swipe-hint 2.4s ease-in-out infinite;
+  }
+
+  /* When the user starts scrolling, hide the hint — they got the
+   * message. We can't observe scroll position from pure CSS without
+   * IntersectionObserver, but :hover on the parent serves as a
+   * proxy for "user is interacting with this region". */
+  .table-responsive:hover::before,
+  .table-responsive:focus-within::before {
+    opacity: 0;
+    transition: opacity 200ms ease-out;
+  }
+}
+
+@keyframes ui-audit-swipe-hint {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(-4px); }
+}
+
+/* ============================================================
+ * Defensive: no fancy animation on prefers-reduced-motion
+ * ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .table-responsive::before {
+    animation: none;
+  }
+}
+
+/* ============================================================
+ * P1-2 — Color picker enhancement
+ *
+ * Brand-settings + site-color admin previously paired a small
+ * <input type="color"> with a text input but the picker swatch
+ * was the size of the text input's left padding — easy to miss.
+ *
+ * Container pattern: <div class="cs-color-input">
+ *                       <input type="color" ...>
+ *                       <input type="text" ...>
+ *                       <div class="cs-color-presets"> swatches </div>
+ *                    </div>
+ *
+ * The native picker swatch gets enlarged to 44×44 (WCAG floor +
+ * matches our touch-target rule) and visually paired with the
+ * text input. Preset swatches are optional below.
+ * ============================================================ */
+
+.cs-color-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.cs-color-input > input[type="color"] {
+  width: 44px;
+  height: 44px;
+  padding: 2px;
+  border: 1px solid var(--cs-color-border, #E2E8F0);
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  /* Remove the default browser bevel on native color input */
+  background: transparent;
+}
+
+.cs-color-input > input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.cs-color-input > input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 6px;
+}
+
+.cs-color-input > input[type="text"] {
+  flex: 1 1 120px;
+  min-width: 0;
+  /* Monospace for hex values — readable + signals "this is a code" */
+  font-family: ui-monospace, 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+  text-transform: uppercase;
+}
+
+.cs-color-presets {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.cs-color-presets button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--cs-color-border, #E2E8F0);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 100ms ease-out;
+}
+
+.cs-color-presets button:hover,
+.cs-color-presets button:focus-visible {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 2px var(--cs-brand-primary, #6366F1);
+}
+
+.cs-color-presets button:focus-visible {
+  outline: none;
+}
+
+/* ============================================================
+ * P1-3 — Sticky form actions bar
+ *
+ * Long forms (general-settings 30+ fields, course-create wizard,
+ * general-setting) hide the submit button below the fold. Operator
+ * fills out the form, can't see Save, scrolls looking for it, gets
+ * frustrated.
+ *
+ * Pattern: wrap action buttons in <div class="cs-form-actions cs-form-actions--sticky">.
+ *
+ * The sticky variant pins the action bar to the bottom of the
+ * viewport (NOT the page — `position: sticky`) so it travels with
+ * the user as they scroll. Includes a subtle top border + backdrop
+ * blur for visual separation from the form content above.
+ *
+ * Mobile: full-width, takes the safe-area inset on iOS notch
+ * devices so the Save button isn't behind the home indicator.
+ * ============================================================ */
+
+.cs-form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 16px 0;
+  margin-top: 24px;
+  border-top: 1px solid var(--cs-color-border, #E2E8F0);
+}
+
+.cs-form-actions--sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 16px 24px;
+  margin: 24px -24px 0;
+  border-top: 1px solid var(--cs-color-border, #E2E8F0);
+  box-shadow: 0 -1px 0 rgba(15, 23, 42, 0.04),
+              0 -4px 12px rgba(15, 23, 42, 0.04);
+}
+
+@media (max-width: 768px) {
+  .cs-form-actions--sticky {
+    /* Account for iOS safe-area inset (home indicator on Face-ID devices) */
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    margin-left: -16px;
+    margin-right: -16px;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .cs-form-actions {
+    flex-wrap: wrap;
+  }
+
+  /* Primary action takes the full width on mobile for thumb-friendly tap */
+  .cs-form-actions--mobile-stack > .cs-form-actions__primary {
+    width: 100%;
+    order: -1;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .cs-form-actions--sticky {
+    background: rgba(15, 23, 42, 0.92);
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* Visual indicator that the bar is sticky-pinned (small "↓" arrow that
+ * appears when the user has more form content below) — purely
+ * decorative, uses css-only IntersectionObserver via :has() if available. */
+.cs-form-actions--sticky::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--cs-color-border, #E2E8F0);
+}
+
+/* ============================================================
+ * P2-1 — Status badge modernization
+ *
+ * Bootstrap 4 syntax: .badge.badge-success / .badge-danger / etc.
+ * Modernized to softer, tinted pills with saturated text.
+ * NO HTML changes needed — pure cascade override.
+ * ============================================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+  line-height: 1.4;
+  border: 1px solid transparent;
+}
+
+.badge.badge-success, .badge.bg-success   { background-color: #DCFCE7; color: #065F46; border-color: #BBF7D0; }
+.badge.badge-danger,  .badge.bg-danger    { background-color: #FEE2E2; color: #991B1B; border-color: #FECACA; }
+.badge.badge-warning, .badge.bg-warning   { background-color: #FEF3C7; color: #92400E; border-color: #FDE68A; }
+.badge.badge-info,    .badge.bg-info      { background-color: #DBEAFE; color: #1E40AF; border-color: #BFDBFE; }
+.badge.badge-primary, .badge.bg-primary   { background-color: #E0E7FF; color: #3730A3; border-color: #C7D2FE; }
+.badge.badge-secondary, .badge.bg-secondary { background-color: #F1F5F9; color: #475569; border-color: #E2E8F0; }
+.badge.badge-light  { background-color: #F8FAFC; color: #334155; border-color: #E2E8F0; }
+.badge.badge-dark   { background-color: #0F172A; color: #F8FAFC; border-color: #1E293B; }
+
+.badge.badge--with-dot::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 6px;
+  background-color: currentColor;
+  vertical-align: middle;
+}
+
+@media (prefers-color-scheme: dark) {
+  .badge.badge-success, .badge.bg-success   { background-color: #064E3B; color: #6EE7B7; border-color: #065F46; }
+  .badge.badge-danger,  .badge.bg-danger    { background-color: #7F1D1D; color: #FCA5A5; border-color: #991B1B; }
+  .badge.badge-warning, .badge.bg-warning   { background-color: #78350F; color: #FCD34D; border-color: #92400E; }
+  .badge.badge-info,    .badge.bg-info      { background-color: #1E3A8A; color: #93C5FD; border-color: #1E40AF; }
+  .badge.badge-primary, .badge.bg-primary   { background-color: #312E81; color: #A5B4FC; border-color: #3730A3; }
+  .badge.badge-secondary, .badge.bg-secondary { background-color: #1E293B; color: #94A3B8; border-color: #334155; }
+}
+
+/* ============================================================
+ * P2-6 — Skeleton loader pattern
+ *
+ * Pages that fetch data via AJAX or htmx need a placeholder
+ * shape while loading. Pure CSS — no JS required.
+ *
+ * Usage:
+ *   <div class="cs-skeleton" style="width:120px; height:14px;"></div>
+ *   <span class="cs-skeleton cs-skeleton--text"></span>
+ *   <div class="cs-skeleton cs-skeleton--circle"
+ *        style="width:48px;height:48px;"></div>
+ *   <table>
+ *     <tr class="cs-skeleton-row"><td colspan="N"></td></tr>
+ *   </table>
+ *
+ * The shimmer animation is a 2-second gradient slide. Honors
+ * prefers-reduced-motion (replaces shimmer with a static color).
+ * ============================================================ */
+
+.cs-skeleton {
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    #E2E8F0 0%,
+    #F1F5F9 50%,
+    #E2E8F0 100%
+  );
+  background-size: 200% 100%;
+  border-radius: 4px;
+  animation: cs-skeleton-shimmer 1.6s ease-in-out infinite;
+  /* Defensive: if no width/height is set inline, fall back to a
+   * visible default so the skeleton at least renders something. */
+  min-height: 14px;
+  min-width: 40px;
+}
+
+.cs-skeleton--text {
+  display: block;
+  height: 14px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.cs-skeleton--text:last-child {
+  margin-bottom: 0;
+  width: 60%;          /* last line of a paragraph reads shorter */
+}
+
+.cs-skeleton--circle {
+  border-radius: 50%;
+}
+
+.cs-skeleton-row td {
+  /* 60-px tall row, shimmer fills the full width */
+  padding: 18px 16px;
+}
+
+.cs-skeleton-row td::before {
+  content: '';
+  display: block;
+  height: 14px;
+  background: linear-gradient(
+    90deg,
+    #E2E8F0 0%,
+    #F1F5F9 50%,
+    #E2E8F0 100%
+  );
+  background-size: 200% 100%;
+  border-radius: 4px;
+  animation: cs-skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes cs-skeleton-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cs-skeleton,
+  .cs-skeleton-row td::before {
+    animation: none;
+    background: #E2E8F0;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .cs-skeleton,
+  .cs-skeleton-row td::before {
+    background: linear-gradient(
+      90deg,
+      #1E293B 0%,
+      #334155 50%,
+      #1E293B 100%
+    );
+    background-size: 200% 100%;
+  }
+}
+
+/* ============================================================
+ * Doc-C-Nav (2026-05-29) — Auth + landing top nav contrast
+ *
+ * Top-nav menu items (Home / About Us / Coaches / Contact Us)
+ * were rendering as ghost text against the light gradient bg
+ * on login / register / landing pages. Force readable color +
+ * weight; keep coach brand on hover.
+ * ============================================================ */
+
+.tgmenu__navbar-wrap .navigation > li > a {
+  /*color: #0F172A;*/
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 150ms ease-out;
+}
+
+.tgmenu__navbar-wrap .navigation > li > a:hover,
+.tgmenu__navbar-wrap .navigation > li > a:focus-visible,
+.tgmenu__navbar-wrap .navigation > li.active > a {
+  color: var(--tg-theme-primary, #6366F1);
+}
+
+.tgmenu__action .btn-outline-light,
+.tgmenu__action a.btn-outline-light {
+  color: #0F172A;
+  border-color: rgba(15, 23, 42, 0.25);
+  font-weight: 600;
+}
+
+.tgmenu__action .btn-outline-light:hover,
+.tgmenu__action a.btn-outline-light:hover {
+  background: rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.4);
+}
+
+/* ============================================================
+ * Doc-C-LiveClassUI (2026-05-29) — live classes table polish
+ *
+ * User screenshot annotation: 'UI not good' on (a) the status
+ * column where the LIVE pill + the d-none live-attendance-pulse
+ * were stacking awkwardly, and (b) the Actions column where the
+ * Join button was getting clipped to "Jo".
+ *
+ * Fixes:
+ *   - Status column gets a min-width so pills don't squeeze
+ *   - .d-none on .live-attendance-pulse properly removes it from
+ *     layout (was visible because the parent flex computed a gap
+ *     even on display: none children in some browsers)
+ *   - Join CTA gets min-width + white-space: nowrap so the label
+ *     never gets clipped to "Jo"
+ * ============================================================ */
+
+#liveClasses td[data-label="Status"],
+#liveClasses td[data-label="स्थिति"] {
+  min-width: 160px;
+}
+
+#liveClasses .live-attendance-pulse.d-none {
+  display: none !important;     /* belt-and-suspenders */
+}
+
+#liveClasses .lc-live + .live-attendance-pulse {
+  margin-top: 4px;
+  /* When both LIVE and in-meeting are visible, stack rather than
+   * wrap mid-pill on narrow viewports. */
+}
+
+#liveClasses .corp-actions__btn[href*="instructor.live-class"],
+#liveClasses .corp-actions a[href*="/live-class/"] {
+  min-width: 78px;
+  white-space: nowrap;
+  text-align: center;
+  justify-content: center;
+}
+
+/* ============================================================
+   2026-06-01 RESPONSIVE AUDIT (RWD-admin) — phone overflow containment
+
+   The Stisla admin navbar keeps all its items inline (page title,
+   menu search, "Visit Website", notification bell, user dropdown) and
+   the footer copyright doesn't wrap, so EVERY admin page leaked a
+   ~78px horizontal page scroll at 320px / ~29px at 375px. These rules
+   let the chrome reflow on phones. Desktop is untouched (≥576px).
+   ============================================================ */
+@media (max-width: 575.98px) {
+  /* Navbar: wrap instead of forcing a single inline row wider than the
+     viewport. The menu search drops to its own full-width line. */
+  .main-navbar {
+    flex-wrap: wrap;
+    height: auto;
+    row-gap: 4px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  .main-navbar .search-box {
+    order: 5;
+    flex: 1 1 100%;
+    margin-left: 0 !important;
+  }
+  .main-navbar .search-box .form-control { width: 100%; }
+
+  /* Long page titles must not push the row wide. */
+  .page-title-new {
+    font-size: 18px !important;
+    margin-left: 8px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 46vw;
+  }
+
+  /* The navbar avatar can blow the user dropdown — and the whole navbar
+     — past a phone viewport in two ways: a Stisla rule pins it to 45px
+     !important, and (when the avatar file 404s) Chrome renders the
+     <img alt="… avatar"> text, which OVERFLOWS the box. Fix both:
+       - match Stisla's specificity (.nav-link.nav-link-user) so our
+         !important actually wins, and pin a compact 30px box;
+       - font-size:0 collapses any broken-image alt text so it can't
+         spill across the navbar. (Harmless when the avatar loads.) */
+  .main-navbar .nav-link.nav-link-user img {
+    width: 30px !important;
+    height: 30px !important;
+    object-fit: cover;
+    font-size: 0 !important;
+    overflow: hidden;
+  }
+
+  /* Footer copyright must wrap rather than overflow. */
+  .main-footer {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  .main-footer .footer-left {
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  /* Final safety net: clip any residual gutter bleed inside the content
+     column. `clip` (not hidden) keeps position:sticky working, and the
+     navbar dropdowns live OUTSIDE .main-content so they're unaffected.
+     Inner .table-responsive scrollers keep their own horizontal scroll. */
+  .main-content { overflow-x: clip; }
+}

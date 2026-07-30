@@ -1,0 +1,11 @@
+{
+    "name": "MercadoPagoPG",
+    "alias": "mercadopagopg",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\MercadoPagoPG\\app\\Providers\\MercadoPagoPGServiceProvider"
+    ],
+    "files": []
+}

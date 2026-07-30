@@ -1,0 +1,58 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    # Baseline file — 2,412 existing errors at level 4 captured on
+    # 2026-05-29. New code MUST NOT add to this. Burn-down policy
+    # documented in docs/STATIC_ANALYSIS_PLAYBOOK_2026-05-29.md.
+    - phpstan-baseline.neon
+
+parameters:
+    # Start at level 4 — pragmatic floor for a mature Laravel codebase.
+    # Level 4 catches: undefined methods/properties, wrong arg types on
+    # function calls, dead code, dead catches. Level 5-9 raise the bar
+    # to strict types and generics; ratcheting up after the level-4
+    # baseline is clean is the standard playbook.
+    level: 4
+
+    paths:
+        - app
+        - Modules
+
+    # Excluded paths — third-party module trees we don't author and
+    # dev-only scratch.
+    excludePaths:
+        - app/Http/Middleware/Authenticate.php   # framework template
+        - app/Console/Kernel.php
+        - vendor
+        - storage
+        - bootstrap/cache
+        - node_modules
+        - public
+        # nWidart module models with empty newFactory() — Larastan
+        # complains about every one because the framework synthesizes
+        # the factory at runtime. Excluding the individual files is
+        # the only path PHPStan accepts (ignoreErrors fails with
+        # "cannot be ignored, use excludePaths").
+        - Modules/ContactMessage/app/Models/ContactMessage.php
+        - Modules/Coupon/app/Models/Coupon.php
+        - Modules/Coupon/app/Models/CouponHistory.php
+        - Modules/Course/app/Models/CourseFilterOption.php
+        - Modules/Customer/app/Models/BannedHistory.php
+        - Modules/GlobalSetting/app/Models/CustomPagination.php
+        - Modules/GlobalSetting/app/Models/SeoSetting.php
+        - Modules/NewsLetter/app/Models/NewsLetter.php
+        - Modules/PaymentWithdraw/app/Models/WithdrawMethod.php
+
+    # Larastan-specific tweaks.
+    checkModelProperties: true
+    checkOctaneCompatibility: false
+
+    # Treat unmatched ignore rules as errors so the ignore-list doesn't
+    # grow stale silently.
+    reportUnmatchedIgnoredErrors: true
+
+    # Tune for memory headroom — large module tree.
+    parallel:
+        processTimeout: 300.0
+        maximumNumberOfProcesses: 4
+
+

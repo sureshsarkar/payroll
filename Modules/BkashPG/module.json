@@ -1,0 +1,11 @@
+{
+    "name": "BkashPG",
+    "alias": "bkashpg",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\BkashPG\\app\\Providers\\BkashPGServiceProvider"
+    ],
+    "files": []
+}

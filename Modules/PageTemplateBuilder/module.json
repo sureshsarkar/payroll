@@ -1,0 +1,11 @@
+{
+    "name": "PageTemplateBuilder",
+    "alias": "pagetemplatebuilder",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\PageTemplateBuilder\\app\\Providers\\PageTemplateBuilderServiceProvider"
+    ],
+    "files": []
+}

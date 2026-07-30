@@ -1,0 +1,111 @@
+# --- Dependencies ---
+/vendor
+/node_modules
+
+# --- Build output / dev caches ---
+/.phpunit.cache
+/.phpunit.result.cache
+/public/build
+/public/hot
+/public/storage
+
+# --- Storage runtime ---
+/storage/*.key
+/storage/app/Yoga
+/storage/app/backup-temp
+/storage/app/public
+/storage/app/purifier
+/storage/app/user_*
+/storage/framework/cache/*
+!/storage/framework/cache/.gitignore
+!/storage/framework/cache/data
+/storage/framework/cache/data/*
+!/storage/framework/cache/data/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+/storage/framework/testing/*
+!/storage/framework/testing/.gitignore
+/storage/logs/*
+!/storage/logs/.gitignore
+
+# --- Secrets & creds ---
+.env
+.env.backup
+.env.production
+.env.*.local
+# P0-3 (2026-05-29) — `.env.bak.*` was not covered by the patterns
+# above, and a historical .env.bak.before-localhost-zoom slipped into
+# git tracking with a leaked APP_KEY. Catch all .env.bak.* variants.
+.env.bak*
+auth.json
+
+# --- Project-specific (not committed) ---
+mbs.rar
+mbs.sql
+db/
+mbs/
+_decom_*
+*.zip
+*.tar.gz
+*.7z
+mbs_backup.zip
+# Catch-all for accidentally-dropped SQL dumps (phpMyAdmin exports etc.)
+# A real schema migration belongs under database/migrations/ — never as a
+# loose .sql in the project root.
+/*.sql
+
+# --- Database backups (P0-1, 2026-05-29) ---
+# storage/backups/ accumulates SQL dumps from spatie/laravel-backup and from
+# manual operator dumps. These contain full PII (password hashes, bearer
+# tokens, 2FA secrets, payment metadata) and MUST NEVER be committed.
+# A historical 211MB dump was committed in 5c40797 — operator coordination
+# is required to purge it from history via git filter-repo. Until then,
+# this ignore at least prevents NEW backups from being tracked.
+/storage/backups/
+!/storage/backups/.gitignore
+
+# --- User uploads (shouldn't live in repo) ---
+/public/uploads/*
+!/public/uploads/.gitignore
+!/public/uploads/.htaccess
+
+# --- Editor / OS ---
+/.fleet
+/.idea
+/.vscode
+/.claude
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- Laravel-specific ---
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+
+# --- Vendor test fixtures we don't need ---
+/vendor/srmklive/paypal/tests/Mocks/samples
+
+# --- Playwright E2E (2026-05-29) ---
+# Storage state (logged-in cookies) is regenerated per CI/dev run by
+# auth.setup.ts — never commit it (leaks session cookies). Report and
+# raw artifacts are too noisy + too large to commit.
+/tests/e2e/.auth/
+/tests/e2e/_report/
+/test-results/
+/playwright-report/
+
+# --- Code coverage (2026-05-29) ---
+# phpunit --coverage-* outputs. HTML report can be 100+ MB on a full
+# run; Clover XML is uploaded to CI as an artifact instead.
+/storage/coverage/
+
+# --- Payroll conversion baseline: exclude bulky user media from code repo ---
+/public/uploads
+/slidus.com
+*.sql
+*.bak
+*.zip

@@ -1,0 +1,32 @@
+{
+    "name": "nwidart/mercadopagopg",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\MercadoPagoPG\\": "",
+            "Modules\\MercadoPagoPG\\App\\": "app/",
+            "Modules\\MercadoPagoPG\\Database\\Factories\\": "database/factories/",
+            "Modules\\MercadoPagoPG\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\MercadoPagoPG\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "mercadopago/dx-php": "^3.0"
+    }
+}

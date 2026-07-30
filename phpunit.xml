@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <!--
+        Code coverage report config used when running phpunit with
+        coverage-html or coverage-clover. The source directive scopes
+        coverage to first-party app code and excludes infrastructure
+        we do not want to measure (migrations, seeders, dev helpers).
+    -->
+    <source>
+        <include>
+            <directory>app</directory>
+            <directory>Modules</directory>
+        </include>
+        <exclude>
+            <directory>app/Console/Commands/AuditSmoke.php</directory>
+            <directory>database/migrations</directory>
+            <directory>database/seeders</directory>
+            <directory>Modules/*/database</directory>
+            <directory>vendor</directory>
+        </exclude>
+    </source>
+    <coverage>
+        <report>
+            <html outputDirectory="storage/coverage/html"/>
+            <clover outputFile="storage/coverage/clover.xml"/>
+            <text outputFile="storage/coverage/text.txt" showUncoveredFiles="false" showOnlySummary="true"/>
+        </report>
+    </coverage>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="CACHE_DRIVER" value="array"/>
+        <!--
+            Force tests onto a SEPARATE database. tests/TestCase::setUp() also
+            hard-aborts if DB_DATABASE matches the production name as defense
+            in depth. SQLite in-memory is incompatible with audit tests that
+            use raw MySQL DDL (SHOW COLUMNS, enum syntax), so we point at a
+            sibling MySQL DB. Create it once with:
+                CREATE DATABASE mbs_test;
+            then sync schema with mysqldump no-data from mbs.
+        -->
+        <env name="DB_DATABASE" value="mbs_test"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="TELESCOPE_ENABLED" value="false"/>
+    </php>
+</phpunit>

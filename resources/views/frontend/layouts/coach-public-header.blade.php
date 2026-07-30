@@ -1,0 +1,358 @@
+{{--
+    2026-06-11 — Coach-branded header for PLATFORM-themed pages reached on a
+    coach domain (e.g. /course/{slug} course detail, which extends the platform
+    master). It renders the EXACT same `cs-nav` markup the coach home page uses
+    and injects only the scoped `cs-` nav CSS (brand vars + nav + buttons + FA5
+    shim) so the header is pixel-identical across the whole coach site —
+    resolving the home-vs-course-detail inconsistency. The cs- classes never
+    collide with the platform theme (different names), and the brand
+    expressions mirror the coach master verbatim so colours/name match exactly.
+
+    The course-detail BODY keeps the platform theme it was built for; we also
+    add a scoped "corporate" polish for that body. Shown only when
+    resolved_coach_id > 0 — the platform domain is unchanged.
+--}}
+@php
+    $coachId   = (int) request()->attributes->get('resolved_coach_id');
+
+    // Brand — real Brand accessors (audit 2026-06-12). Name falls back to the
+    // coach's own name when no brand row exists, so a coach domain never shows
+    // the platform name; logo gated on ownLogo && !isPlatformDefault so the
+    // platform logo can never leak here.
+    $brandName = (! ($brand->isPlatformDefault ?? true) && !empty($brand->name)) ? $brand->name : null;
+    if (empty($brandName)) {
+        $coachUser = $coachId ? \App\Models\User::find($coachId) : null;
+        $brandName = $coachUser->name ?? ($brand->name ?? config('app.name'));
+    }
+    $primary   = $brand->primaryColor ?? '#6366F1';
+    $accent    = $brand->accentColor  ?? '#8B5CF6';
+    $brandLogo = (($brand->ownLogo ?? false) && ! ($brand->isPlatformDefault ?? false) && method_exists($brand, 'logoUrl'))
+        ? $brand->logoUrl()
+        : null;
+    $brandHomeUrl = url('/');
+
+    try {
+        $chCartCount = auth()->check()
+            ? (int) (auth()->user()->cart_count ?? 0)
+            : \Gloudemans\Shoppingcart\Facades\Cart::content()->count();
+    } catch (\Throwable $e) { $chCartCount = 0; }
+
+    // The coach's GLOBAL menu — reuse the EXACT source the coach home/site nav
+    // uses (custom Menu Builder with dropdowns/mega menus, else the page-derived
+    // nav) via the public navForCoach() helper, so this course-detail header is
+    // identical to every other page and stays in sync when the coach edits their
+    // menu. Defensive: any failure → empty, and the markup below falls back to
+    // Home/Courses so the header can never break the page.
+    $chCoachSlug = \App\Models\CoachLandingPage::where('added_by', $coachId)->value('slug');
+    $chNav = [];
+    try {
+        $chSite = \App\Models\CoachLandingPage::where('added_by', $coachId)->orderBy('id')->first();
+        $chNav  = app(\App\Http\Controllers\Frontend\CoachSitePublicController::class)
+            ->navForCoach($coachId, $chSite);
+    } catch (\Throwable $e) { $chNav = []; }
+
+    // Contact CTA — honour the coach's OWN setting (coach_site_settings), exactly
+    // like the coach-site header: show only when nav_show_cta is on AND a valid
+    // URL exists. Previously this read the GLOBAL platform $setting and always
+    // rendered, so the button showed on course-detail even when the coach hid it.
+    $chSettings = \App\Models\CoachSiteSettings::where('coach_id', $coachId)->first();
+    $chShowCta  = $chSettings && $chSettings->nav_show_cta && !empty($chSettings->nav_cta_url);
+    $chCtaText  = $chSettings->nav_cta_text ?? null;
+    $chCtaUrl   = $chSettings->nav_cta_url ?? '#';
+@endphp
+
+<style nonce="{{ csp_nonce() }}">
+    /* Brand tokens scoped to the header (no platform :root pollution). */
+    .cs-nav {
+        --brand-primary: {{ $primary }};
+        --brand-accent:  {{ $accent }};
+        --brand-text:    #0F172A;
+        --brand-muted:   #475569;
+        --brand-border:  #E2E8F0;
+        --brand-grad:    linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-accent) 100%);
+        --cs-sh-brand:   0 14px 36px rgba(99, 102, 241, 0.28);
+    }
+
+    /* ── cs-nav (copied verbatim from coach-site.css, cs- namespaced) ── */
+    .cs-container { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+    .cs-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 13px 26px; border-radius: 999px;
+        font-weight: 600; font-size: 15px; border: 2px solid transparent;
+        cursor: pointer; transition: transform .15s, box-shadow .2s, background .2s, filter .2s;
+        text-decoration: none; font-family: inherit; letter-spacing: -0.005em; line-height: 1;
+    }
+    .cs-btn:hover { text-decoration: none; transform: translateY(-2px); }
+    .cs-btn--primary { background: var(--brand-grad); color: #fff; box-shadow: var(--cs-sh-brand); }
+    .cs-btn--primary:hover { color: #fff; filter: brightness(1.08); box-shadow: 0 18px 44px rgba(99,102,241,.35); }
+    .cs-btn--outline { background: transparent; color: var(--brand-text); border: 2px solid var(--brand-border); }
+    .cs-btn--outline:hover { border-color: var(--brand-text); }
+    .cs-btn--sm { padding: 9px 18px; font-size: 13.5px; }
+
+    .cs-nav {
+        position: sticky; top: 0; z-index: 50;
+        background: rgba(255,255,255,.86);
+        backdrop-filter: saturate(180%) blur(14px); -webkit-backdrop-filter: saturate(180%) blur(14px);
+        border-bottom: 1px solid var(--brand-border);
+    }
+    .cs-nav__inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 28px; gap: 28px; }
+    .cs-nav__brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .cs-nav__brand img { max-height: 40px; }
+    .cs-nav__brand span { font-family: 'Plus Jakarta Sans','Inter',sans-serif; font-weight: 800; font-size: 20px; color: var(--brand-text); letter-spacing: -0.02em; }
+    .cs-nav__links { display: flex; gap: 32px; align-items: center; }
+    .cs-nav__links a { color: var(--brand-text); font-weight: 500; font-size: 15px; letter-spacing: -0.005em; position: relative; text-decoration: none; }
+    .cs-nav__links a::after { content: ''; position: absolute; bottom: -6px; left: 0; right: 0; height: 2px; background: var(--brand-grad); border-radius: 2px; transform: scaleX(0); transform-origin: left; transition: transform .2s; }
+    .cs-nav__links a:hover::after, .cs-nav__links a[aria-current="page"]::after { transform: scaleX(1); }
+    .cs-nav__links a[aria-current="page"] { color: var(--brand-primary); }
+
+    /* ── Dropdown + mega menu (mirrors coach-site.css so the course-detail nav
+          behaves exactly like the coach home nav: Menu Builder dropdowns/mega). ── */
+    .cs-nav__item { position: relative; display: inline-flex; align-items: center; }
+    .cs-nav__toplink { display: inline-flex; align-items: center; gap: 6px; color: var(--brand-text); font-weight: 500; font-size: 15px; cursor: pointer; }
+    .cs-nav__toplink.is-active { color: var(--brand-primary); }
+    .cs-nav__caret { font-size: 10px; transition: transform .18s ease; opacity: .7; }
+    .cs-nav__has-children:hover .cs-nav__caret, .cs-nav__has-children:focus-within .cs-nav__caret { transform: rotate(180deg); }
+    .cs-nav__dropdown {
+        position: absolute; top: 100%; left: 0; min-width: 200px;
+        background: #fff; border: 1px solid var(--brand-border); border-radius: 12px;
+        box-shadow: 0 16px 40px rgba(16,24,40,.12); padding: 8px;
+        display: flex; flex-direction: column; gap: 2px;
+        opacity: 0; visibility: hidden; transform: translateY(8px);
+        transition: opacity .16s ease, transform .16s ease, visibility .16s; z-index: 60;
+    }
+    .cs-nav__has-children:hover .cs-nav__dropdown,
+    .cs-nav__has-children:focus-within .cs-nav__dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+    .cs-nav__dropdown a {
+        padding: 10px 13px; border-radius: 9px; font-size: 14px; font-weight: 500;
+        color: var(--brand-text); white-space: nowrap; display: flex; align-items: center; gap: 8px;
+        transition: background .15s ease, color .15s ease, padding-left .15s ease;
+    }
+    .cs-nav__dropdown a::after { display: none !important; }
+    .cs-nav__dropdown a:hover { padding-left: 17px; background: var(--brand-muted, #f4f5fb); color: var(--brand-primary); }
+    .cs-nav__has-mega { position: relative; }
+    .cs-nav__mega {
+        position: absolute; top: 100%; left: 0;
+        background: #fff; border: 1px solid var(--brand-border); border-radius: 14px;
+        box-shadow: 0 20px 50px rgba(16,24,40,.14); padding: 22px 26px;
+        opacity: 0; visibility: hidden; transform: translateY(8px);
+        transition: opacity .16s ease, transform .16s ease, visibility .16s; z-index: 60;
+    }
+    .cs-nav__has-mega:hover .cs-nav__mega,
+    .cs-nav__has-mega:focus-within .cs-nav__mega { opacity: 1; visibility: visible; transform: translateY(0); }
+    .cs-nav__mega-inner { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 22px 34px; min-width: 480px; max-width: 780px; }
+    .cs-nav__mega-h { display: block; font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--brand-primary); margin-bottom: 11px; }
+    a.cs-nav__mega-h:hover { text-decoration: underline; }
+    .cs-nav__mega-h::after { display: none; }
+    .cs-nav__mega-links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+    .cs-nav__mega-links a { color: var(--brand-text); font-size: 14px; font-weight: 500; }
+    .cs-nav__mega-links a::after { display: none; }
+    .cs-nav__mega-links a:hover { color: var(--brand-primary); }
+    .cs-nav__dropdown-label { padding: 9px 12px 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #9aa0bc; }
+    .cs-nav__links .cs-nav__item:last-child .cs-nav__mega,
+    .cs-nav__links .cs-nav__item:nth-last-child(2) .cs-nav__mega { left: auto; right: 0; }
+    @media (max-width: 640px) {
+        .cs-nav-open .cs-nav__item, .cs-nav-open .cs-nav__has-mega { display: block; width: 100%; }
+        .cs-nav-open .cs-nav__dropdown, .cs-nav-open .cs-nav__mega {
+            position: static; opacity: 1; visibility: visible; transform: none;
+            box-shadow: none; border: 0; border-left: 2px solid var(--brand-border);
+            border-radius: 0; margin: 6px 0 6px 10px; padding: 4px 0 4px 10px; min-width: 0;
+        }
+        .cs-nav-open .cs-nav__mega-inner { display: block; min-width: 0; max-width: none; }
+        .cs-nav-open .cs-nav__mega-col { margin-bottom: 14px; }
+        .cs-nav-open .cs-nav__caret { display: none; }
+    }
+
+    /* FA6 → FA5 shim (platform bundles FA5; cs-nav authors FA6 names). */
+    .cs-nav .fa-solid, .cs-nav .fa-regular { font-family: 'Font Awesome 5 Free' !important; }
+    .cs-nav .fa-solid { font-weight: 900; }
+    .cs-nav .fa-cart-shopping::before { content: '\f07a'; }
+    .cs-nav .fa-bars::before { content: '\f0c9'; }
+
+    .cs-nav__cart { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 999px; background: transparent; color: var(--brand-text); font-size: 17px; transition: background .15s, color .15s, transform .15s; text-decoration: none; margin-right: 4px; border: 0; cursor: pointer; }
+    .cs-nav__cart:hover { background: color-mix(in srgb, var(--brand-primary) 10%, transparent); color: var(--brand-primary); transform: translateY(-1px); }
+    .cs-nav__cart-count { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--brand-primary,#6366F1); color: #fff; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(99,102,241,.35); line-height: 1; }
+    .cs-nav__cart-count.is-zero { display: none; }
+    .cs-nav__toggle { display: none; background: none; border: 0; font-size: 22px; cursor: pointer; color: var(--brand-text); }
+    .cs-nav-open .cs-nav__links { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: #fff; padding: 20px 28px; border-bottom: 1px solid var(--brand-border); gap: 14px; z-index: 50; }
+    @media (max-width: 640px) {
+        .cs-container { padding: 0 20px; }
+        .cs-nav__links { display: none; }
+        .cs-nav__toggle { display: inline-block; }
+    }
+
+    /* ─── Corporate polish for the platform course-detail BODY (scoped to
+           course-detail classes only; brand-coloured via --cpub). ─── */
+    :root { --cpub: {{ $primary }}; --cpub-accent: {{ $accent }}; }
+    .courses__details-thumb img { border-radius: 16px; }
+    a.popup-video { background: rgba(255,255,255,.92) !important; color: var(--cpub) !important; box-shadow: 0 8px 28px rgba(16,24,40,.22) !important; border: none !important; }
+    a.popup-video i { color: var(--cpub) !important; }
+    .nav-tabs { border-bottom: 1px solid #EAECF0 !important; gap: 6px; }
+    .nav-tabs .nav-link { border: none !important; background: transparent !important; color: #667085 !important; font-weight: 600 !important; padding: 12px 20px !important; position: relative; }
+    .nav-tabs .nav-link:hover { color: var(--cpub) !important; }
+    .nav-tabs .nav-link.active { color: var(--cpub) !important; background: transparent !important; }
+    .nav-tabs .nav-link.active::after { content: ''; position: absolute; left: 14px; right: 14px; bottom: -1px; height: 3px; background: var(--cpub); border-radius: 3px 3px 0 0; }
+    .courses__details-sidebar { border: 1px solid #EAECF0 !important; border-radius: 16px !important; box-shadow: 0 6px 24px rgba(16,24,40,.06) !important; overflow: hidden; background: #fff; }
+    .courses__cost-wrap { background: linear-gradient(135deg, var(--cpub), var(--cpub-accent)) !important; border-radius: 14px !important; padding: 22px 24px !important; color: #fff !important; box-shadow: 0 8px 24px rgba(99,102,241,.28) !important; }
+    .courses__cost-wrap span { color: rgba(255,255,255,.85) !important; }
+    .courses__cost-wrap .title { color: #fff !important; font-weight: 800 !important; }
+    .courses__cost-wrap del { color: rgba(255,255,255,.6) !important; }
+    .courses__information-wrap .list-wrap > li { padding: 13px 0 !important; border-bottom: 1px solid #F2F4F7 !important; color: #475467; }
+    .courses__information-wrap .title { color: #101828 !important; font-weight: 700 !important; }
+    .courses__details-enroll .btn, .courses__details-enroll .btn-two, .courses__details-enroll .add-to-cart, .courses__details-content .add-to-cart {
+        background: var(--cpub) !important; background-image: none !important; border: none !important; color: #fff !important;
+        border-radius: 10px !important; font-weight: 600 !important; padding: 14px 24px !important; width: 100%; justify-content: center;
+        box-shadow: 0 2px 6px rgba(16,24,40,.12) !important; transition: filter .15s, box-shadow .15s, transform .05s !important;
+    }
+    .courses__details-enroll .btn::after, .courses__details-enroll .btn-two::after, .courses__details-enroll .add-to-cart::after { display: none !important; }
+    .courses__details-enroll .btn:hover, .courses__details-enroll .btn-two:hover, .courses__details-enroll .add-to-cart:hover { filter: brightness(1.07) !important; box-shadow: 0 6px 18px rgba(99,102,241,.3) !important; }
+    .courses__details-enroll .btn-four { background: #fff !important; color: var(--cpub) !important; border: 1.5px solid var(--cpub) !important; box-shadow: none !important; }
+
+    /* ── Coach GLOBAL footer (2026-07-16) — coach-site.css isn't loaded on
+          platform-themed pages, so the injected global footer would render
+          unstyled with tofu brand icons (page bundles FA5, footer uses FA6
+          `.fa-brands` class names). Inline the scoped cs-footer styles + an
+          FA5 brands/solid shim so the footer looks identical to every other
+          coach page. Scoped to .cs-footer → platform domain is never touched. ── */
+    .cs-footer {
+        --brand-grad: linear-gradient(135deg, {{ $primary }} 0%, {{ $accent }} 100%);
+        --cs-sh-brand: 0 14px 36px rgba(99,102,241,.28);
+        background: #0F172A; color: #94A3B8; padding: 70px 0 0; margin-top: 40px;
+    }
+    .cs-footer .fa-brands { font-family: 'Font Awesome 5 Brands' !important; font-weight: 400; }
+    .cs-footer .fa-solid, .cs-footer .fa-regular { font-family: 'Font Awesome 5 Free' !important; }
+    .cs-footer .fa-solid { font-weight: 900; }
+    .cs-footer__grid { display: grid; grid-template-columns: 1.5fr repeat(3, 1fr); gap: 50px; padding-bottom: 50px; }
+    .cs-footer__logo { max-height: 52px; margin-bottom: 16px; }
+    .cs-footer__name { color: #fff; font-family: 'Plus Jakarta Sans','Inter',sans-serif; font-size: 24px; margin: 0 0 14px; font-weight: 800; letter-spacing: -0.02em; }
+    .cs-footer__tag { color: #CBD5E1; font-size: 14px; line-height: 1.6; max-width: 320px; }
+    .cs-footer__col h4 { color: #fff; font-size: 12.5px; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 18px; font-weight: 700; }
+    .cs-footer__links { list-style: none; padding: 0; margin: 0; }
+    .cs-footer__links li { margin-bottom: 12px; }
+    .cs-footer__links a { color: #CBD5E1; font-size: 14px; transition: color .15s; }
+    .cs-footer__links a:hover { color: #fff; }
+    .cs-footer__bar { border-top: 1px solid #1E293B; padding: 24px 0; }
+    .cs-footer__bar-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .cs-footer__bar-inner span { color: #64748B; font-size: 13px; }
+    .cs-footer__social { display: flex; gap: 10px; margin-top: 20px; }
+    .cs-footer__social a { width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.08); color: #CBD5E1; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; text-decoration: none; transition: all .18s cubic-bezier(.4,0,.2,1); }
+    .cs-footer__social a:hover { background: var(--brand-grad); color: #fff; transform: translateY(-2px); box-shadow: var(--cs-sh-brand); }
+    @media (max-width: 920px) { .cs-footer__grid { grid-template-columns: 1fr; gap: 32px; } }
+</style>
+
+<header class="cs-nav">
+    <div class="cs-container cs-nav__inner">
+        <a href="{{ $brandHomeUrl }}" class="cs-nav__brand">
+            @if($brandLogo)
+                <img src="{{ $brandLogo }}" alt="{{ $brandName }}">
+            @else
+                <span>{{ $brandName }}</span>
+            @endif
+        </a>
+
+        <nav class="cs-nav__links">
+            @forelse($chNav as $n)
+                @if(!empty($n['children']) && ($n['layout'] ?? 'dropdown') === 'mega')
+                    {{-- MEGA MENU — wide multi-column panel (mirrors the coach home nav). --}}
+                    <div class="cs-nav__item cs-nav__has-children cs-nav__has-mega">
+                        <a href="{{ $n['url'] }}" class="cs-nav__toplink {{ ($n['active'] ?? false) ? 'is-active' : '' }}"
+                           @if(!empty($n['external'])) target="_blank" rel="noopener" @endif
+                           aria-haspopup="true" aria-expanded="false">
+                            {{ $n['label'] }} <i class="fa-solid fa-chevron-down cs-nav__caret" aria-hidden="true"></i>
+                        </a>
+                        <div class="cs-nav__mega" role="menu">
+                            <div class="cs-nav__mega-inner">
+                                @foreach($n['children'] as $col)
+                                    <div class="cs-nav__mega-col">
+                                        @if(($col['link_type'] ?? '') === 'none' || empty($col['url']))
+                                            <span class="cs-nav__mega-h">{{ $col['label'] }}</span>
+                                        @else
+                                            <a class="cs-nav__mega-h" href="{{ $col['url'] }}"
+                                               @if(!empty($col['external'])) target="_blank" rel="noopener" @endif>{{ $col['label'] }}</a>
+                                        @endif
+                                        @if(!empty($col['children']))
+                                            <ul class="cs-nav__mega-links">
+                                                @foreach($col['children'] as $lnk)
+                                                    <li><a href="{{ $lnk['url'] }}" role="menuitem"
+                                                           @if(!empty($lnk['external'])) target="_blank" rel="noopener" @endif
+                                                           @if($lnk['active'] ?? false) aria-current="page" @endif>{{ $lnk['label'] }}</a></li>
+                                                @endforeach
+                                            </ul>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @elseif(!empty($n['children']))
+                    {{-- Simple dropdown --}}
+                    <div class="cs-nav__item cs-nav__has-children">
+                        <a href="{{ $n['url'] }}" class="cs-nav__toplink {{ ($n['active'] ?? false) ? 'is-active' : '' }}"
+                           @if(!empty($n['external'])) target="_blank" rel="noopener" @endif
+                           aria-haspopup="true" aria-expanded="false">
+                            {{ $n['label'] }} <i class="fa-solid fa-chevron-down cs-nav__caret" aria-hidden="true"></i>
+                        </a>
+                        <div class="cs-nav__dropdown" role="menu">
+                            @foreach($n['children'] as $c)
+                                @if(($c['link_type'] ?? '') === 'none' || empty($c['url']))
+                                    <span class="cs-nav__dropdown-label">{{ $c['label'] }}</span>
+                                @else
+                                    <a href="{{ $c['url'] }}" role="menuitem"
+                                       @if(!empty($c['external'])) target="_blank" rel="noopener" @endif
+                                       @if($c['active'] ?? false) aria-current="page" @endif>{{ $c['label'] }}</a>
+                                @endif
+                            @endforeach
+                        </div>
+                    </div>
+                @else
+                    <a href="{{ $n['url'] }}"
+                       @if(!empty($n['external'])) target="_blank" rel="noopener" @endif
+                       @if(($n['active'] ?? false)) aria-current="page" @endif>{{ $n['label'] }}</a>
+                @endif
+            @empty
+                <a href="{{ url('/') }}">{{ __('Home') }}</a>
+                <a href="{{ route('courses') }}">{{ __('Courses') }}</a>
+            @endforelse
+        </nav>
+
+        <a href="{{ coachCommerceUrl('cart') }}" class="cs-nav__cart" aria-label="{{ __('Cart') }}" title="{{ __('View cart') }}">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span class="mini-cart-count cs-nav__cart-count{{ $chCartCount > 0 ? '' : ' is-zero' }}">{{ $chCartCount }}</span>
+        </a>
+
+        {{-- Login in the menu bar (matches the coach home cs-nav exactly):
+             guest → coach-branded login; logged-in → role-aware My account. --}}
+        @auth('web')
+            <a href="{{ auth('web')->user()->role === 'student' ? route('student.dashboard') : route('instructor.dashboard') }}"
+               class="cs-btn cs-btn--outline cs-btn--sm cs-nav__login">{{ __('My account') }}</a>
+        @else
+            <a href="{{ $chCoachSlug ? url('/coach/' . $chCoachSlug . '/login') : url('/login') }}"
+               class="cs-btn cs-btn--outline cs-btn--sm cs-nav__login">{{ __('Log in') }}</a>
+        @endauth
+        @if($chShowCta)
+            <a href="{{ $chCtaUrl }}" class="cs-btn cs-btn--primary cs-btn--sm cs-nav__cta">{{ $chCtaText ?: __('Contact') }}</a>
+        @endif
+
+        <button type="button" class="cs-nav__toggle" aria-label="{{ __('Open menu') }}" data-cs-nav-toggle>
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </div>
+</header>
+
+<script nonce="{{ csp_nonce() }}">
+    (function () {
+        // Cart badge: show/hide the instant the count text changes (theme JS
+        // sets $('.mini-cart-count').text(count) on add) — no refresh.
+        function syncBadge(el) {
+            var n = parseInt((el.textContent || '').trim(), 10);
+            if (isNaN(n)) n = 0;
+            el.classList.toggle('is-zero', n <= 0);
+        }
+        document.querySelectorAll('.cs-nav .mini-cart-count').forEach(function (el) {
+            syncBadge(el);
+            new MutationObserver(function () { syncBadge(el); }).observe(el, { childList: true, characterData: true, subtree: true });
+        });
+        // Mobile menu toggle (mirrors the coach home behaviour).
+        var t = document.querySelector('.cs-nav [data-cs-nav-toggle]');
+        if (t) t.addEventListener('click', function () { document.body.classList.toggle('cs-nav-open'); });
+    })();
+</script>
