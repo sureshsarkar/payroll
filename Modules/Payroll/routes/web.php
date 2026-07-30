@@ -42,5 +42,7 @@ Route::middleware(['web', 'auth:admin'])
     ->prefix('admin/payroll')
     ->name('admin.payroll.')
     ->group(function () {
+        Route::get('/', [PayrollController::class, 'adminIndex'])->name('index');
+        Route::get('{run}', [PayrollController::class, 'adminShow'])->name('show');
         Route::post('{run}/approve', [PayrollController::class, 'approve'])->name('approve');
     });

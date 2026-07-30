@@ -84,6 +84,16 @@
 
             @endif
 
+            {{-- Payroll conversion — Super Admin payroll approval --}}
+            @if (Route::has('admin.payroll.index'))
+                <li class="menu-header">{{ __('Payroll') }}</li>
+                <li class="{{ isRoute('admin.payroll.*', 'active') }}">
+                    <a class="nav-link" href="{{ route('admin.payroll.index') }}"><i class="fas fa-file-invoice-dollar"></i>
+                        <span>{{ __('Payroll Approvals') }}</span>
+                    </a>
+                </li>
+            @endif
+
             {{-- ───────────────────────────── COACHES ─────────────────────────────
                  2026-07-20 Phase 2 — regrouped to the approved 9-group structure.
                  Every block below is MOVED verbatim: its own @if / Module::isEnabled

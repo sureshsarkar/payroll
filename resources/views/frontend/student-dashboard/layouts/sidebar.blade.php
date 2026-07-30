@@ -479,6 +479,26 @@ margin-top: 10px;
                         {{ __('My Attendance') }}
                     </a>
                 </li>
+
+                {{-- Payroll conversion — Employee self-service --}}
+                <li class="{{ Route::is('employee.attendance.*') ? 'active' : '' }} m-0">
+                    <a href="{{ route('employee.attendance.my') }}">
+                        <i class="fas fa-calendar-check" style="color:#0ea5e9;"></i>
+                        {{ __('Attendance Sheet') }}
+                    </a>
+                </li>
+                <li class="{{ Route::is('employee.leave.*') ? 'active' : '' }} m-0">
+                    <a href="{{ route('employee.leave.index') }}">
+                        <i class="fas fa-plane-departure" style="color:#6366f1;"></i>
+                        {{ __('My Leave') }}
+                    </a>
+                </li>
+                <li class="{{ Route::is('employee.payslips.*') ? 'active' : '' }} m-0">
+                    <a href="{{ route('employee.payslips.index') }}">
+                        <i class="fas fa-file-invoice-dollar" style="color:#16a34a;"></i>
+                        {{ __('My Payslips') }}
+                    </a>
+                </li>
                 {{-- Phase 4C 2026-05-19 — Fee Management student view --}}
                 <li class="{{ Route::is('student.fees.*') ? 'active' : '' }} m-0">
                     <a href="{{ route('student.fees.index') }}">

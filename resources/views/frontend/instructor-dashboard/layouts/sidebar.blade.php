@@ -951,6 +951,40 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
         </ul>
     </details>
 
+    {{-- GROUP — PAYROLL & HR (LMS→Payroll conversion) ───────────── --}}
+    <details class="sb-group" data-sb-key="payroll-hr" open>
+        <summary class="sb-group__head">
+            <span>{{ __('Payroll & HR') }}</span>
+            <i class="bi bi-chevron-down sb-group__chev"></i>
+        </summary>
+        <ul class="sb-nav">
+            <li class="{{ Route::is('hr.attendance.*') ? 'active' : '' }}">
+                <a href="{{ route('hr.attendance.team') }}">
+                    <span class="sb-icon"><i class="bi bi-calendar-check"></i></span>
+                    <span>{{ __('Team Attendance') }}</span>
+                </a>
+            </li>
+            <li class="{{ Route::is('hr.leave.*') ? 'active' : '' }}">
+                <a href="{{ route('hr.leave.index') }}">
+                    <span class="sb-icon"><i class="bi bi-calendar2-week"></i></span>
+                    <span>{{ __('Leave Approvals') }}</span>
+                </a>
+            </li>
+            <li class="{{ Route::is('hr.salary.*') ? 'active' : '' }}">
+                <a href="{{ route('hr.salary.index') }}">
+                    <span class="sb-icon"><i class="bi bi-cash-stack"></i></span>
+                    <span>{{ __('Salary Structures') }}</span>
+                </a>
+            </li>
+            <li class="{{ Route::is('hr.payroll.*') ? 'active' : '' }}">
+                <a href="{{ route('hr.payroll.index') }}">
+                    <span class="sb-icon"><i class="bi bi-receipt"></i></span>
+                    <span>{{ __('Payroll Runs') }}</span>
+                </a>
+            </li>
+        </ul>
+    </details>
+
     {{-- GROUP 2 — ACADEMIC MANAGEMENT ──────────────────────────── --}}
     <details class="sb-group" data-sb-key="academic" open>
         <summary class="sb-group__head">

@@ -81,6 +81,23 @@ class PayrollController extends Controller
             $ok ? 'Payroll submitted for approval.' : 'Run cannot be submitted (empty or already submitted).');
     }
 
+    /** Super Admin: company-wide list of payroll runs to review/approve. */
+    public function adminIndex(): View
+    {
+        return view('payroll::admin-runs', [
+            'runs' => PayrollRun::orderByDesc('year')->orderByDesc('month')->get(),
+        ]);
+    }
+
+    /** Super Admin: review a run's items before approving. */
+    public function adminShow(PayrollRun $run): View
+    {
+        return view('payroll::admin-run-show', [
+            'run'   => $run,
+            'items' => $run->items()->with('employee')->get(),
+        ]);
+    }
+
     /** Super Admin: approve a submitted run and generate payslip PDFs. */
     public function approve(Request $request, PayrollRun $run): RedirectResponse
     {
