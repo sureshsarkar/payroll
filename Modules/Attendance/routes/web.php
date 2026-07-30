@@ -5,15 +5,29 @@ use Modules\Attendance\app\Http\Controllers\AttendanceController;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| Attendance module — web routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
+| Employee (role=student) self-service + HR (role=instructor) team screens.
+| Role gates reuse the app's existing `studentrole` / `instructorrole`
+| middleware aliases (see app/Http/Kernel.php).
 */
 
-Route::group([], function () {
-    Route::resource('attendance', AttendanceController::class)->names('attendance');
-});
+// ---- Employee self-service ------------------------------------------------
+Route::middleware(['web', 'auth', 'studentrole'])
+    ->prefix('employee/attendance')
+    ->name('employee.attendance.')
+    ->group(function () {
+        Route::get('/', [AttendanceController::class, 'myAttendance'])->name('my');
+        Route::post('check-in', [AttendanceController::class, 'checkIn'])->name('checkin');
+        Route::post('check-out', [AttendanceController::class, 'checkOut'])->name('checkout');
+    });
+
+// ---- HR team management ---------------------------------------------------
+Route::middleware(['web', 'auth', 'instructorrole'])
+    ->prefix('hr/attendance')
+    ->name('hr.attendance.')
+    ->group(function () {
+        Route::get('team', [AttendanceController::class, 'team'])->name('team');
+        Route::post('mark', [AttendanceController::class, 'bulkStore'])->name('mark');
+        Route::get('sheet', [AttendanceController::class, 'teamSheet'])->name('sheet');
+    });

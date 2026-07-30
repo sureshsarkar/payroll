@@ -1,0 +1,11 @@
+{
+    "name": "HrEmployee",
+    "alias": "hremployee",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\HrEmployee\\app\\Providers\\HrEmployeeServiceProvider"
+    ],
+    "files": []
+}

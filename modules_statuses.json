@@ -31,5 +31,8 @@
     "CryptoPayment": true,
     "MercadoPagoPG": true,
     "Marquee": true,
-    "Attendance": true
+    "Attendance": true,
+    "HrEmployee": true,
+    "Leave": true,
+    "Payroll": true
 }
