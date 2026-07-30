@@ -1,19 +1,33 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Leave\app\Http\Controllers\LeaveApprovalController;
 use Modules\Leave\app\Http\Controllers\LeaveController;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| Leave module — web routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
+| Employee (studentrole) : balances, apply, cancel
+| HR (instructorrole)    : approve / reject team leave
 */
 
-Route::group([], function () {
-    Route::resource('leave', LeaveController::class)->names('leave');
-});
+// ---- Employee ------------------------------------------------------------
+Route::middleware(['web', 'auth', 'studentrole'])
+    ->prefix('employee/leave')
+    ->name('employee.leave.')
+    ->group(function () {
+        Route::get('/', [LeaveController::class, 'index'])->name('index');
+        Route::post('/', [LeaveController::class, 'store'])->name('store');
+        Route::post('{leave}/cancel', [LeaveController::class, 'cancel'])->name('cancel');
+    });
+
+// ---- HR ------------------------------------------------------------------
+Route::middleware(['web', 'auth', 'instructorrole'])
+    ->prefix('hr/leave')
+    ->name('hr.leave.')
+    ->group(function () {
+        Route::get('/', [LeaveApprovalController::class, 'index'])->name('index');
+        Route::post('{leave}/approve', [LeaveApprovalController::class, 'approve'])->name('approve');
+        Route::post('{leave}/reject', [LeaveApprovalController::class, 'reject'])->name('reject');
+    });
