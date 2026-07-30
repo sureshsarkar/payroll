@@ -481,6 +481,12 @@ margin-top: 10px;
                 </li>
 
                 {{-- Payroll conversion — Employee self-service --}}
+                <li class="{{ Route::is('employee.overview') ? 'active' : '' }} m-0">
+                    <a href="{{ route('employee.overview') }}">
+                        <i class="fas fa-th-large" style="color:#1f2d3d;"></i>
+                        {{ __('My Overview') }}
+                    </a>
+                </li>
                 <li class="{{ Route::is('employee.attendance.*') ? 'active' : '' }} m-0">
                     <a href="{{ route('employee.attendance.my') }}">
                         <i class="fas fa-calendar-check" style="color:#0ea5e9;"></i>

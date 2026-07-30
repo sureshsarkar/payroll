@@ -87,7 +87,14 @@
             {{-- Payroll conversion — Super Admin payroll approval --}}
             @if (Route::has('admin.payroll.index'))
                 <li class="menu-header">{{ __('Payroll') }}</li>
-                <li class="{{ isRoute('admin.payroll.*', 'active') }}">
+                @if (Route::has('admin.payroll.dashboard'))
+                    <li class="{{ isRoute('admin.payroll.dashboard', 'active') }}">
+                        <a class="nav-link" href="{{ route('admin.payroll.dashboard') }}"><i class="fas fa-chart-line"></i>
+                            <span>{{ __('Payroll Dashboard') }}</span>
+                        </a>
+                    </li>
+                @endif
+                <li class="{{ isRoute(['admin.payroll.index','admin.payroll.show'], 'active') }}">
                     <a class="nav-link" href="{{ route('admin.payroll.index') }}"><i class="fas fa-file-invoice-dollar"></i>
                         <span>{{ __('Payroll Approvals') }}</span>
                     </a>

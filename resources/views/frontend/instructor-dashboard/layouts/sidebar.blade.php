@@ -958,6 +958,12 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
             <i class="bi bi-chevron-down sb-group__chev"></i>
         </summary>
         <ul class="sb-nav">
+            <li class="{{ Route::is('hr.overview') ? 'active' : '' }}">
+                <a href="{{ route('hr.overview') }}">
+                    <span class="sb-icon"><i class="bi bi-speedometer2"></i></span>
+                    <span>{{ __('HR Dashboard') }}</span>
+                </a>
+            </li>
             <li class="{{ Route::is('hr.employees.*') ? 'active' : '' }}">
                 <a href="{{ route('hr.employees.index') }}">
                     <span class="sb-icon"><i class="bi bi-people"></i></span>

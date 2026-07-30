@@ -38,4 +38,18 @@ class EmployeeProfile extends Model
     {
         return $this->belongsTo(User::class, 'reporting_hr_id');
     }
+
+    /**
+     * User-ids of the employees an HR manages: those reporting to them via
+     * profile, plus their legacy coach_id-linked students (transition fallback).
+     *
+     * @return \Illuminate\Support\Collection<int, int>
+     */
+    public static function teamUserIds(User $hr): \Illuminate\Support\Collection
+    {
+        $byProfile = static::where('reporting_hr_id', $hr->id)->pluck('user_id');
+        $byCoach   = User::where('role', 'student')->where('coach_id', $hr->id)->pluck('id');
+
+        return $byProfile->merge($byCoach)->unique()->values();
+    }
 }

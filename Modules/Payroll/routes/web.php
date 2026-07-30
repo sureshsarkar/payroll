@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Payroll\app\Http\Controllers\DashboardController;
 use Modules\Payroll\app\Http\Controllers\PayrollController;
 use Modules\Payroll\app\Http\Controllers\PayslipController;
 use Modules\Payroll\app\Http\Controllers\SalaryStructureController;
@@ -14,20 +15,23 @@ use Modules\Payroll\app\Http\Controllers\SalaryStructureController;
 | Super Admin (auth:admin): approve a submitted run
 */
 
-// ---- Employee: payslips ---------------------------------------------------
-Route::middleware(['web', 'auth', 'studentrole'])
-    ->prefix('employee/payslips')
-    ->name('employee.payslips.')
-    ->group(function () {
+// ---- Employee: dashboard + payslips ---------------------------------------
+Route::middleware(['web', 'auth', 'studentrole'])->group(function () {
+    Route::get('employee/overview', [DashboardController::class, 'employee'])->name('employee.overview');
+
+    Route::prefix('employee/payslips')->name('employee.payslips.')->group(function () {
         Route::get('/', [PayslipController::class, 'index'])->name('index');
         Route::get('{item}/download', [PayslipController::class, 'download'])->name('download');
     });
+});
 
 // ---- HR: salary structures + payroll runs ---------------------------------
 Route::middleware(['web', 'auth', 'instructorrole'])
     ->prefix('hr')
     ->name('hr.')
     ->group(function () {
+        Route::get('overview', [DashboardController::class, 'hr'])->name('overview');
+
         Route::get('salary-structures', [SalaryStructureController::class, 'index'])->name('salary.index');
         Route::post('salary-structures', [SalaryStructureController::class, 'store'])->name('salary.store');
 
@@ -43,6 +47,7 @@ Route::middleware(['web', 'auth:admin'])
     ->prefix('admin/payroll')
     ->name('admin.payroll.')
     ->group(function () {
+        Route::get('dashboard', [DashboardController::class, 'admin'])->name('dashboard');
         Route::get('/', [PayrollController::class, 'adminIndex'])->name('index');
         Route::get('{run}', [PayrollController::class, 'adminShow'])->name('show');
         Route::get('{run}/export', [PayrollController::class, 'exportRun'])->name('export');
