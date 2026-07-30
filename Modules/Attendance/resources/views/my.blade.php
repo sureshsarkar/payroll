@@ -57,6 +57,10 @@
             <a class="btn btn-sm btn-outline-secondary" href="{{ route('employee.attendance.my', ['year'=>$prev->year,'month'=>$prev->month]) }}">&larr;</a>
             <h5 class="mb-0 mx-3">{{ $monthName }}</h5>
             <a class="btn btn-sm btn-outline-secondary" href="{{ route('employee.attendance.my', ['year'=>$next->year,'month'=>$next->month]) }}">&rarr;</a>
+            <div class="ms-auto btn-group btn-group-sm">
+                <a href="{{ route('employee.attendance.export', ['format'=>'xlsx','year'=>$year,'month'=>$month]) }}" class="btn btn-outline-success">Excel</a>
+                <a href="{{ route('employee.attendance.export', ['format'=>'pdf','year'=>$year,'month'=>$month]) }}" class="btn btn-outline-danger">PDF</a>
+            </div>
         </div>
         <div class="row g-1 text-center fw-bold text-muted small mb-1">
             @foreach(['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] as $d)<div class="col">{{ $d }}</div>@endforeach

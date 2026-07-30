@@ -14,7 +14,12 @@
     <a class="btn btn-sm btn-outline-secondary" href="{{ route('hr.attendance.sheet', ['year'=>$prev->year,'month'=>$prev->month]) }}">&larr;</a>
     <h4 class="mb-0 mx-3">Attendance sheet · {{ $first->format('F Y') }}</h4>
     <a class="btn btn-sm btn-outline-secondary" href="{{ route('hr.attendance.sheet', ['year'=>$next->year,'month'=>$next->month]) }}">&rarr;</a>
-    <a href="{{ route('hr.attendance.team') }}" class="btn btn-sm btn-outline-primary ms-auto">&larr; Mark attendance</a>
+    <div class="ms-auto btn-group btn-group-sm">
+        <a href="{{ route('hr.attendance.sheet.export', ['format'=>'xlsx','year'=>$year,'month'=>$month]) }}" class="btn btn-outline-success">Excel</a>
+        <a href="{{ route('hr.attendance.sheet.export', ['format'=>'pdf','year'=>$year,'month'=>$month]) }}" class="btn btn-outline-danger">PDF</a>
+        <a href="{{ route('hr.attendance.sheet.export', ['format'=>'csv','year'=>$year,'month'=>$month]) }}" class="btn btn-outline-secondary">CSV</a>
+    </div>
+    <a href="{{ route('hr.attendance.team') }}" class="btn btn-sm btn-outline-primary ms-2">&larr; Mark attendance</a>
 </div>
 
 <div class="card stat-card"><div class="card-body">

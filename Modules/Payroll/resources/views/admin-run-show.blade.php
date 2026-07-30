@@ -8,13 +8,18 @@
     <h4 class="mb-0 mx-3">{{ $run->periodLabel() }}</h4>
     @php $map=['draft'=>'secondary','hr_submitted'=>'warning','admin_approved'=>'success','paid'=>'info']; @endphp
     <span class="badge bg-{{ $map[$run->status] ?? 'secondary' }}">{{ str_replace('_',' ',$run->status) }}</span>
+    <div class="ms-auto btn-group btn-group-sm">
+        <a href="{{ route('admin.payroll.export', ['run'=>$run,'format'=>'xlsx']) }}" class="btn btn-outline-success">Excel</a>
+        <a href="{{ route('admin.payroll.export', ['run'=>$run,'format'=>'pdf']) }}" class="btn btn-outline-danger">PDF</a>
+        <a href="{{ route('admin.payroll.export', ['run'=>$run,'format'=>'csv']) }}" class="btn btn-outline-secondary">CSV</a>
+    </div>
     @if($run->status === 'hr_submitted')
-        <form method="POST" action="{{ route('admin.payroll.approve',$run) }}" class="ms-auto"
+        <form method="POST" action="{{ route('admin.payroll.approve',$run) }}" class="ms-2"
               onsubmit="return confirm('Approve and generate payslips?');">
             @csrf<button class="btn btn-sm btn-success">Approve &amp; generate payslips</button>
         </form>
     @elseif($run->status === 'admin_approved')
-        <span class="ms-auto text-success small">Approved · payslips generated.</span>
+        <span class="ms-2 text-success small">Approved · payslips generated.</span>
     @endif
 </div>
 

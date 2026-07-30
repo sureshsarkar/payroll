@@ -34,6 +34,7 @@ Route::middleware(['web', 'auth', 'instructorrole'])
         Route::get('payroll', [PayrollController::class, 'index'])->name('payroll.index');
         Route::post('payroll/prepare', [PayrollController::class, 'prepare'])->name('payroll.prepare');
         Route::get('payroll/{run}', [PayrollController::class, 'show'])->name('payroll.show');
+        Route::get('payroll/{run}/export', [PayrollController::class, 'exportRun'])->name('payroll.export');
         Route::post('payroll/{run}/submit', [PayrollController::class, 'submit'])->name('payroll.submit');
     });
 
@@ -44,5 +45,6 @@ Route::middleware(['web', 'auth:admin'])
     ->group(function () {
         Route::get('/', [PayrollController::class, 'adminIndex'])->name('index');
         Route::get('{run}', [PayrollController::class, 'adminShow'])->name('show');
+        Route::get('{run}/export', [PayrollController::class, 'exportRun'])->name('export');
         Route::post('{run}/approve', [PayrollController::class, 'approve'])->name('approve');
     });

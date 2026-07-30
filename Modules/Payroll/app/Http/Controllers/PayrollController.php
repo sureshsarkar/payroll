@@ -4,6 +4,7 @@ namespace Modules\Payroll\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\SheetExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -70,6 +71,23 @@ class PayrollController extends Controller
             'run'   => $run,
             'items' => $run->items()->with('employee')->get(),
         ]);
+    }
+
+    /** Export a payroll run (company-wide payroll sheet) as csv/xls/pdf. */
+    public function exportRun(Request $request, PayrollRun $run, SheetExporter $exporter)
+    {
+        $format = $request->input('format', 'xlsx');
+
+        $headers = ['Employee', 'Emp ID', 'Payable Days', 'LOP Days', 'Gross', 'Deductions', 'Net Pay'];
+        $rows = $run->items()->with('employee')->get()->map(fn ($it) => [
+            $it->employee->name ?? 'Employee #'.$it->user_id,
+            $it->user_id, $it->payable_days, $it->lop_days,
+            number_format((float) $it->total_earnings, 2, '.', ''),
+            number_format((float) $it->total_deductions, 2, '.', ''),
+            number_format((float) $it->net_pay, 2, '.', ''),
+        ])->all();
+
+        return $exporter->download($format, 'Payroll '.$run->periodLabel(), $headers, $rows, 'landscape');
     }
 
     /** HR: submit the draft run for Super-Admin approval. */

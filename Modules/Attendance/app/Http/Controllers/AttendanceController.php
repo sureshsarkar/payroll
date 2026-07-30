@@ -4,6 +4,8 @@ namespace Modules\Attendance\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\SheetExporter;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -119,6 +121,51 @@ class AttendanceController extends Controller
         ]);
 
         return view('attendance::team-sheet', compact('hr', 'year', 'month', 'rows'));
+    }
+
+    /** HR: export the team monthly sheet as csv/xls/pdf. */
+    public function exportTeamSheet(Request $request, SheetExporter $exporter)
+    {
+        $format = $request->input('format', 'xlsx');
+        $year   = (int) $request->input('year', now()->year);
+        $month  = (int) $request->input('month', now()->month);
+        $team   = $this->teamMembers($request->user());
+
+        $headers = ['Employee', 'Present', 'Absent', 'Half', 'Leave', 'WFH', 'Holiday', 'LOP', 'Payable', 'Working'];
+        $rows = $team->map(function (User $u) use ($year, $month) {
+            $s = $this->service->monthlySummary($u->id, $year, $month);
+
+            return [$u->name, $s['present'], $s['absent'], $s['half_day'], $s['leave'],
+                $s['wfh'], $s['holiday'], $s['lop_days'], $s['payable_days'], $s['working_days']];
+        })->all();
+
+        $title = 'Attendance '.Carbon::create($year, $month, 1)->format('F Y');
+
+        return $exporter->download($format, $title, $headers, $rows, 'landscape');
+    }
+
+    /** Employee: export own monthly attendance sheet (daily rows). */
+    public function exportMySheet(Request $request, SheetExporter $exporter)
+    {
+        $format = $request->input('format', 'xlsx');
+        $year   = (int) $request->input('year', now()->year);
+        $month  = (int) $request->input('month', now()->month);
+        $user   = $request->user();
+        $map    = $this->service->monthMap($user->id, $year, $month);
+
+        $start = Carbon::create($year, $month, 1);
+        $headers = ['Date', 'Day', 'Status', 'Check In', 'Check Out'];
+        $rows = [];
+        for ($d = 1; $d <= $start->daysInMonth; $d++) {
+            $date = Carbon::create($year, $month, $d);
+            $rec  = $map->get($d);
+            $rows[] = [$date->format('d M Y'), $date->format('D'),
+                $rec->status ?? '-', $rec->check_in ?? '', $rec->check_out ?? ''];
+        }
+
+        $title = $user->name.' Attendance '.$start->format('F Y');
+
+        return $exporter->download($format, $title, $headers, $rows);
     }
 
     /* ------------------------------------------------------------------ */

@@ -9,15 +9,20 @@
     @php $map=['draft'=>'secondary','hr_submitted'=>'warning','admin_approved'=>'success','paid'=>'info']; @endphp
     <span class="badge bg-{{ $map[$run->status] ?? 'secondary' }}">{{ str_replace('_',' ',$run->status) }}</span>
 
+    <div class="ms-auto btn-group btn-group-sm">
+        <a href="{{ route('hr.payroll.export', ['run'=>$run,'format'=>'xlsx']) }}" class="btn btn-outline-success">Excel</a>
+        <a href="{{ route('hr.payroll.export', ['run'=>$run,'format'=>'pdf']) }}" class="btn btn-outline-danger">PDF</a>
+        <a href="{{ route('hr.payroll.export', ['run'=>$run,'format'=>'csv']) }}" class="btn btn-outline-secondary">CSV</a>
+    </div>
     @if($run->status === 'draft')
-        <form method="POST" action="{{ route('hr.payroll.submit',$run) }}" class="ms-auto">
+        <form method="POST" action="{{ route('hr.payroll.submit',$run) }}" class="ms-2">
             @csrf
             <button class="btn btn-sm btn-primary" {{ $items->isEmpty()?'disabled':'' }}>Submit for approval</button>
         </form>
     @elseif($run->status === 'hr_submitted')
-        <span class="ms-auto text-muted small">Awaiting Super Admin approval.</span>
+        <span class="ms-2 text-muted small">Awaiting Super Admin approval.</span>
     @else
-        <span class="ms-auto text-success small">Approved · payslips generated.</span>
+        <span class="ms-2 text-success small">Approved · payslips generated.</span>
     @endif
 </div>
 

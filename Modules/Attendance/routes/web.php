@@ -18,6 +18,7 @@ Route::middleware(['web', 'auth', 'studentrole'])
     ->name('employee.attendance.')
     ->group(function () {
         Route::get('/', [AttendanceController::class, 'myAttendance'])->name('my');
+        Route::get('export', [AttendanceController::class, 'exportMySheet'])->name('export');
         Route::post('check-in', [AttendanceController::class, 'checkIn'])->name('checkin');
         Route::post('check-out', [AttendanceController::class, 'checkOut'])->name('checkout');
     });
@@ -30,4 +31,5 @@ Route::middleware(['web', 'auth', 'instructorrole'])
         Route::get('team', [AttendanceController::class, 'team'])->name('team');
         Route::post('mark', [AttendanceController::class, 'bulkStore'])->name('mark');
         Route::get('sheet', [AttendanceController::class, 'teamSheet'])->name('sheet');
+        Route::get('sheet/export', [AttendanceController::class, 'exportTeamSheet'])->name('sheet.export');
     });
