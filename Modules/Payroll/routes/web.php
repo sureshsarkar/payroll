@@ -2,18 +2,45 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Payroll\app\Http\Controllers\PayrollController;
+use Modules\Payroll\app\Http\Controllers\PayslipController;
+use Modules\Payroll\app\Http\Controllers\SalaryStructureController;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| Payroll module — web routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
+| Employee (studentrole) : own payslips
+| HR (instructorrole)    : salary structures + payroll runs (prepare/submit)
+| Super Admin (auth:admin): approve a submitted run
 */
 
-Route::group([], function () {
-    Route::resource('payroll', PayrollController::class)->names('payroll');
-});
+// ---- Employee: payslips ---------------------------------------------------
+Route::middleware(['web', 'auth', 'studentrole'])
+    ->prefix('employee/payslips')
+    ->name('employee.payslips.')
+    ->group(function () {
+        Route::get('/', [PayslipController::class, 'index'])->name('index');
+        Route::get('{item}/download', [PayslipController::class, 'download'])->name('download');
+    });
+
+// ---- HR: salary structures + payroll runs ---------------------------------
+Route::middleware(['web', 'auth', 'instructorrole'])
+    ->prefix('hr')
+    ->name('hr.')
+    ->group(function () {
+        Route::get('salary-structures', [SalaryStructureController::class, 'index'])->name('salary.index');
+        Route::post('salary-structures', [SalaryStructureController::class, 'store'])->name('salary.store');
+
+        Route::get('payroll', [PayrollController::class, 'index'])->name('payroll.index');
+        Route::post('payroll/prepare', [PayrollController::class, 'prepare'])->name('payroll.prepare');
+        Route::get('payroll/{run}', [PayrollController::class, 'show'])->name('payroll.show');
+        Route::post('payroll/{run}/submit', [PayrollController::class, 'submit'])->name('payroll.submit');
+    });
+
+// ---- Super Admin: approval ------------------------------------------------
+Route::middleware(['web', 'auth:admin'])
+    ->prefix('admin/payroll')
+    ->name('admin.payroll.')
+    ->group(function () {
+        Route::post('{run}/approve', [PayrollController::class, 'approve'])->name('approve');
+    });
