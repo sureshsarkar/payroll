@@ -5,15 +5,18 @@ use Modules\HrEmployee\app\Http\Controllers\HrEmployeeController;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| HrEmployee module — web routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
+| HR (instructorrole): employee onboarding + department management.
 */
 
-Route::group([], function () {
-    Route::resource('hremployee', HrEmployeeController::class)->names('hremployee');
-});
+Route::middleware(['web', 'auth', 'instructorrole'])
+    ->prefix('hr')
+    ->name('hr.')
+    ->group(function () {
+        Route::get('employees', [HrEmployeeController::class, 'index'])->name('employees.index');
+        Route::post('employees/profile', [HrEmployeeController::class, 'storeProfile'])->name('employees.profile');
+
+        Route::get('departments', [HrEmployeeController::class, 'departments'])->name('departments.index');
+        Route::post('departments', [HrEmployeeController::class, 'storeDepartment'])->name('departments.store');
+    });

@@ -958,6 +958,18 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
             <i class="bi bi-chevron-down sb-group__chev"></i>
         </summary>
         <ul class="sb-nav">
+            <li class="{{ Route::is('hr.employees.*') ? 'active' : '' }}">
+                <a href="{{ route('hr.employees.index') }}">
+                    <span class="sb-icon"><i class="bi bi-people"></i></span>
+                    <span>{{ __('Employees') }}</span>
+                </a>
+            </li>
+            <li class="{{ Route::is('hr.departments.*') ? 'active' : '' }}">
+                <a href="{{ route('hr.departments.index') }}">
+                    <span class="sb-icon"><i class="bi bi-diagram-3"></i></span>
+                    <span>{{ __('Departments') }}</span>
+                </a>
+            </li>
             <li class="{{ Route::is('hr.attendance.*') ? 'active' : '' }}">
                 <a href="{{ route('hr.attendance.team') }}">
                     <span class="sb-icon"><i class="bi bi-calendar-check"></i></span>
