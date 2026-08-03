@@ -9,6 +9,7 @@ use Illuminate\View\View;
 use Modules\Payroll\app\Models\PayrollItem;
 use Modules\Payroll\app\Models\PayrollRun;
 use Modules\Payroll\app\Services\PayrollRunService;
+use Modules\Payroll\app\Support\FormXiPayslip;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -51,5 +52,17 @@ class PayslipController extends Controller
         $filename = sprintf('payslip-%d-%02d.pdf', $item->run->year, $item->run->month);
 
         return Storage::disk($disk)->download($item->payslip_path, $filename);
+    }
+
+    /** Download the statutory Form XI pay slip for one of this employee's items. */
+    public function formXi(Request $request, PayrollItem $item, FormXiPayslip $payslip)
+    {
+        abort_unless($item->user_id === $request->user()->id, 403);
+        abort_unless(in_array($item->run->status, [PayrollRun::ADMIN_APPROVED, PayrollRun::PAID], true), 403);
+
+        return response($payslip->render($item), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$payslip->filename($item).'"',
+        ]);
     }
 }

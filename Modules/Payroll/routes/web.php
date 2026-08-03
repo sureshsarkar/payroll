@@ -22,6 +22,7 @@ Route::middleware(['web', 'auth', 'studentrole'])->group(function () {
     Route::prefix('employee/payslips')->name('employee.payslips.')->group(function () {
         Route::get('/', [PayslipController::class, 'index'])->name('index');
         Route::get('{item}/download', [PayslipController::class, 'download'])->name('download');
+        Route::get('{item}/form-xi', [PayslipController::class, 'formXi'])->name('formxi');
     });
 });
 

@@ -27,7 +27,10 @@
                         <td class="pv-r">₹{{ number_format($it->total_earnings,2) }}</td>
                         <td class="pv-r">₹{{ number_format($it->total_deductions,2) }}</td>
                         <td class="pv-r" style="font-weight:700">₹{{ number_format($it->net_pay,2) }}</td>
-                        <td class="pv-r"><a href="{{ route('employee.payslips.download',$it) }}" class="pv-btn p sm"><i class="fas fa-download"></i> PDF</a></td>
+                        <td class="pv-r">
+                            <a href="{{ route('employee.payslips.formxi',$it) }}" class="pv-btn sm"><i class="fas fa-file-invoice"></i> Form XI</a>
+                            <a href="{{ route('employee.payslips.download',$it) }}" class="pv-btn p sm"><i class="fas fa-download"></i> PDF</a>
+                        </td>
                     </tr>
                 @endforeach
                 </tbody>
