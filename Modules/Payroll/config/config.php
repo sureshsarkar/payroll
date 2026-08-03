@@ -5,6 +5,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Establishment / factory header
+    |--------------------------------------------------------------------------
+    | Printed on the statutory wage register (Delhi Form IV). Set these in .env
+    | so the register shows the correct registered employer name, address and
+    | statutory registration numbers.
+    */
+    'establishment' => [
+        'name'    => env('PAYROLL_ESTABLISHMENT_NAME', config('app.name')),
+        'address' => env('PAYROLL_ESTABLISHMENT_ADDRESS', ''),
+        'pf_no'   => env('PAYROLL_ESTABLISHMENT_PF_NO', ''),
+        'esi_no'  => env('PAYROLL_ESTABLISHMENT_ESI_NO', ''),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Statutory deduction defaults (India)
     |--------------------------------------------------------------------------
     | Rates are configurable — Super Admin can override at runtime later. These

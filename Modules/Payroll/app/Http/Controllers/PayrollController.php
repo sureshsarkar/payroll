@@ -11,9 +11,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
+use Modules\Attendance\app\Services\AttendanceService;
 use Modules\HrEmployee\app\Models\EmployeeProfile;
 use Modules\Payroll\app\Models\PayrollRun;
 use Modules\Payroll\app\Services\PayrollRunService;
+use Modules\Payroll\app\Support\WageRegisterFormatter;
 
 /**
  * HR-side payroll workflow (prepare -> submit) plus the Super-Admin approval
@@ -84,18 +86,27 @@ class PayrollController extends Controller
         if ($format === 'pdf') {
             $profiles = EmployeeProfile::whereIn('user_id', $items->pluck('user_id'))
                 ->with('department')->get()->keyBy('user_id');
-            $earningHeads = $items->flatMap(fn ($item) => collect($item->earnings ?? [])->pluck('name'))
-                ->filter()->unique()->values();
-            $deductionHeads = $items->flatMap(fn ($item) => collect($item->deductions ?? [])->pluck('name'))
-                ->filter()->unique()->values();
+
+            // Attendance summary per employee for the run's month (Form IV needs
+            // the day columns: worked / weekly-off / holiday / leave / pay days).
+            $attendance = app(AttendanceService::class);
+            $summaries = $items->mapWithKeys(fn ($item) => [
+                $item->user_id => $attendance->monthlySummary($item->user_id, $run->year, $run->month),
+            ]);
+
+            $register = (new WageRegisterFormatter())->build($items, $summaries, $profiles);
+            $establishment = config('payroll.establishment');
 
             $options = new Options();
             $options->set('defaultFont', 'DejaVu Sans');
             $options->set('isRemoteEnabled', false);
             $pdf = new Dompdf($options);
-            $pdf->loadHtml(view('payroll::wage-register-pdf', compact(
-                'run', 'items', 'profiles', 'earningHeads', 'deductionHeads'
-            ))->render(), 'UTF-8');
+            $pdf->loadHtml(view('payroll::wage-register-pdf', [
+                'run'           => $run,
+                'rows'          => $register['rows'],
+                'totals'        => $register['totals'],
+                'establishment' => $establishment,
+            ])->render(), 'UTF-8');
             $pdf->setPaper('A4', 'landscape');
             $pdf->render();
 
