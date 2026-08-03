@@ -1,56 +1,66 @@
-@extends('attendance::layouts.payroll')
-@section('title', 'HR Dashboard')
-@section('subtitle', 'HR · '.$hr->name)
+@extends('frontend.instructor-dashboard.layouts.master')
 
+@section('dashboard-contents')
 @php
     $cards = [
-        ['Team size', $teamCount, '#1f2d3d', 'bi-people'],
-        ['Present today', $presentToday, '#1e9e5a', 'bi-check2-circle'],
-        ['On leave today', $onLeaveToday, '#5b6ee1', 'bi-airplane'],
-        ['Pending leave approvals', $pendingLeaves, '#e08a1e', 'bi-hourglass-split'],
-        ['Team attendance %', $attendancePct.'%', '#0f9bb0', 'bi-graph-up'],
+        ['Team size', $teamCount, 'var(--pv-brand)', 'fa-users'],
+        ['Present today', $presentToday, 'var(--pv-green)', 'fa-user-check'],
+        ['On leave today', $onLeaveToday, 'var(--pv-violet)', 'fa-plane-departure'],
+        ['Pending approvals', $pendingLeaves, 'var(--pv-amber)', 'fa-hourglass-half'],
+        ['Attendance %', $attendancePct.'%', 'var(--pv-sky)', 'fa-chart-line'],
     ];
+    $map = ['draft'=>'draft','hr_submitted'=>'hr_submitted','admin_approved'=>'admin_approved','paid'=>'paid'];
 @endphp
 
-@section('content')
-<h4 class="mb-3">Welcome, {{ $hr->name }}</h4>
+<div class="pv">
+    @include('payroll::partials.ui')
 
-<div class="row g-3 mb-4">
-    @foreach($cards as [$label,$val,$color,$icon])
-        <div class="col-6 col-lg">
-            <div class="card stat-card h-100"><div class="card-body text-center">
-                <div class="h3 mb-0" style="color:{{ $color }}">{{ $val }}</div>
-                <div class="small text-muted">{{ $label }}</div>
-            </div></div>
+    <div class="pv-head">
+        <div>
+            <h1 class="t">HR Dashboard</h1>
+            <p class="s">Welcome back, {{ $hr->name }} — here's your team at a glance.</p>
         </div>
-    @endforeach
-</div>
-
-<div class="row g-3">
-    <div class="col-lg-7">
-        <div class="card stat-card"><div class="card-body">
-            <h6 class="text-muted mb-3">This month's payroll · {{ now()->format('F Y') }}</h6>
-            @if($monthRun)
-                @php $map=['draft'=>'secondary','hr_submitted'=>'warning','admin_approved'=>'success','paid'=>'info']; @endphp
-                <p class="mb-1">Status: <span class="badge bg-{{ $map[$monthRun->status] ?? 'secondary' }}">{{ str_replace('_',' ',$monthRun->status) }}</span></p>
-                <p class="mb-1">Employees: <strong>{{ $monthRun->employee_count }}</strong> · Total net: <strong>₹{{ number_format($monthRun->total_net,2) }}</strong></p>
-                <a href="{{ route('hr.payroll.show',$monthRun) }}" class="btn btn-sm btn-outline-primary mt-2">Open run</a>
-            @else
-                <p class="text-muted">No payroll run for this month yet.</p>
-                <a href="{{ route('hr.payroll.index') }}" class="btn btn-sm btn-success">Prepare payroll</a>
-            @endif
-        </div></div>
     </div>
-    <div class="col-lg-5">
-        <div class="card stat-card"><div class="card-body">
-            <h6 class="text-muted mb-3">Quick actions</h6>
-            <div class="d-grid gap-2">
-                <a href="{{ route('hr.attendance.team') }}" class="btn btn-sm btn-outline-secondary text-start">🗓️ Mark team attendance</a>
-                <a href="{{ route('hr.leave.index') }}" class="btn btn-sm btn-outline-secondary text-start">✅ Review leave requests @if($pendingLeaves)<span class="badge bg-warning ms-1">{{ $pendingLeaves }}</span>@endif</a>
-                <a href="{{ route('hr.employees.index') }}" class="btn btn-sm btn-outline-secondary text-start">👥 Onboard employees</a>
-                <a href="{{ route('hr.salary.index') }}" class="btn btn-sm btn-outline-secondary text-start">💰 Salary structures</a>
+
+    <div class="pv-stats">
+        @foreach($cards as [$label,$val,$color,$icon])
+            <div class="pv-stat" style="--c:{{ $color }}">
+                <div class="n">{{ $val }}</div>
+                <div class="l"><i class="fas {{ $icon }}" style="margin-right:5px;opacity:.7"></i>{{ $label }}</div>
             </div>
-        </div></div>
+        @endforeach
+    </div>
+
+    <div class="pv-cols c73">
+        <div class="pv-card">
+            <div class="h"><i class="fas fa-receipt pv-muted"></i> This month's payroll · {{ now()->format('F Y') }}</div>
+            <div class="b">
+                @if($monthRun)
+                    <p style="margin:0 0 8px">Status: <span class="pv-badge {{ $monthRun->status }}">{{ str_replace('_',' ',$monthRun->status) }}</span></p>
+                    <p class="pv-muted" style="margin:0 0 14px">
+                        {{ $monthRun->employee_count }} employees · Total net
+                        <strong style="color:var(--pv-ink)">₹{{ number_format($monthRun->total_net,2) }}</strong>
+                    </p>
+                    <a href="{{ route('hr.payroll.show',$monthRun) }}" class="pv-btn p">Open run</a>
+                @else
+                    <p class="pv-muted" style="margin:0 0 14px">No payroll run for this month yet.</p>
+                    <a href="{{ route('hr.payroll.index') }}" class="pv-btn g"><i class="fas fa-plus"></i> Prepare payroll</a>
+                @endif
+            </div>
+        </div>
+
+        <div class="pv-card">
+            <div class="h"><i class="fas fa-bolt pv-muted"></i> Quick actions</div>
+            <div class="b">
+                <div class="pv-grid-actions">
+                    <a class="pv-linkrow" href="{{ route('hr.attendance.team') }}"><i class="fas fa-calendar-check" style="color:var(--pv-sky)"></i> Mark team attendance</a>
+                    <a class="pv-linkrow" href="{{ route('hr.leave.index') }}"><i class="fas fa-clipboard-check" style="color:var(--pv-amber)"></i> Review leave requests
+                        @if($pendingLeaves)<span class="pv-badge pending" style="margin-left:auto">{{ $pendingLeaves }}</span>@endif</a>
+                    <a class="pv-linkrow" href="{{ route('hr.employees.index') }}"><i class="fas fa-user-plus" style="color:var(--pv-brand)"></i> Onboard employees</a>
+                    <a class="pv-linkrow" href="{{ route('hr.salary.index') }}"><i class="fas fa-money-bill-wave" style="color:var(--pv-green)"></i> Salary structures</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 @endsection

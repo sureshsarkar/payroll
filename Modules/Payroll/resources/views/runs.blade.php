@@ -1,56 +1,59 @@
-@extends('attendance::layouts.payroll')
-@section('title', 'Payroll Runs')
-@section('subtitle', 'HR')
+@extends('frontend.instructor-dashboard.layouts.master')
 
-@section('content')
-<div class="d-flex align-items-center mb-3">
-    <h4 class="mb-0">Payroll runs</h4>
-    <a href="{{ route('hr.salary.index') }}" class="btn btn-sm btn-outline-primary ms-auto">Salary structures</a>
-</div>
+@section('dashboard-contents')
+<div class="pv">
+    @include('payroll::partials.ui')
 
-<div class="card stat-card mb-4"><div class="card-body">
-    <form method="POST" action="{{ route('hr.payroll.prepare') }}" class="row g-2 align-items-end">
-        @csrf
-        <div class="col-auto">
-            <label class="form-label small mb-0">Month</label>
-            <select name="month" class="form-select form-select-sm">
-                @foreach(range(1,12) as $m)
-                    <option value="{{ $m }}" {{ $m==$now->month?'selected':'' }}>{{ \Carbon\Carbon::create(null,$m,1)->format('F') }}</option>
+    <div class="pv-head">
+        <div>
+            <h1 class="t">Payroll Runs</h1>
+            <p class="s">Prepare monthly payroll — attendance & statutory deductions are pulled automatically.</p>
+        </div>
+        <div class="pv-actions">
+            <a href="{{ route('hr.salary.index') }}" class="pv-btn"><i class="fas fa-money-bill-wave"></i> Salary structures</a>
+        </div>
+    </div>
+
+    <div class="pv-card">
+        <div class="h"><i class="fas fa-play-circle" style="color:var(--pv-green)"></i> Prepare a run</div>
+        <div class="b">
+            <form method="POST" action="{{ route('hr.payroll.prepare') }}" class="pv-inline">
+                @csrf
+                <div class="pv-field" style="margin:0"><label class="pv-label">Month</label>
+                    <select name="month" class="pv-select">
+                        @foreach(range(1,12) as $m)<option value="{{ $m }}" {{ $m==$now->month?'selected':'' }}>{{ \Carbon\Carbon::create(null,$m,1)->format('F') }}</option>@endforeach
+                    </select></div>
+                <div class="pv-field" style="margin:0"><label class="pv-label">Year</label>
+                    <input type="number" name="year" value="{{ $now->year }}" class="pv-input" style="width:110px"></div>
+                <button class="pv-btn g"><i class="fas fa-cogs"></i> Prepare payroll</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="pv-card">
+        <div class="h"><i class="fas fa-list pv-muted"></i> All runs</div>
+        <div class="b tight">
+            @if($runs->isEmpty())
+                <div class="pv-empty"><div class="ic"><i class="fas fa-receipt"></i></div>No payroll runs yet.</div>
+            @else
+            <div class="pv-tw">
+            <table class="pv-table" style="min-width:560px">
+                <thead><tr><th>Period</th><th>Status</th><th class="pv-c">Employees</th><th class="pv-r">Total Net</th><th class="pv-r"></th></tr></thead>
+                <tbody>
+                @foreach($runs as $run)
+                    <tr>
+                        <td><strong>{{ $run->periodLabel() }}</strong></td>
+                        <td><span class="pv-badge {{ $run->status }}">{{ str_replace('_',' ',$run->status) }}</span></td>
+                        <td class="pv-c">{{ $run->employee_count }}</td>
+                        <td class="pv-r">₹{{ number_format($run->total_net,2) }}</td>
+                        <td class="pv-r"><a href="{{ route('hr.payroll.show',$run) }}" class="pv-btn sm">Open</a></td>
+                    </tr>
                 @endforeach
-            </select>
+                </tbody>
+            </table>
+            </div>
+            @endif
         </div>
-        <div class="col-auto">
-            <label class="form-label small mb-0">Year</label>
-            <input type="number" name="year" value="{{ $now->year }}" class="form-control form-control-sm" style="width:110px">
-        </div>
-        <div class="col-auto">
-            <button class="btn btn-sm btn-success">Prepare payroll</button>
-        </div>
-        <div class="col-auto text-muted small">Pulls attendance → computes LOP, statutory deductions & net pay.</div>
-    </form>
-</div></div>
-
-<div class="card stat-card"><div class="card-body">
-    @if($runs->isEmpty())
-        <p class="text-muted mb-0">No payroll runs yet. Prepare one above.</p>
-    @else
-    <table class="table table-sm align-middle mb-0">
-        <thead><tr><th>Period</th><th>Status</th><th class="text-center">Employees</th><th class="text-end">Total Net (₹)</th><th></th></tr></thead>
-        <tbody>
-        @foreach($runs as $run)
-            <tr>
-                <td>{{ $run->periodLabel() }}</td>
-                <td>
-                    @php $map=['draft'=>'secondary','hr_submitted'=>'warning','admin_approved'=>'success','paid'=>'info']; @endphp
-                    <span class="badge bg-{{ $map[$run->status] ?? 'secondary' }}">{{ str_replace('_',' ',$run->status) }}</span>
-                </td>
-                <td class="text-center">{{ $run->employee_count }}</td>
-                <td class="text-end">{{ number_format($run->total_net,2) }}</td>
-                <td class="text-end"><a href="{{ route('hr.payroll.show',$run) }}" class="btn btn-sm btn-outline-secondary">Open</a></td>
-            </tr>
-        @endforeach
-        </tbody>
-    </table>
-    @endif
-</div></div>
+    </div>
+</div>
 @endsection

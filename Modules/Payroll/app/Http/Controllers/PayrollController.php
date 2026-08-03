@@ -5,6 +5,8 @@ namespace Modules\Payroll\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\SheetExporter;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -77,9 +79,34 @@ class PayrollController extends Controller
     public function exportRun(Request $request, PayrollRun $run, SheetExporter $exporter)
     {
         $format = $request->input('format', 'xlsx');
+        $items = $run->items()->with('employee')->get();
+
+        if ($format === 'pdf') {
+            $profiles = EmployeeProfile::whereIn('user_id', $items->pluck('user_id'))
+                ->with('department')->get()->keyBy('user_id');
+            $earningHeads = $items->flatMap(fn ($item) => collect($item->earnings ?? [])->pluck('name'))
+                ->filter()->unique()->values();
+            $deductionHeads = $items->flatMap(fn ($item) => collect($item->deductions ?? [])->pluck('name'))
+                ->filter()->unique()->values();
+
+            $options = new Options();
+            $options->set('defaultFont', 'DejaVu Sans');
+            $options->set('isRemoteEnabled', false);
+            $pdf = new Dompdf($options);
+            $pdf->loadHtml(view('payroll::wage-register-pdf', compact(
+                'run', 'items', 'profiles', 'earningHeads', 'deductionHeads'
+            ))->render(), 'UTF-8');
+            $pdf->setPaper('A4', 'landscape');
+            $pdf->render();
+
+            return response($pdf->output(), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="Salary Register '.$run->periodLabel().'.pdf"',
+            ]);
+        }
 
         $headers = ['Employee', 'Emp ID', 'Payable Days', 'LOP Days', 'Gross', 'Deductions', 'Net Pay'];
-        $rows = $run->items()->with('employee')->get()->map(fn ($it) => [
+        $rows = $items->map(fn ($it) => [
             $it->employee->name ?? 'Employee #'.$it->user_id,
             $it->user_id, $it->payable_days, $it->lop_days,
             number_format((float) $it->total_earnings, 2, '.', ''),

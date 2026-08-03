@@ -1,60 +1,71 @@
-@extends('attendance::layouts.payroll')
-@section('title', 'Leave Approvals')
-@section('subtitle', 'HR')
+@extends('frontend.instructor-dashboard.layouts.master')
 
-@section('content')
-<h4 class="mb-3">Pending leave requests</h4>
-<div class="card stat-card mb-4"><div class="card-body">
-    @if($pending->isEmpty())
-        <p class="text-muted mb-0">No pending requests. 🎉</p>
-    @else
-    <div class="table-responsive">
-    <table class="table table-sm align-middle mb-0">
-        <thead><tr><th>Employee</th><th>Type</th><th>Dates</th><th class="text-center">Days</th><th>Reason</th><th class="text-end">Action</th></tr></thead>
-        <tbody>
-        @foreach($pending as $lv)
-            <tr>
-                <td>{{ $lv->employee->name ?? '#'.$lv->user_id }}</td>
-                <td>{{ $lv->type->name ?? '—' }} <span class="badge bg-light text-dark">{{ $lv->type?->is_paid ? 'Paid' : 'Unpaid' }}</span></td>
-                <td class="small">{{ $lv->start_date->format('d M') }} – {{ $lv->end_date->format('d M Y') }}</td>
-                <td class="text-center">{{ $lv->days }}</td>
-                <td class="small text-muted">{{ $lv->reason }}</td>
-                <td class="text-end" style="white-space:nowrap">
-                    <form method="POST" action="{{ route('hr.leave.approve',$lv) }}" class="d-inline">
-                        @csrf<button class="btn btn-sm btn-success py-0">Approve</button>
-                    </form>
-                    <form method="POST" action="{{ route('hr.leave.reject',$lv) }}" class="d-inline">
-                        @csrf<button class="btn btn-sm btn-outline-danger py-0">Reject</button>
-                    </form>
-                </td>
-            </tr>
-        @endforeach
-        </tbody>
-    </table>
+@section('dashboard-contents')
+<div class="pv">
+    @include('payroll::partials.ui')
+
+    <div class="pv-head">
+        <div>
+            <h1 class="t">Leave Approvals</h1>
+            <p class="s">Review and act on your team's leave requests.</p>
+        </div>
     </div>
-    @endif
-</div></div>
 
-<h5 class="mb-2">Recently reviewed</h5>
-<div class="card stat-card"><div class="card-body">
-    @if($recent->isEmpty())
-        <p class="text-muted mb-0">Nothing reviewed yet.</p>
-    @else
-    <table class="table table-sm align-middle mb-0">
-        <thead><tr><th>Employee</th><th>Type</th><th>Dates</th><th class="text-center">Days</th><th>Status</th></tr></thead>
-        <tbody>
-        @foreach($recent as $lv)
-            @php $c=['approved'=>'success','rejected'=>'danger']; @endphp
-            <tr>
-                <td>{{ $lv->employee->name ?? '#'.$lv->user_id }}</td>
-                <td>{{ $lv->type->name ?? '—' }}</td>
-                <td class="small">{{ $lv->start_date->format('d M') }} – {{ $lv->end_date->format('d M Y') }}</td>
-                <td class="text-center">{{ $lv->days }}</td>
-                <td><span class="badge bg-{{ $c[$lv->status] ?? 'secondary' }}">{{ $lv->status }}</span></td>
-            </tr>
-        @endforeach
-        </tbody>
-    </table>
-    @endif
-</div></div>
+    <div class="pv-card">
+        <div class="h"><i class="fas fa-hourglass-half" style="color:var(--pv-amber)"></i> Pending requests
+            @if($pending->count())<span class="pv-badge pending" style="margin-left:6px">{{ $pending->count() }}</span>@endif</div>
+        <div class="b tight">
+            @if($pending->isEmpty())
+                <div class="pv-empty"><div class="ic"><i class="fas fa-check-circle"></i></div>No pending requests. All caught up!</div>
+            @else
+            <div class="pv-tw">
+            <table class="pv-table" style="min-width:760px">
+                <thead><tr><th>Employee</th><th>Type</th><th>Dates</th><th class="pv-c">Days</th><th>Reason</th><th class="pv-r">Action</th></tr></thead>
+                <tbody>
+                @foreach($pending as $lv)
+                    <tr>
+                        <td><strong>{{ $lv->employee->name ?? '#'.$lv->user_id }}</strong></td>
+                        <td>{{ $lv->type->name ?? '—' }} <span class="pv-badge {{ $lv->type?->is_paid ? 'leave' : 'draft' }}">{{ $lv->type?->is_paid ? 'Paid' : 'Unpaid' }}</span></td>
+                        <td class="pv-muted">{{ $lv->start_date->format('d M') }} – {{ $lv->end_date->format('d M Y') }}</td>
+                        <td class="pv-c">{{ $lv->days }}</td>
+                        <td class="pv-mut2">{{ $lv->reason }}</td>
+                        <td class="pv-r" style="white-space:nowrap">
+                            <form method="POST" action="{{ route('hr.leave.approve',$lv) }}" style="display:inline">@csrf<button class="pv-btn g sm">Approve</button></form>
+                            <form method="POST" action="{{ route('hr.leave.reject',$lv) }}" style="display:inline">@csrf<button class="pv-btn d sm">Reject</button></form>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+            </div>
+            @endif
+        </div>
+    </div>
+
+    <div class="pv-card">
+        <div class="h"><i class="fas fa-history pv-muted"></i> Recently reviewed</div>
+        <div class="b tight">
+            @if($recent->isEmpty())
+                <div class="pv-empty">Nothing reviewed yet.</div>
+            @else
+            <div class="pv-tw">
+            <table class="pv-table" style="min-width:auto">
+                <thead><tr><th>Employee</th><th>Type</th><th>Dates</th><th class="pv-c">Days</th><th>Status</th></tr></thead>
+                <tbody>
+                @foreach($recent as $lv)
+                    <tr>
+                        <td>{{ $lv->employee->name ?? '#'.$lv->user_id }}</td>
+                        <td>{{ $lv->type->name ?? '—' }}</td>
+                        <td class="pv-muted">{{ $lv->start_date->format('d M') }} – {{ $lv->end_date->format('d M Y') }}</td>
+                        <td class="pv-c">{{ $lv->days }}</td>
+                        <td><span class="pv-badge {{ $lv->status }}">{{ $lv->status }}</span></td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
 @endsection

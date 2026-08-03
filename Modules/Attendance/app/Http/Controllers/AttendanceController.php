@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\SheetExporter;
 use Carbon\Carbon;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -107,20 +109,133 @@ class AttendanceController extends Controller
         return back()->with('success', "Attendance marked for {$n} employee(s).");
     }
 
-    /** HR team monthly sheet (per-employee summary rows). */
+    /** HR monthly workspace: one employee's day-by-day attendance with team context. */
     public function teamSheet(Request $request): View
     {
         $hr    = $request->user();
         $year  = (int) $request->input('year', now()->year);
         $month = (int) $request->input('month', now()->month);
         $team  = $this->teamMembers($hr);
+        $profiles = EmployeeProfile::whereIn('user_id', $team->pluck('id'))->get()->keyBy('user_id');
+
+        $selected = $team->firstWhere('id', (int) $request->input('employee_id')) ?? $team->first();
+        $first = Carbon::create($year, $month, 1)->startOfMonth();
+        $selectedDate = Carbon::parse($request->input('date', now()->toDateString()));
+        if (! $selectedDate->betweenIncluded($first, (clone $first)->endOfMonth())) {
+            $selectedDate = $first;
+        }
 
         $rows = $team->map(fn (User $u) => [
             'user'    => $u,
             'summary' => $this->service->monthlySummary($u->id, $year, $month),
         ]);
 
-        return view('attendance::team-sheet', compact('hr', 'year', 'month', 'rows'));
+        return view('attendance::team-sheet', [
+            'hr' => $hr,
+            'year' => $year,
+            'month' => $month,
+            'team' => $team,
+            'rows' => $rows,
+            'selected' => $selected,
+            'profiles' => $profiles,
+            'selectedProfile' => $selected ? $profiles->get($selected->id) : null,
+            'summary' => $selected ? $this->service->monthlySummary($selected->id, $year, $month) : null,
+            'map' => $selected ? $this->service->monthMap($selected->id, $year, $month) : collect(),
+            'selectedDate' => $selectedDate,
+            'selectedRecord' => $selected ? Attendance::where('user_id', $selected->id)
+                ->whereDate('attendance_date', $selectedDate)->first() : null,
+        ]);
+    }
+
+    /** HR updates one employee's attendance for one selected day. */
+    public function storeIndividualDay(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'employee_id' => ['required', 'integer'],
+            'date' => ['required', 'date'],
+            'status' => ['required', 'string'],
+            'check_in' => ['nullable', 'date_format:H:i'],
+            'check_out' => ['nullable', 'date_format:H:i'],
+            'remarks' => ['nullable', 'string', 'max:255'],
+            'quick_preset' => ['nullable', 'in:0930_1830,0940_1900'],
+            'year' => ['required', 'integer', 'between:2000,2100'],
+            'month' => ['required', 'integer', 'between:1,12'],
+        ]);
+
+        $quickTimes = [
+            '0930_1830' => ['check_in' => '09:30', 'check_out' => '18:30'],
+            '0940_1900' => ['check_in' => '09:40', 'check_out' => '19:00'],
+        ];
+
+        if (! in_array($data['status'], Attendance::STATUSES, true)) {
+            return back()->with('error', 'Invalid attendance status.');
+        }
+
+        $employee = $this->teamMembers($request->user())->firstWhere('id', (int) $data['employee_id']);
+        if (! $employee) {
+            return back()->with('error', 'That employee is not assigned to you.');
+        }
+
+        $preset = $quickTimes[$data['quick_preset'] ?? ''] ?? null;
+        $this->service->mark($employee->id, $data['date'], $preset ? Attendance::PRESENT : $data['status'], [
+            'check_in' => $preset['check_in'] ?? ($data['check_in'] ?? null),
+            'check_out' => $preset['check_out'] ?? ($data['check_out'] ?? null),
+            'remarks' => $data['remarks'] ?? null,
+            'marked_by' => $request->user()->id,
+            'source' => 'manual',
+        ]);
+
+        return redirect()->route('hr.attendance.sheet', [
+            'year' => $data['year'], 'month' => $data['month'],
+            'employee_id' => $employee->id, 'date' => $data['date'],
+        ])->with('success', $preset
+            ? "Quick attendance saved for {$employee->name}."
+            : "Attendance updated for {$employee->name}.");
+    }
+
+    /** Fill all unmarked weekdays in a month with realistic random office times. */
+    public function fillMonthWithRandomTimes(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'employee_id' => ['required', 'integer'],
+            'year' => ['required', 'integer', 'between:2000,2100'],
+            'month' => ['required', 'integer', 'between:1,12'],
+        ]);
+
+        $employee = $this->teamMembers($request->user())->firstWhere('id', (int) $data['employee_id']);
+        if (! $employee) {
+            return back()->with('error', 'That employee is not assigned to you.');
+        }
+
+        $first = Carbon::create($data['year'], $data['month'], 1)->startOfMonth();
+        $existingDates = Attendance::where('user_id', $employee->id)
+            ->whereBetween('attendance_date', [$first->toDateString(), (clone $first)->endOfMonth()->toDateString()])
+            ->pluck('attendance_date')
+            ->map(fn ($date) => Carbon::parse($date)->toDateString())
+            ->flip();
+
+        $created = 0;
+        for ($day = 1; $day <= $first->daysInMonth; $day++) {
+            $date = Carbon::create($data['year'], $data['month'], $day);
+            if ($date->isWeekend() || $existingDates->has($date->toDateString())) {
+                continue;
+            }
+
+            $checkInMinutes = (9 * 60) + random_int(30, 40);
+            $checkOutMinutes = (18 * 60) + random_int(30, 60);
+            $this->service->mark($employee->id, $date, Attendance::PRESENT, [
+                'check_in' => sprintf('%02d:%02d', intdiv($checkInMinutes, 60), $checkInMinutes % 60),
+                'check_out' => sprintf('%02d:%02d', intdiv($checkOutMinutes, 60), $checkOutMinutes % 60),
+                'marked_by' => $request->user()->id,
+                'source' => 'manual',
+                'remarks' => 'Monthly attendance quick fill',
+            ]);
+            $created++;
+        }
+
+        return redirect()->route('hr.attendance.sheet', [
+            'year' => $data['year'], 'month' => $data['month'], 'employee_id' => $employee->id,
+        ])->with('success', "Monthly attendance added for {$employee->name}: {$created} weekday(s) filled with random office times.");
     }
 
     /** HR: export the team monthly sheet as csv/xls/pdf. */
@@ -142,6 +257,64 @@ class AttendanceController extends Controller
         $title = 'Attendance '.Carbon::create($year, $month, 1)->format('F Y');
 
         return $exporter->download($format, $title, $headers, $rows, 'landscape');
+    }
+
+    /** HR: download the selected employee's day-by-day monthly attendance. */
+    public function exportEmployeeSheet(Request $request, SheetExporter $exporter)
+    {
+        $format = $request->input('format', 'xlsx');
+        $year = (int) $request->input('year', now()->year);
+        $month = (int) $request->input('month', now()->month);
+        $employee = $this->teamMembers($request->user())->firstWhere('id', (int) $request->input('employee_id'));
+
+        abort_unless($employee, 404);
+
+        $map = $this->service->monthMap($employee->id, $year, $month);
+        $first = Carbon::create($year, $month, 1);
+
+        // The PDF is a biometric-style monthly register: all days across one
+        // landscape page, with In / Out / status in each day cell. Other export
+        // formats remain simple daily rows for spreadsheet use.
+        if ($format === 'pdf') {
+            $profile = EmployeeProfile::where('user_id', $employee->id)->first();
+            $summary = $this->service->monthlySummary($employee->id, $year, $month);
+            $days = collect(range(1, $first->daysInMonth))->map(fn (int $day) => [
+                'date' => Carbon::create($year, $month, $day),
+                'record' => $map->get($day),
+            ]);
+
+            $options = new Options();
+            $options->set('defaultFont', 'DejaVu Sans');
+            $options->set('isRemoteEnabled', false);
+            $pdf = new Dompdf($options);
+            $pdf->loadHtml(view('attendance::employee-register-pdf', compact(
+                'employee', 'profile', 'summary', 'first', 'days'
+            ))->render(), 'UTF-8');
+            $pdf->setPaper('A4', 'landscape');
+            $pdf->render();
+
+            return response($pdf->output(), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="'.$employee->name.' Attendance Register '.$first->format('F Y').'.pdf"',
+            ]);
+        }
+
+        $rows = [];
+        for ($day = 1; $day <= $first->daysInMonth; $day++) {
+            $date = Carbon::create($year, $month, $day);
+            $record = $map->get($day);
+            $rows[] = [
+                $date->format('d M Y'), $date->format('D'), $record->status ?? 'Not marked',
+                $record->check_in ?? '', $record->check_out ?? '', $record->remarks ?? '',
+            ];
+        }
+
+        return $exporter->download(
+            $format,
+            $employee->name.' Attendance '.$first->format('F Y'),
+            ['Date', 'Day', 'Status', 'Check in', 'Check out', 'Remarks'],
+            $rows,
+        );
     }
 
     /** Employee: export own monthly attendance sheet (daily rows). */

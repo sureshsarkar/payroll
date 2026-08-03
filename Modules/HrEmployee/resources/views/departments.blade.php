@@ -1,62 +1,63 @@
-@extends('attendance::layouts.payroll')
-@section('title', 'Departments')
-@section('subtitle', 'HR')
+@extends('frontend.instructor-dashboard.layouts.master')
 
-@section('content')
-<div class="d-flex align-items-center mb-3">
-    <h4 class="mb-0">Departments</h4>
-    <a href="{{ route('hr.employees.index') }}" class="btn btn-sm btn-outline-primary ms-auto">Employees</a>
-</div>
+@section('dashboard-contents')
+<div class="pv">
+    @include('payroll::partials.ui')
 
-<div class="row g-4">
-    <div class="col-lg-5">
-        <div class="card stat-card"><div class="card-body">
-            <h5 class="mb-3">New department</h5>
-            <form method="POST" action="{{ route('hr.departments.store') }}">
-                @csrf
-                <div class="mb-2">
-                    <label class="form-label small">Name</label>
-                    <input name="name" class="form-control form-control-sm" required placeholder="e.g. Engineering">
-                </div>
-                <div class="mb-2">
-                    <label class="form-label small">Code</label>
-                    <input name="code" class="form-control form-control-sm" placeholder="ENG">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label small">Department head (HR)</label>
-                    <select name="head_user_id" class="form-select form-select-sm">
-                        <option value="">—</option>
-                        @foreach($hrs as $h)
-                            <option value="{{ $h->id }}">{{ $h->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <button class="btn btn-sm btn-success">Create department</button>
-            </form>
-        </div></div>
+    <div class="pv-head">
+        <div>
+            <h1 class="t">Departments</h1>
+            <p class="s">Organise your team into departments.</p>
+        </div>
+        <div class="pv-actions">
+            <a href="{{ route('hr.employees.index') }}" class="pv-btn"><i class="fas fa-users"></i> Employees</a>
+        </div>
     </div>
 
-    <div class="col-lg-7">
-        <div class="card stat-card"><div class="card-body">
-            <h5 class="mb-3">All departments</h5>
-            @if($departments->isEmpty())
-                <p class="text-muted mb-0">No departments yet. Create one on the left.</p>
-            @else
-            <table class="table table-sm align-middle mb-0">
-                <thead><tr><th>Name</th><th>Code</th><th class="text-center">Employees</th><th>Status</th></tr></thead>
-                <tbody>
-                @foreach($departments as $d)
-                    <tr>
-                        <td>{{ $d->name }}</td>
-                        <td>{{ $d->code ?? '—' }}</td>
-                        <td class="text-center">{{ $d->employees_count }}</td>
-                        <td><span class="badge bg-{{ $d->is_active ? 'success' : 'secondary' }}">{{ $d->is_active ? 'Active' : 'Inactive' }}</span></td>
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
-            @endif
-        </div></div>
+    <div class="pv-cols c73">
+        <div class="pv-card">
+            <div class="h"><i class="fas fa-plus-circle" style="color:var(--pv-brand)"></i> New department</div>
+            <div class="b">
+                <form method="POST" action="{{ route('hr.departments.store') }}">
+                    @csrf
+                    <div class="pv-field"><label class="pv-label">Name *</label>
+                        <input name="name" class="pv-input" required placeholder="e.g. Engineering"></div>
+                    <div class="pv-field"><label class="pv-label">Code</label>
+                        <input name="code" class="pv-input" placeholder="ENG"></div>
+                    <div class="pv-field"><label class="pv-label">Department head (HR)</label>
+                        <select name="head_user_id" class="pv-select">
+                            <option value="">—</option>
+                            @foreach($hrs as $h)<option value="{{ $h->id }}">{{ $h->name }}</option>@endforeach
+                        </select></div>
+                    <button class="pv-btn g"><i class="fas fa-plus"></i> Create department</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="pv-card">
+            <div class="h"><i class="fas fa-sitemap pv-muted"></i> All departments</div>
+            <div class="b tight">
+                @if($departments->isEmpty())
+                    <div class="pv-empty"><div class="ic"><i class="fas fa-sitemap"></i></div>No departments yet.</div>
+                @else
+                <div class="pv-tw">
+                <table class="pv-table" style="min-width:auto">
+                    <thead><tr><th>Name</th><th>Code</th><th class="pv-c">Employees</th><th>Status</th></tr></thead>
+                    <tbody>
+                    @foreach($departments as $d)
+                        <tr>
+                            <td><strong>{{ $d->name }}</strong></td>
+                            <td class="pv-muted">{{ $d->code ?? '—' }}</td>
+                            <td class="pv-c">{{ $d->employees_count }}</td>
+                            <td><span class="pv-badge {{ $d->is_active ? 'active' : 'draft' }}">{{ $d->is_active ? 'Active' : 'Inactive' }}</span></td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+                </div>
+                @endif
+            </div>
+        </div>
     </div>
 </div>
 @endsection

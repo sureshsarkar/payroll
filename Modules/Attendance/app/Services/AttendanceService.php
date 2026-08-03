@@ -31,11 +31,11 @@ class AttendanceService
         ]);
 
         $attendance->status         = $status;
-        $attendance->check_in       = $attrs['check_in']   ?? $attendance->check_in;
-        $attendance->check_out      = $attrs['check_out']  ?? $attendance->check_out;
+        $attendance->check_in       = array_key_exists('check_in', $attrs) ? $attrs['check_in'] : $attendance->check_in;
+        $attendance->check_out      = array_key_exists('check_out', $attrs) ? $attrs['check_out'] : $attendance->check_out;
         $attendance->source         = $attrs['source']     ?? ($attendance->source ?: 'manual');
         $attendance->marked_by      = $attrs['marked_by']  ?? $attendance->marked_by;
-        $attendance->remarks        = $attrs['remarks']    ?? $attendance->remarks;
+        $attendance->remarks        = array_key_exists('remarks', $attrs) ? $attrs['remarks'] : $attendance->remarks;
         $attendance->worked_minutes = $this->computeWorkedMinutes($attendance->check_in, $attendance->check_out);
         $attendance->save();
 

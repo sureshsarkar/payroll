@@ -15,6 +15,10 @@ Route::middleware(['web', 'auth', 'instructorrole'])
     ->name('hr.')
     ->group(function () {
         Route::get('employees', [HrEmployeeController::class, 'index'])->name('employees.index');
+        Route::get('employees/create', [HrEmployeeController::class, 'create'])->name('employees.create');
+        Route::post('employees', [HrEmployeeController::class, 'storeEmployee'])->name('employees.store');
+        Route::get('employees/{employee}/edit', [HrEmployeeController::class, 'edit'])->name('employees.edit');
+        Route::put('employees/{employee}', [HrEmployeeController::class, 'updateEmployee'])->name('employees.update');
         Route::post('employees/profile', [HrEmployeeController::class, 'storeProfile'])->name('employees.profile');
 
         Route::get('departments', [HrEmployeeController::class, 'departments'])->name('departments.index');

@@ -1,60 +1,57 @@
-@extends('attendance::layouts.payroll')
-@section('title', 'Payroll · '.$run->periodLabel())
-@section('subtitle', 'HR')
+@extends('frontend.instructor-dashboard.layouts.master')
 
-@section('content')
-<div class="d-flex align-items-center mb-3">
-    <a href="{{ route('hr.payroll.index') }}" class="btn btn-sm btn-outline-secondary">&larr; Runs</a>
-    <h4 class="mb-0 mx-3">{{ $run->periodLabel() }}</h4>
-    @php $map=['draft'=>'secondary','hr_submitted'=>'warning','admin_approved'=>'success','paid'=>'info']; @endphp
-    <span class="badge bg-{{ $map[$run->status] ?? 'secondary' }}">{{ str_replace('_',' ',$run->status) }}</span>
+@section('dashboard-contents')
+<div class="pv">
+    @include('payroll::partials.ui')
 
-    <div class="ms-auto btn-group btn-group-sm">
-        <a href="{{ route('hr.payroll.export', ['run'=>$run,'format'=>'xlsx']) }}" class="btn btn-outline-success">Excel</a>
-        <a href="{{ route('hr.payroll.export', ['run'=>$run,'format'=>'pdf']) }}" class="btn btn-outline-danger">PDF</a>
-        <a href="{{ route('hr.payroll.export', ['run'=>$run,'format'=>'csv']) }}" class="btn btn-outline-secondary">CSV</a>
+    <div class="pv-head">
+        <div>
+            <h1 class="t">{{ $run->periodLabel() }} <span class="pv-badge {{ $run->status }}" style="font-size:12px;vertical-align:middle">{{ str_replace('_',' ',$run->status) }}</span></h1>
+            <p class="s">Payroll run detail</p>
+        </div>
+        <div class="pv-actions">
+            <span class="pv-btngrp">
+                <a href="{{ route('hr.payroll.export', ['run'=>$run,'format'=>'xlsx']) }}" class="pv-btn sm g">Excel</a>
+                <a href="{{ route('hr.payroll.export', ['run'=>$run,'format'=>'pdf']) }}" class="pv-btn sm d">PDF</a>
+                <a href="{{ route('hr.payroll.export', ['run'=>$run,'format'=>'csv']) }}" class="pv-btn sm">CSV</a>
+            </span>
+            @if($run->status === 'draft')
+                <form method="POST" action="{{ route('hr.payroll.submit',$run) }}" style="display:inline">@csrf
+                    <button class="pv-btn p" {{ $items->isEmpty()?'disabled':'' }}><i class="fas fa-paper-plane"></i> Submit for approval</button></form>
+            @elseif($run->status === 'hr_submitted')
+                <span class="pv-muted" style="font-size:13px">Awaiting Super Admin approval</span>
+            @else
+                <span style="color:var(--pv-green);font-size:13px;font-weight:600"><i class="fas fa-check-circle"></i> Approved</span>
+            @endif
+            <a href="{{ route('hr.payroll.index') }}" class="pv-btn sm">‹ Runs</a>
+        </div>
     </div>
-    @if($run->status === 'draft')
-        <form method="POST" action="{{ route('hr.payroll.submit',$run) }}" class="ms-2">
-            @csrf
-            <button class="btn btn-sm btn-primary" {{ $items->isEmpty()?'disabled':'' }}>Submit for approval</button>
-        </form>
-    @elseif($run->status === 'hr_submitted')
-        <span class="ms-2 text-muted small">Awaiting Super Admin approval.</span>
-    @else
-        <span class="ms-2 text-success small">Approved · payslips generated.</span>
-    @endif
+
+    <div class="pv-card">
+        <div class="b tight">
+            @if($items->isEmpty())
+                <div class="pv-empty">No items. Go back and prepare the run.</div>
+            @else
+            <div class="pv-tw">
+            <table class="pv-table" style="min-width:680px">
+                <thead><tr><th>Employee</th><th class="pv-c">Payable</th><th class="pv-c">LOP</th><th class="pv-r">Gross</th><th class="pv-r">Deductions</th><th class="pv-r">Net Pay</th></tr></thead>
+                <tbody>
+                @foreach($items as $it)
+                    <tr>
+                        <td><strong>{{ $it->employee->name ?? 'Employee #'.$it->user_id }}</strong></td>
+                        <td class="pv-c">{{ $it->payable_days }}</td>
+                        <td class="pv-c" style="color:var(--pv-red)">{{ $it->lop_days }}</td>
+                        <td class="pv-r">₹{{ number_format($it->total_earnings,2) }}</td>
+                        <td class="pv-r">₹{{ number_format($it->total_deductions,2) }}</td>
+                        <td class="pv-r" style="font-weight:700">₹{{ number_format($it->net_pay,2) }}</td>
+                    </tr>
+                @endforeach
+                </tbody>
+                <tfoot><tr><td colspan="5" class="pv-r">Total Net</td><td class="pv-r">₹{{ number_format($run->total_net,2) }}</td></tr></tfoot>
+            </table>
+            </div>
+            @endif
+        </div>
+    </div>
 </div>
-
-<div class="card stat-card"><div class="card-body">
-    @if($items->isEmpty())
-        <p class="text-muted mb-0">No items. Go back and prepare the run.</p>
-    @else
-    <div class="table-responsive">
-        <table class="table table-sm table-striped align-middle mb-2">
-            <thead><tr>
-                <th>Employee</th><th class="text-center">Payable</th><th class="text-center">LOP</th>
-                <th class="text-end">Gross</th><th class="text-end">Deductions</th><th class="text-end">Net Pay (₹)</th>
-            </tr></thead>
-            <tbody>
-            @foreach($items as $it)
-                <tr>
-                    <td>{{ $it->employee->name ?? 'Employee #'.$it->user_id }} <span class="text-muted small">#{{ $it->user_id }}</span></td>
-                    <td class="text-center">{{ $it->payable_days }}</td>
-                    <td class="text-center text-danger">{{ $it->lop_days }}</td>
-                    <td class="text-end">{{ number_format($it->total_earnings,2) }}</td>
-                    <td class="text-end">{{ number_format($it->total_deductions,2) }}</td>
-                    <td class="text-end fw-bold">{{ number_format($it->net_pay,2) }}</td>
-                </tr>
-            @endforeach
-            </tbody>
-            <tfoot><tr class="fw-bold">
-                <td colspan="5" class="text-end">Total Net</td>
-                <td class="text-end">{{ number_format($run->total_net,2) }}</td>
-            </tr></tfoot>
-        </table>
-    </div>
-    <p class="text-muted small mb-0">Statutory deductions (PF/ESIC/PT/TDS) and LOP are auto-computed by the engine per the company config.</p>
-    @endif
-</div></div>
 @endsection

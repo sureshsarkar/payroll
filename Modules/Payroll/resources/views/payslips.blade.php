@@ -1,33 +1,40 @@
-@extends('attendance::layouts.payroll')
-@section('title', 'My Payslips')
-@section('subtitle', auth()->user()->name)
+@extends('frontend.student-dashboard.layouts.master')
 
-@section('content')
-<h4 class="mb-3">My payslips</h4>
+@section('dashboard-contents')
+<div class="pv">
+    @include('payroll::partials.ui')
 
-<div class="card stat-card"><div class="card-body">
-    @if($items->isEmpty())
-        <p class="text-muted mb-0">No payslips yet. They appear here once payroll for a month is approved.</p>
-    @else
-    <table class="table table-sm align-middle mb-0">
-        <thead><tr>
-            <th>Period</th><th class="text-end">Gross</th><th class="text-end">Deductions</th>
-            <th class="text-end">Net Pay ({{ $currency }})</th><th></th>
-        </tr></thead>
-        <tbody>
-        @foreach($items as $it)
-            <tr>
-                <td>{{ $it->run->periodLabel() }}</td>
-                <td class="text-end">{{ number_format($it->total_earnings,2) }}</td>
-                <td class="text-end">{{ number_format($it->total_deductions,2) }}</td>
-                <td class="text-end fw-bold">{{ number_format($it->net_pay,2) }}</td>
-                <td class="text-end">
-                    <a href="{{ route('employee.payslips.download',$it) }}" class="btn btn-sm btn-outline-primary">Download PDF</a>
-                </td>
-            </tr>
-        @endforeach
-        </tbody>
-    </table>
-    @endif
-</div></div>
+    <div class="pv-head">
+        <div>
+            <h1 class="t">My Payslips</h1>
+            <p class="s">Download your monthly payslips.</p>
+        </div>
+    </div>
+
+    <div class="pv-card">
+        <div class="b tight">
+            @if($items->isEmpty())
+                <div class="pv-empty"><div class="ic"><i class="fas fa-file-invoice-dollar"></i></div>
+                    No payslips yet. They appear once your monthly payroll is approved.</div>
+            @else
+            <div class="pv-tw">
+            <table class="pv-table" style="min-width:560px">
+                <thead><tr><th>Period</th><th class="pv-r">Gross</th><th class="pv-r">Deductions</th><th class="pv-r">Net Pay</th><th class="pv-r"></th></tr></thead>
+                <tbody>
+                @foreach($items as $it)
+                    <tr>
+                        <td><strong>{{ $it->run->periodLabel() }}</strong></td>
+                        <td class="pv-r">₹{{ number_format($it->total_earnings,2) }}</td>
+                        <td class="pv-r">₹{{ number_format($it->total_deductions,2) }}</td>
+                        <td class="pv-r" style="font-weight:700">₹{{ number_format($it->net_pay,2) }}</td>
+                        <td class="pv-r"><a href="{{ route('employee.payslips.download',$it) }}" class="pv-btn p sm"><i class="fas fa-download"></i> PDF</a></td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
 @endsection

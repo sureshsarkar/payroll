@@ -1,58 +1,64 @@
-@extends('attendance::layouts.payroll')
-@section('title', 'Team Attendance')
-@section('subtitle', 'HR · '.$hr->name)
+@extends('frontend.instructor-dashboard.layouts.master')
 
-@section('content')
-<div class="d-flex align-items-center mb-3">
-    <h4 class="mb-0">Mark team attendance</h4>
-    <a href="{{ route('hr.attendance.sheet') }}" class="btn btn-sm btn-outline-primary ms-auto">Monthly sheet &rarr;</a>
-</div>
+@section('dashboard-contents')
+<div class="pv">
+    @include('payroll::partials.ui')
 
-<form method="GET" class="row g-2 mb-3">
-    <div class="col-auto">
-        <input type="date" name="date" value="{{ $date }}" class="form-control form-control-sm">
+    <div class="pv-head">
+        <div>
+            <h1 class="t">Team Attendance</h1>
+            <p class="s">Mark attendance for your team.</p>
+        </div>
+        <div class="pv-actions">
+            <a href="{{ route('hr.attendance.sheet') }}" class="pv-btn"><i class="fas fa-table"></i> Monthly sheet</a>
+        </div>
     </div>
-    <div class="col-auto"><button class="btn btn-sm btn-secondary">Load date</button></div>
-</form>
 
-<form method="POST" action="{{ route('hr.attendance.mark') }}">
-    @csrf
-    <input type="hidden" name="date" value="{{ $date }}">
-    <div class="card stat-card">
-        <div class="card-body">
-            @if($team->isEmpty())
-                <p class="text-muted mb-0">No employees are assigned to you yet. Assign employees via their profile (reporting HR) to see them here.</p>
-            @else
-            <div class="table-responsive">
-                <table class="table table-sm align-middle">
+    <form method="GET" class="pv-inline" style="margin-bottom:16px">
+        <div class="pv-field" style="margin:0">
+            <label class="pv-label">Date</label>
+            <input type="date" name="date" value="{{ $date }}" class="pv-input" style="width:170px">
+        </div>
+        <button class="pv-btn">Load date</button>
+    </form>
+
+    <form method="POST" action="{{ route('hr.attendance.mark') }}">
+        @csrf
+        <input type="hidden" name="date" value="{{ $date }}">
+        <div class="pv-card">
+            <div class="h"><i class="fas fa-calendar-check pv-muted"></i> {{ \Carbon\Carbon::parse($date)->format('l, d M Y') }}</div>
+            <div class="b">
+                @if($team->isEmpty())
+                    <div class="pv-empty"><div class="ic"><i class="fas fa-user-friends"></i></div>
+                        No employees assigned to you yet. Add them under <strong>Employees</strong>.</div>
+                @else
+                <div class="pv-tw">
+                <table class="pv-table" style="min-width:auto">
                     <thead><tr>
-                        <th style="width:2rem"><input type="checkbox" onclick="document.querySelectorAll('.emp-cb').forEach(c=>c.checked=this.checked)"></th>
-                        <th>Employee</th>
-                        <th>Marked ({{ \Carbon\Carbon::parse($date)->format('d M') }})</th>
+                        <th style="width:36px"><input type="checkbox" onclick="document.querySelectorAll('.pv-cb').forEach(c=>c.checked=this.checked)"></th>
+                        <th>Employee</th><th>Marked status</th>
                     </tr></thead>
                     <tbody>
                     @foreach($team as $emp)
                         @php $rec = $marked->get($emp->id); @endphp
                         <tr>
-                            <td><input class="emp-cb form-check-input" type="checkbox" name="user_ids[]" value="{{ $emp->id }}"></td>
-                            <td>{{ $emp->name }} <span class="text-muted small">#{{ $emp->id }}</span></td>
-                            <td>
-                                @if($rec)<span class="badge badge-{{ $rec->status }}">{{ $rec->status }}</span>
-                                @else<span class="text-muted small">—</span>@endif
-                            </td>
+                            <td><input class="pv-cb" type="checkbox" name="user_ids[]" value="{{ $emp->id }}"></td>
+                            <td><strong>{{ $emp->name }}</strong> <span class="pv-mut2">#{{ $emp->id }}</span></td>
+                            <td>@if($rec)<span class="pv-badge {{ strtolower($rec->status) }}">{{ $rec->status }}</span>@else<span class="pv-muted">—</span>@endif</td>
                         </tr>
                     @endforeach
                     </tbody>
                 </table>
+                </div>
+                <div class="pv-inline" style="margin-top:16px">
+                    <select name="status" class="pv-select" style="width:auto">
+                        @foreach($statuses as $s)<option value="{{ $s }}">{{ $s }}</option>@endforeach
+                    </select>
+                    <button class="pv-btn g"><i class="fas fa-check"></i> Mark selected</button>
+                </div>
+                @endif
             </div>
-            <div class="d-flex gap-2 align-items-center">
-                <select name="status" class="form-select form-select-sm" style="width:auto">
-                    @foreach($statuses as $s)<option value="{{ $s }}">{{ $s }}</option>@endforeach
-                </select>
-                <button class="btn btn-sm btn-success">Mark selected</button>
-            </div>
-            @endif
         </div>
-    </div>
-</form>
+    </form>
+</div>
 @endsection
