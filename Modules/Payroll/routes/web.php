@@ -40,6 +40,7 @@ Route::middleware(['web', 'auth', 'instructorrole'])
         Route::get('payroll/{run}', [PayrollController::class, 'show'])->name('payroll.show');
         Route::get('payroll/{run}/export', [PayrollController::class, 'exportRun'])->name('payroll.export');
         Route::get('payroll/{run}/slip/{employee}', [PayrollController::class, 'exportEmployee'])->name('payroll.slip');
+        Route::get('payroll/{run}/payslip/{employee}', [PayrollController::class, 'exportPayslip'])->name('payroll.payslip');
         Route::post('payroll/{run}/submit', [PayrollController::class, 'submit'])->name('payroll.submit');
     });
 
@@ -53,5 +54,6 @@ Route::middleware(['web', 'auth:admin'])
         Route::get('{run}', [PayrollController::class, 'adminShow'])->name('show');
         Route::get('{run}/export', [PayrollController::class, 'exportRun'])->name('export');
         Route::get('{run}/slip/{employee}', [PayrollController::class, 'exportEmployee'])->name('slip');
+        Route::get('{run}/payslip/{employee}', [PayrollController::class, 'exportPayslip'])->name('payslip');
         Route::post('{run}/approve', [PayrollController::class, 'approve'])->name('approve');
     });

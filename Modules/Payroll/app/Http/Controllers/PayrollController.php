@@ -15,6 +15,7 @@ use Modules\Attendance\app\Services\AttendanceService;
 use Modules\HrEmployee\app\Models\EmployeeProfile;
 use Modules\Payroll\app\Models\PayrollRun;
 use Modules\Payroll\app\Services\PayrollRunService;
+use Modules\Payroll\app\Support\AmountToWords;
 use Modules\Payroll\app\Support\WageRegisterFormatter;
 
 /**
@@ -114,6 +115,50 @@ class PayrollController extends Controller
         $filename = 'Salary Slip - '.($employee->name ?: 'Employee '.$employee->id).' - '.$run->periodLabel().'.pdf';
 
         return response($this->registerPdf($run, $items), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ]);
+    }
+
+    /**
+     * Export a single employee's statutory pay slip (Form XI, Rule 26(2)) for
+     * the given run's month — the individual bilingual-ready wage slip.
+     */
+    public function exportPayslip(PayrollRun $run, User $employee)
+    {
+        $item = $run->items()->with('employee')->where('user_id', $employee->id)->firstOrFail();
+        $profile = EmployeeProfile::with('department')->where('user_id', $employee->id)->first();
+        $summary = app(AttendanceService::class)->monthlySummary($employee->id, $run->year, $run->month);
+
+        $register = (new WageRegisterFormatter())->build(
+            collect([$item]), collect([$employee->id => $summary]), collect([$employee->id => $profile])
+        );
+
+        $photo = ($profile && filled($profile->photo_path) && is_file(public_path($profile->photo_path)))
+            ? public_path($profile->photo_path) : null;
+
+        $options = new Options();
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('isRemoteEnabled', false);
+        $pdf = new Dompdf($options);
+        $pdf->loadHtml(view('payroll::payslip-formxi-pdf', [
+            'run'           => $run,
+            'employee'      => $item->employee ?: $employee,
+            'profile'       => $profile,
+            'item'          => $item,
+            'row'           => $register['rows'][0],
+            'summary'       => $summary,
+            'deductions'    => collect($item->deductions ?? []),
+            'words'         => AmountToWords::rupees((float) $item->net_pay),
+            'establishment' => config('payroll.establishment'),
+            'photo'         => $photo,
+        ])->render(), 'UTF-8');
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->render();
+
+        $filename = 'Payslip - '.($employee->name ?: 'Employee '.$employee->id).' - '.$run->periodLabel().'.pdf';
+
+        return response($pdf->output(), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);

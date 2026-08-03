@@ -40,7 +40,10 @@
                 <td class="text-end">{{ number_format($it->total_earnings,2) }}</td>
                 <td class="text-end">{{ number_format($it->total_deductions,2) }}</td>
                 <td class="text-end fw-bold">{{ number_format($it->net_pay,2) }}</td>
-                <td class="text-center"><a href="{{ route('admin.payroll.slip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="btn btn-sm btn-outline-danger py-0">Form IV</a></td>
+                <td class="text-center text-nowrap">
+                    <a href="{{ route('admin.payroll.payslip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="btn btn-sm btn-outline-primary py-0">Payslip</a>
+                    <a href="{{ route('admin.payroll.slip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="btn btn-sm btn-outline-danger py-0">Form IV</a>
+                </td>
             </tr>
         @endforeach
         </tbody>

@@ -44,7 +44,10 @@
                         <td class="pv-r">₹{{ number_format($it->total_earnings,2) }}</td>
                         <td class="pv-r">₹{{ number_format($it->total_deductions,2) }}</td>
                         <td class="pv-r" style="font-weight:700">₹{{ number_format($it->net_pay,2) }}</td>
-                        <td class="pv-c"><a href="{{ route('hr.payroll.slip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="pv-btn sm d">Form IV</a></td>
+                        <td class="pv-c">
+                            <a href="{{ route('hr.payroll.payslip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="pv-btn sm">Payslip</a>
+                            <a href="{{ route('hr.payroll.slip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="pv-btn sm d">Form IV</a>
+                        </td>
                     </tr>
                 @endforeach
                 </tbody>
