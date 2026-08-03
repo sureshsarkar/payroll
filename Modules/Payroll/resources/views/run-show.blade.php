@@ -34,7 +34,7 @@
             @else
             <div class="pv-tw">
             <table class="pv-table" style="min-width:680px">
-                <thead><tr><th>Employee</th><th class="pv-c">Payable</th><th class="pv-c">LOP</th><th class="pv-r">Gross</th><th class="pv-r">Deductions</th><th class="pv-r">Net Pay</th></tr></thead>
+                <thead><tr><th>Employee</th><th class="pv-c">Payable</th><th class="pv-c">LOP</th><th class="pv-r">Gross</th><th class="pv-r">Deductions</th><th class="pv-r">Net Pay</th><th class="pv-c">Slip</th></tr></thead>
                 <tbody>
                 @foreach($items as $it)
                     <tr>
@@ -44,10 +44,11 @@
                         <td class="pv-r">₹{{ number_format($it->total_earnings,2) }}</td>
                         <td class="pv-r">₹{{ number_format($it->total_deductions,2) }}</td>
                         <td class="pv-r" style="font-weight:700">₹{{ number_format($it->net_pay,2) }}</td>
+                        <td class="pv-c"><a href="{{ route('hr.payroll.slip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="pv-btn sm d">Form IV</a></td>
                     </tr>
                 @endforeach
                 </tbody>
-                <tfoot><tr><td colspan="5" class="pv-r">Total Net</td><td class="pv-r">₹{{ number_format($run->total_net,2) }}</td></tr></tfoot>
+                <tfoot><tr><td colspan="6" class="pv-r">Total Net</td><td class="pv-r">₹{{ number_format($run->total_net,2) }}</td></tr></tfoot>
             </table>
             </div>
             @endif

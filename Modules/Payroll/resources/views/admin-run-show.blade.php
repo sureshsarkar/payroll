@@ -29,6 +29,7 @@
         <thead><tr>
             <th>Employee</th><th class="text-center">Payable</th><th class="text-center">LOP</th>
             <th class="text-end">Gross</th><th class="text-end">Deductions</th><th class="text-end">Net Pay (₹)</th>
+            <th class="text-center">Slip</th>
         </tr></thead>
         <tbody>
         @foreach($items as $it)
@@ -39,10 +40,11 @@
                 <td class="text-end">{{ number_format($it->total_earnings,2) }}</td>
                 <td class="text-end">{{ number_format($it->total_deductions,2) }}</td>
                 <td class="text-end fw-bold">{{ number_format($it->net_pay,2) }}</td>
+                <td class="text-center"><a href="{{ route('admin.payroll.slip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="btn btn-sm btn-outline-danger py-0">Form IV</a></td>
             </tr>
         @endforeach
         </tbody>
-        <tfoot><tr class="fw-bold"><td colspan="5" class="text-end">Total Net</td>
+        <tfoot><tr class="fw-bold"><td colspan="6" class="text-end">Total Net</td>
             <td class="text-end">{{ number_format($run->total_net,2) }}</td></tr></tfoot>
     </table>
     </div>

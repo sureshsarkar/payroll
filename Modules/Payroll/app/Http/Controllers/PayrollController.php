@@ -84,33 +84,7 @@ class PayrollController extends Controller
         $items = $run->items()->with('employee')->get();
 
         if ($format === 'pdf') {
-            $profiles = EmployeeProfile::whereIn('user_id', $items->pluck('user_id'))
-                ->with('department')->get()->keyBy('user_id');
-
-            // Attendance summary per employee for the run's month (Form IV needs
-            // the day columns: worked / weekly-off / holiday / leave / pay days).
-            $attendance = app(AttendanceService::class);
-            $summaries = $items->mapWithKeys(fn ($item) => [
-                $item->user_id => $attendance->monthlySummary($item->user_id, $run->year, $run->month),
-            ]);
-
-            $register = (new WageRegisterFormatter())->build($items, $summaries, $profiles);
-            $establishment = config('payroll.establishment');
-
-            $options = new Options();
-            $options->set('defaultFont', 'DejaVu Sans');
-            $options->set('isRemoteEnabled', false);
-            $pdf = new Dompdf($options);
-            $pdf->loadHtml(view('payroll::wage-register-pdf', [
-                'run'           => $run,
-                'rows'          => $register['rows'],
-                'totals'        => $register['totals'],
-                'establishment' => $establishment,
-            ])->render(), 'UTF-8');
-            $pdf->setPaper('A4', 'landscape');
-            $pdf->render();
-
-            return response($pdf->output(), 200, [
+            return response($this->registerPdf($run, $items), 200, [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'attachment; filename="Salary Register '.$run->periodLabel().'.pdf"',
             ]);
@@ -126,6 +100,60 @@ class PayrollController extends Controller
         ])->all();
 
         return $exporter->download($format, 'Payroll '.$run->periodLabel(), $headers, $rows, 'landscape');
+    }
+
+    /**
+     * Export a single employee's Form IV wage/salary slip (one row of the
+     * register) for the given run's month.
+     */
+    public function exportEmployee(PayrollRun $run, User $employee)
+    {
+        $items = $run->items()->with('employee')->where('user_id', $employee->id)->get();
+        abort_if($items->isEmpty(), 404);
+
+        $filename = 'Salary Slip - '.($employee->name ?: 'Employee '.$employee->id).' - '.$run->periodLabel().'.pdf';
+
+        return response($this->registerPdf($run, $items), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ]);
+    }
+
+    /**
+     * Render the given payroll items as a Form IV "Register of Payment of
+     * Wages / Salary" PDF and return the raw bytes. Shared by the whole-run
+     * export and the single-employee slip so both stay pixel-identical.
+     *
+     * @param  \Illuminate\Support\Collection<int, \Modules\Payroll\app\Models\PayrollItem>  $items
+     */
+    private function registerPdf(PayrollRun $run, Collection $items): string
+    {
+        $profiles = EmployeeProfile::whereIn('user_id', $items->pluck('user_id'))
+            ->with('department')->get()->keyBy('user_id');
+
+        // Attendance summary per employee for the run's month (Form IV needs
+        // the day columns: worked / weekly-off / holiday / leave / pay days).
+        $attendance = app(AttendanceService::class);
+        $summaries = $items->mapWithKeys(fn ($item) => [
+            $item->user_id => $attendance->monthlySummary($item->user_id, $run->year, $run->month),
+        ]);
+
+        $register = (new WageRegisterFormatter())->build($items, $summaries, $profiles);
+
+        $options = new Options();
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('isRemoteEnabled', false);
+        $pdf = new Dompdf($options);
+        $pdf->loadHtml(view('payroll::wage-register-pdf', [
+            'run'           => $run,
+            'rows'          => $register['rows'],
+            'totals'        => $register['totals'],
+            'establishment' => config('payroll.establishment'),
+        ])->render(), 'UTF-8');
+        $pdf->setPaper('A4', 'landscape');
+        $pdf->render();
+
+        return $pdf->output();
     }
 
     /** HR: submit the draft run for Super-Admin approval. */
