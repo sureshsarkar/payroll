@@ -5,9 +5,12 @@ namespace Modules\HrEmployee\app\Models;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\Company\app\Concerns\BelongsToCompany;
 
 class EmployeeProfile extends Model
 {
+    use BelongsToCompany;
+
     public const ACTIVE     = 'active';
     public const ONBOARDING = 'onboarding';
     public const EXITED     = 'exited';

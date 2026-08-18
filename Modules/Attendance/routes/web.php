@@ -13,7 +13,7 @@ use Modules\Attendance\app\Http\Controllers\AttendanceController;
 */
 
 // ---- Employee self-service ------------------------------------------------
-Route::middleware(['web', 'auth', 'studentrole'])
+Route::middleware(['web', 'auth', 'studentrole', 'companycontext'])
     ->prefix('employee/attendance')
     ->name('employee.attendance.')
     ->group(function () {
@@ -24,7 +24,7 @@ Route::middleware(['web', 'auth', 'studentrole'])
     });
 
 // ---- HR team management ---------------------------------------------------
-Route::middleware(['web', 'auth', 'instructorrole'])
+Route::middleware(['web', 'auth', 'instructorrole', 'companycontext'])
     ->prefix('hr/attendance')
     ->name('hr.attendance.')
     ->group(function () {

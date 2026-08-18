@@ -4,9 +4,12 @@ namespace Modules\Leave\app\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\Company\app\Concerns\BelongsToCompany;
 
 class LeaveType extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'name', 'code', 'is_paid', 'annual_quota', 'carry_forward', 'is_active',
     ];

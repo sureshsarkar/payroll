@@ -5,9 +5,12 @@ namespace Modules\Payroll\app\Models;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\Company\app\Concerns\BelongsToCompany;
 
 class PayrollItem extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'payroll_run_id', 'user_id', 'payable_days', 'lop_days',
         'gross', 'total_earnings', 'total_deductions', 'lop_amount',

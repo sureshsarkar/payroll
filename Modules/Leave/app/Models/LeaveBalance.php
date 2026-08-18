@@ -5,9 +5,12 @@ namespace Modules\Leave\app\Models;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\Company\app\Concerns\BelongsToCompany;
 
 class LeaveBalance extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'user_id', 'leave_type_id', 'year', 'allotted', 'used',
     ];

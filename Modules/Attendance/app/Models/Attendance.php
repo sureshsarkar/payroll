@@ -5,9 +5,12 @@ namespace Modules\Attendance\app\Models;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\Company\app\Concerns\BelongsToCompany;
 
 class Attendance extends Model
 {
+    use BelongsToCompany;
+
     /** Canonical status values. */
     public const PRESENT  = 'Present';
     public const ABSENT   = 'Absent';

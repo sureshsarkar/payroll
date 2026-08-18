@@ -6,9 +6,12 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\Company\app\Concerns\BelongsToCompany;
 
 class Department extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'name', 'code', 'head_user_id', 'parent_id', 'is_active',
     ];

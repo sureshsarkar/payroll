@@ -13,7 +13,7 @@ use Modules\Leave\app\Http\Controllers\LeaveController;
 */
 
 // ---- Employee ------------------------------------------------------------
-Route::middleware(['web', 'auth', 'studentrole'])
+Route::middleware(['web', 'auth', 'studentrole', 'companycontext'])
     ->prefix('employee/leave')
     ->name('employee.leave.')
     ->group(function () {
@@ -23,7 +23,7 @@ Route::middleware(['web', 'auth', 'studentrole'])
     });
 
 // ---- HR ------------------------------------------------------------------
-Route::middleware(['web', 'auth', 'instructorrole'])
+Route::middleware(['web', 'auth', 'instructorrole', 'companycontext'])
     ->prefix('hr/leave')
     ->name('hr.leave.')
     ->group(function () {

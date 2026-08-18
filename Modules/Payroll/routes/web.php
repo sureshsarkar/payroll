@@ -16,7 +16,7 @@ use Modules\Payroll\app\Http\Controllers\SalaryStructureController;
 */
 
 // ---- Employee: dashboard + payslips ---------------------------------------
-Route::middleware(['web', 'auth', 'studentrole'])->group(function () {
+Route::middleware(['web', 'auth', 'studentrole', 'companycontext'])->group(function () {
     Route::get('employee/overview', [DashboardController::class, 'employee'])->name('employee.overview');
 
     Route::prefix('employee/payslips')->name('employee.payslips.')->group(function () {
@@ -27,7 +27,7 @@ Route::middleware(['web', 'auth', 'studentrole'])->group(function () {
 });
 
 // ---- HR: salary structures + payroll runs ---------------------------------
-Route::middleware(['web', 'auth', 'instructorrole'])
+Route::middleware(['web', 'auth', 'instructorrole', 'companycontext'])
     ->prefix('hr')
     ->name('hr.')
     ->group(function () {
