@@ -4,9 +4,12 @@ namespace Modules\Payroll\app\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\Company\app\Concerns\BelongsToCompany;
 
 class SalaryComponent extends Model
 {
+    use BelongsToCompany;
+
     public const EARNING   = 'earning';
     public const DEDUCTION = 'deduction';
 

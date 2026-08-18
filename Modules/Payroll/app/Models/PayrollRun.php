@@ -7,9 +7,12 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\Company\app\Concerns\BelongsToCompany;
 
 class PayrollRun extends Model
 {
+    use BelongsToCompany;
+
     public const DRAFT          = 'draft';
     public const HR_SUBMITTED   = 'hr_submitted';
     public const ADMIN_APPROVED = 'admin_approved';

@@ -5,9 +5,12 @@ namespace Modules\Payroll\app\Models;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\Company\app\Concerns\BelongsToCompany;
 
 class SalaryRevision extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'user_id', 'old_ctc', 'new_ctc', 'effective_from', 'reason', 'created_by',
     ];

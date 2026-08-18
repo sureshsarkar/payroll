@@ -935,6 +935,58 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
          are added to this same group in Phase C. Only currently-functional items
          are listed. ════════════════════════════════════════════════════════ --}}
 
+    {{-- ════════════════════════════════════════════════════════════════
+         2026-08-18 — Multi-tenant: active-company switcher. Shown only to HR
+         (instructor role). Lets an HR see the active company and switch between
+         the companies they own, or register a new one. Resolved defensively so
+         a missing Company module/route never 500s the whole panel.
+         ════════════════════════════════════════════════════════════════ --}}
+    @if ((userAuth()?->role ?? null) === 'instructor')
+        @php
+            try { $sbCompanies = \Modules\Company\app\Models\Company::forUser(userAuth()); }
+            catch (\Throwable $e) { $sbCompanies = collect(); }
+            $sbActiveId = (int) session('active_company_id');
+            $sbActive   = $sbCompanies->firstWhere('id', $sbActiveId) ?? $sbCompanies->first();
+        @endphp
+        <div class="sb-section" style="padding-top:10px;">
+            <div class="sb-section-label">{{ __('Active Company') }}</div>
+            @if ($sbCompanies->isNotEmpty())
+                <details class="sb-group" style="padding:0 6px;">
+                    <summary class="sb-group__head" style="border:1px solid var(--csb-border);border-radius:9px;background:var(--csb-surface);padding:9px 11px;">
+                        <span class="sb-icon" style="width:24px;height:24px;"><i class="bi bi-building"></i></span>
+                        <span style="flex:1;color:var(--text);font-weight:600;text-transform:none;letter-spacing:0;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $sbActive?->name ?? __('Select company') }}</span>
+                        <i class="bi bi-chevron-down sb-group__chev"></i>
+                    </summary>
+                    <ul class="sb-nav" style="margin-top:6px;">
+                        @foreach ($sbCompanies as $sbCo)
+                            <li class="{{ $sbCo->id === $sbActive?->id ? 'active' : '' }}">
+                                @if ($sbCo->id === $sbActive?->id)
+                                    <a href="{{ route('hr.companies.index') }}">
+                                        <span class="sb-icon"><i class="bi bi-check2-circle"></i></span>{{ $sbCo->name }}
+                                    </a>
+                                @else
+                                    <a href="#" onclick="event.preventDefault(); this.querySelector('form').submit();">
+                                        <span class="sb-icon"><i class="bi bi-building"></i></span>{{ $sbCo->name }}
+                                        <form method="POST" action="{{ route('hr.companies.switch', $sbCo) }}" class="d-none">@csrf</form>
+                                    </a>
+                                @endif
+                            </li>
+                        @endforeach
+                        <li>
+                            <a href="{{ route('hr.companies.create') }}">
+                                <span class="sb-icon"><i class="bi bi-plus-lg"></i></span>{{ __('Register New Company') }}
+                            </a>
+                        </li>
+                    </ul>
+                </details>
+            @else
+                <a href="{{ route('hr.companies.create') }}" class="sb-quick-add__btn" style="text-decoration:none;justify-content:center;">
+                    <span class="sb-icon"><i class="bi bi-plus-lg"></i></span>{{ __('Register your company') }}
+                </a>
+            @endif
+        </div>
+    @endif
+
     {{-- GROUP 1 — OVERVIEW ─────────────────────────────────────── --}}
     <details class="sb-group" data-sb-key="overview" open>
         <summary class="sb-group__head">

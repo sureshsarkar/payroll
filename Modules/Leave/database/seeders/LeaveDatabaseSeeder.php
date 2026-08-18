@@ -3,12 +3,17 @@
 namespace Modules\Leave\database\seeders;
 
 use Illuminate\Database\Seeder;
+use Modules\Company\app\Models\Company;
+use Modules\Company\app\Scopes\CompanyScope;
 use Modules\Leave\app\Models\LeaveType;
 
 class LeaveDatabaseSeeder extends Seeder
 {
     /**
-     * Seed the standard leave types (idempotent — safe to re-run).
+     * Seed the standard leave types per company (idempotent — safe to re-run).
+     * Multi-tenant: leave types belong to a company, so seed a set for each
+     * existing company. New companies get their own set at registration time
+     * (CompanyController::seedDefaults).
      */
     public function run(): void
     {
@@ -19,8 +24,13 @@ class LeaveDatabaseSeeder extends Seeder
             ['name' => 'Loss of Pay',   'code' => 'LOP', 'is_paid' => false, 'annual_quota' => 0,  'carry_forward' => false],
         ];
 
-        foreach ($types as $t) {
-            LeaveType::updateOrCreate(['code' => $t['code']], $t + ['is_active' => true]);
+        foreach (Company::pluck('id') as $companyId) {
+            foreach ($types as $t) {
+                LeaveType::withoutGlobalScope(CompanyScope::class)->updateOrCreate(
+                    ['company_id' => $companyId, 'code' => $t['code']],
+                    $t + ['company_id' => $companyId, 'is_active' => true],
+                );
+            }
         }
     }
 }

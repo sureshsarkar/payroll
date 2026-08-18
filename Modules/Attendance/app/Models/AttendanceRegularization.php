@@ -5,9 +5,12 @@ namespace Modules\Attendance\app\Models;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\Company\app\Concerns\BelongsToCompany;
 
 class AttendanceRegularization extends Model
 {
+    use BelongsToCompany;
+
     public const PENDING  = 'pending';
     public const APPROVED = 'approved';
     public const REJECTED = 'rejected';

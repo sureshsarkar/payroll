@@ -6,9 +6,12 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\Company\app\Concerns\BelongsToCompany;
 
 class SalaryStructure extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'user_id', 'ctc_annual', 'gross_monthly', 'effective_from',
         'is_current', 'created_by',

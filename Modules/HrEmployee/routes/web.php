@@ -10,7 +10,7 @@ use Modules\HrEmployee\app\Http\Controllers\HrEmployeeController;
 | HR (instructorrole): employee onboarding + department management.
 */
 
-Route::middleware(['web', 'auth', 'instructorrole'])
+Route::middleware(['web', 'auth', 'instructorrole', 'companycontext'])
     ->prefix('hr')
     ->name('hr.')
     ->group(function () {
