@@ -31,7 +31,7 @@
 !/storage/logs/.gitignore
 
 # --- Secrets & creds ---
-.env
+# .env
 .env.backup
 .env.production
 .env.*.local
