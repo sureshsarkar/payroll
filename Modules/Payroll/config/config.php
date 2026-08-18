@@ -20,6 +20,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Coach / HR panel presentation
+    |--------------------------------------------------------------------------
+    | During the LMS→Payroll conversion the coach panel is repurposed as an
+    | HR/Payroll workspace. The legacy LMS sidebar groups (Academic, People,
+    | Sales & Operations, Communication) are hidden by default. Set
+    | PAYROLL_SHOW_LMS_COACH_MENUS=true to bring them back.
+    */
+    'coach' => [
+        'show_lms_menus' => env('PAYROLL_SHOW_LMS_COACH_MENUS', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Statutory deduction defaults (India)
     |--------------------------------------------------------------------------
     | Rates are configurable — Super Admin can override at runtime later. These

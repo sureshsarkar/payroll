@@ -1004,6 +1004,9 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
     </details>
 
     {{-- GROUP 2 — ACADEMIC MANAGEMENT ──────────────────────────── --}}
+    {{-- 2026-08-18 — LMS→Payroll conversion: hidden by default. Restore via
+         PAYROLL_SHOW_LMS_COACH_MENUS=true (config payroll.coach.show_lms_menus). --}}
+    @if (config('payroll.coach.show_lms_menus'))
     <details class="sb-group" data-sb-key="academic" open>
         <summary class="sb-group__head">
             <span>{{ __('Academic Management') }}</span>
@@ -1079,8 +1082,10 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
             @endif
         </ul>
     </details>
+    @endif
 
     {{-- GROUP 3 — PEOPLE MANAGEMENT ────────────────────────────── --}}
+    @if (config('payroll.coach.show_lms_menus'))
     <details class="sb-group" data-sb-key="people" open>
         <summary class="sb-group__head">
             <span>{{ __('People Management') }}</span>
@@ -1155,8 +1160,10 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
             @endif
         </ul>
     </details>
+    @endif
 
     {{-- GROUP 4 — SALES & OPERATIONS ───────────────────────────── --}}
+    @if (config('payroll.coach.show_lms_menus'))
     <details class="sb-group" data-sb-key="sales" open>
         <summary class="sb-group__head">
             <span>{{ __('Sales & Operations') }}</span>
@@ -1223,11 +1230,13 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
             @endif
         </ul>
     </details>
+    @endif
 
     {{-- GROUP 5 — COMMUNICATION ────────────────────────────────── --}}
     {{-- Only currently-functional communication surfaces: Announcements +
          Email Notifications. SMS / WhatsApp are intentionally NOT here (no
          placeholder / dummy toggle) — documented for a future phase. --}}
+    @if (config('payroll.coach.show_lms_menus'))
     <details class="sb-group" data-sb-key="communication" open>
         <summary class="sb-group__head">
             <span>{{ __('Communication') }}</span>
@@ -1264,6 +1273,7 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
             @endif
         </ul>
     </details>
+    @endif
 
     {{-- GROUP 6 — REPORTS ──────────────────────────────────────── --}}
     {{-- Analytics + the centralised Reports module (Revenue / Payments /
