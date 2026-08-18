@@ -130,6 +130,8 @@ class Kernel extends HttpKernel
         // pre-existing rows. The old gating middleware itself is no longer used.
         'studentrole' => \App\Http\Middleware\StudentroleMiddleware::class,
         'instructorrole' => \App\Http\Middleware\InstructorMiddleware::class,
+        // Multi-tenant: resolves + binds the active Company for HR/Employee requests.
+        'companycontext' => \Modules\Company\app\Http\Middleware\EnsureCompanyContext::class,
         // 2026-06-09 (security audit) — JSON role gate for the coach API.
         'api.instructor' => \App\Http\Middleware\ApiInstructorMiddleware::class,
         '2fa' => \App\Http\Middleware\EnsureTwoFactorChallenged::class,

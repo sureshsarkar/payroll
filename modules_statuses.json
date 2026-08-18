@@ -34,5 +34,6 @@
     "Attendance": true,
     "HrEmployee": true,
     "Leave": true,
-    "Payroll": true
+    "Payroll": true,
+    "Company": true
 }

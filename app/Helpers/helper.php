@@ -394,6 +394,19 @@ if (! function_exists('userAuth')) {
         return Auth::guard('web')->user();
     }
 }
+if (! function_exists('currentCompany')) {
+    /**
+     * The active tenant Company bound by EnsureCompanyContext, or null when
+     * unbound (CLI, seeders, backfill, Super Admin) — callers/scope must treat
+     * null as "no tenant filter".
+     *
+     * @return \Modules\Company\app\Models\Company|null
+     */
+    function currentCompany()
+    {
+        return app()->bound('currentCompany') ? app('currentCompany') : null;
+    }
+}
 if (! function_exists('adminAuth')) {
     function adminAuth()
     {
