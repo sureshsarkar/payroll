@@ -54,15 +54,26 @@ class EmployeeProfile extends Model
     }
 
     /**
-     * User-ids of the employees an HR manages: those reporting to them via
-     * profile, plus their legacy coach_id-linked students (transition fallback).
+     * User-ids of the employees an HR manages, scoped to the active company.
+     *
+     * The `reporting_hr_id` lookup is automatically constrained to the active
+     * company by the CompanyScope global scope, so a colliding reporting_hr_id
+     * in another tenant can never leak in. The legacy coach_id fallback is only
+     * used when NO company context is bound (pre-company / CLI paths) — inside a
+     * tenant request we trust profile membership alone, which cannot cross
+     * companies.
      *
      * @return \Illuminate\Support\Collection<int, int>
      */
     public static function teamUserIds(User $hr): \Illuminate\Support\Collection
     {
         $byProfile = static::where('reporting_hr_id', $hr->id)->pluck('user_id');
-        $byCoach   = User::where('role', 'student')->where('coach_id', $hr->id)->pluck('id');
+
+        if (currentCompany()) {
+            return $byProfile->unique()->values();
+        }
+
+        $byCoach = User::where('role', 'student')->where('coach_id', $hr->id)->pluck('id');
 
         return $byProfile->merge($byCoach)->unique()->values();
     }
