@@ -97,7 +97,7 @@ class SocialiteController extends Controller {
                                 $notification = ['messege' => $notification, 'alert-type' => 'success'];
 
                                 return redirect()
-                                    ->intended(route('student.dashboard'))
+                                    ->intended(route('employee.overview'))
                                     ->with($notification);
                             }
                         } else {
@@ -133,10 +133,12 @@ class SocialiteController extends Controller {
                         $notification = ['messege' => $notification, 'alert-type' => 'success'];
 
                         // user.dashboard route doesn't exist; pick the correct
-                        // dashboard from the user's role.
+                        // dashboard from the user's role. LMS→HR conversion —
+                        // this install has no LMS features exposed any more,
+                        // so employees/HR land on their own dashboards.
                         $dashboard = $user->role === 'student'
-                            ? route('student.dashboard')
-                            : route('instructor.dashboard');
+                            ? route('employee.overview')
+                            : route('hr.overview');
 
                         return redirect()->intended($dashboard)->with($notification);
                     }
@@ -163,7 +165,7 @@ class SocialiteController extends Controller {
                         $notification = ['messege' => $notification, 'alert-type' => 'success'];
 
                         return redirect()
-                            ->intended(route('student.dashboard'))
+                            ->intended(route('employee.overview'))
                             ->with($notification);
                     }
 

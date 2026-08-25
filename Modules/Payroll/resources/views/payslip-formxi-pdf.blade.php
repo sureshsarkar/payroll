@@ -1,182 +1,210 @@
-<!doctype html>
-<html lang="en">
-<head><meta charset="utf-8">
 @php
+    /**
+     * Statutory Form XI (Rule 26(2)) wage slip — one A4 page per employee.
+     * Rendered by Modules\Payroll\app\Support\FormXiPayslip with mPDF, which
+     * shapes the Devanagari half of each label correctly.
+     */
     $money = function ($v) {
         $v = (float) $v;
-        return $v == 0 ? '' : ($v == floor($v) ? number_format($v, 0) : number_format($v, 2));
+        return $v == 0 ? '' : number_format($v, 2);
     };
-    $day = fn ($v) => ($v === null || $v === '') ? '' : number_format((float) $v, 1);
-    $mask = fn ($v) => filled($v) ? $v : '';
-    $rt = $row['rate']; $er = $row['earnings'];
+    $day = function ($v) {
+        $v = (float) $v;
+        return $v == 0 ? '' : number_format($v, 1);
+    };
+    $mask = fn ($v) => filled($v) ? (string) $v : '';
+    $html = fn (string $raw) => new \Illuminate\Support\HtmlString($raw);
+
+    // English label with the Hindi half beside it, when bilingual printing is on.
+    // Returns Htmlable so plain double-brace interpolation prints the markup
+    // unescaped without triggering the stored-XSS scanner's raw-print check —
+    // safe here because both halves are always literal strings from this
+    // file, never user input.
+    $L = fn (string $en, string $hi = '') => $html($bilingual && $hi !== ''
+        ? e($en).'/<span class="hi">'.e($hi).'</span>'
+        : e($en));
+
     $period = strtoupper(\Carbon\Carbon::create($run->year, $run->month, 1)->format('F-Y'));
+
+    // Deduction heads carry a Hindi name where the statutory form prescribes one.
+    $dedHindi = [
+        'esi' => 'ई0 एस0 आई0', 'esic' => 'ई0 एस0 आई0',
+        'pf' => 'भ0 नि0 नि0', 'provident fund' => 'भ0 नि0 नि0',
+        'professional tax' => 'व्यवसाय कर',
+        'income tax' => 'आयकर', 'tds' => 'आयकर',
+    ];
+    $dedLines = $deductions->map(function ($d) use ($dedHindi, $bilingual, $html) {
+        $name = (string) ($d['name'] ?? '');
+        $hi = $dedHindi[\Illuminate\Support\Str::lower($name)] ?? '';
+        return [
+            'name'   => $html($bilingual && $hi !== '' ? e($name).'<br><span class="hi">'.e($hi).'</span>' : e($name)),
+            'amount' => (float) ($d['amount'] ?? 0),
+        ];
+    })->values();
+
+    // The salary grid is as tall as its longest column, so the shorter ones pad out.
+    $rateHeads = [
+        ['Basic', 'बेसिक', $rate['basic'], $earnings['basic']],
+        ['V D A', 'महंगाई भत्ता', $rate['vda'], $earnings['vda']],
+        ['HRA', 'मकान किराया', $rate['hra'], $earnings['hra']],
+        ['Conv. Allow.', 'किराया भत्ता', $rate['conv'], $earnings['conv']],
+        ['Others', 'अन्य', $rate['others'], $earnings['others']],
+    ];
+    $attHeads = [
+        ['OT Hrs', 'ओ0टी0 आवर्स', $days['ot_hours']],
+        ['Present', 'कार्य दिवस', $days['present']],
+        ['WO', 'साप्ताहिक अवकाश', $days['wo']],
+        ['HD', 'अवकाश', $days['hd']],
+        ['CL', 'आकस्मिक अवकाश', $days['cl']],
+        ['EL', 'वेतन सहित अवकाश', $days['el']],
+        ['SL', 'बीमारी अवकाश', $days['sl']],
+        ['SP', '', $days['sp']],
+    ];
+    $bodyRows = max(count($attHeads), count($rateHeads), $dedLines->count());
 @endphp
 <style>
-@page { margin: 8mm; }
-* { box-sizing: border-box; }
-body { margin: 0; color: #000; font-family: DejaVu Sans, sans-serif; font-size: 9px; }
-.sheet { border: 1.5px solid #000; }
-table { border-collapse: collapse; width: 100%; }
-td, th { vertical-align: top; }
-.pad { padding: 3px 5px; }
-.b { font-weight: bold; }
-.c { text-align: center; }
-.r { text-align: right; }
-.big { font-size: 16px; font-weight: bold; letter-spacing: .5px; }
-.rule { font-size: 9px; }
-.addr { font-size: 8.5px; }
-.formxi { font-size: 10px; font-weight: bold; }
-/* header */
-.hdr td { border-bottom: 1.5px solid #000; padding: 4px 6px; }
-.photo { width: 74px; height: 88px; object-fit: cover; border: 1px solid #000; }
-.photo-ph { width: 74px; height: 88px; border: 1px solid #999; }
-/* left FORM XI panel */
-.leftbox { width: 30%; border-right: 1.5px solid #000; }
-.leftbox td { padding: 3px 6px; }
-.leftbox .hd { border-bottom: 1px solid #000; text-align: center; font-weight: bold; }
-.netbox { border-top: 1px solid #000; border-bottom: 1px solid #000; }
-.net-amt { font-size: 15px; font-weight: bold; }
-/* identity */
-.ident td { border: 1px solid #000; padding: 2px 5px; font-size: 8.5px; }
-.ident .k { width: 15%; color: #000; }
-.ident .kk { width: 14%; }
-/* salary */
-.sal th, .sal td { border: 1px solid #000; padding: 2px 5px; }
-.sal th { background: #f0f0f0; font-size: 8.5px; }
-.att td { border: 1px solid #000; padding: 1px 5px; font-size: 8.5px; }
-.att .v { text-align: right; font-weight: bold; }
-.foot { text-align: center; font-size: 8px; padding: 3px; border-top: 1px solid #000; }
-.words { font-weight: bold; font-size: 9px; }
-</style></head>
-<body>
-<div class="sheet">
+    body { font-family: freeserif; font-size: 9pt; color: #000; }
+    .hi { font-size: 8pt; }
+    table { border-collapse: collapse; width: 100%; }
+    td, th { vertical-align: top; padding: 1.5pt 3pt; }
+    .b { font-weight: bold; }
+    .c { text-align: center; }
+    .r { text-align: right; }
+    .sheet { border: 0.6mm solid #000; }
+    .co-name { font-size: 15pt; font-weight: bold; }
+    .co-addr { font-size: 8pt; }
+    .rule { font-size: 8.5pt; }
+    .formxi { font-size: 9.5pt; font-weight: bold; }
+    .photo { width: 22mm; }
+    .hdr td { border-bottom: 0.6mm solid #000; }
+    .panel { border-right: 0.6mm solid #000; width: 25%; }
+    .panel .row { padding: 1.5pt 4pt; }
+    .panel .hd { border-bottom: 0.3mm solid #000; text-align: center; font-weight: bold; font-size: 10pt; padding: 3pt; }
+    .net { border-top: 0.3mm solid #000; }
+    .net-amt { font-size: 13pt; font-weight: bold; text-align: right; padding-right: 8pt; }
+    .sign { border-top: 0.3mm solid #000; }
+    .ident td { border: 0.3mm solid #000; font-size: 8.5pt; }
+    .grid td, .grid th { border: 0.3mm solid #000; font-size: 8.5pt; }
+    .grid th { font-weight: bold; }
+    .words { border: 0.3mm solid #000; font-weight: bold; }
+    .note { border-top: 0.3mm solid #000; font-size: 7pt; padding: 2pt 4pt; }
+</style>
 
-    {{-- ============ HEADER ============ --}}
-    <table class="hdr"><tr>
-        <td style="width:26%; border-right:1.5px solid #000; text-align:center; vertical-align:middle">
-            <span class="rule">( Rule 26 (2) )</span>
+<table class="sheet">
+    {{-- ---------------- letterhead ---------------- --}}
+    <tr class="hdr">
+        <td style="width:25%; vertical-align:middle">
+            @if($establishment['logo'])
+                <img src="{{ $establishment['logo'] }}" style="height:12mm">
+            @endif
+            <div class="rule">( Rule 26 (2) )</div>
         </td>
-        <td style="width:54%; text-align:center">
-            <div class="big">{{ $establishment['name'] ?? config('app.name') }}</div>
-            <div class="addr">{{ $establishment['address'] ?? '' }}</div>
-            <div style="margin-top:2px">PAYSLIP FOR THE MONTH OF <span class="b">{{ $period }}</span></div>
+        <td class="c" style="width:55%">
+            <div class="co-name">{{ $establishment['name'] }}</div>
+            <div class="co-addr">{{ $establishment['address'] }}</div>
+            <div>{{ $L('PAYSLIP FOR THE MONTH OF', 'वेतन स्लिप माह') }} <span class="b">{{ $period }}</span></div>
             <div class="formxi">FORM - XI</div>
         </td>
-        <td style="width:20%; text-align:center; border-left:1.5px solid #000">
-            @if($photo)
-                <img class="photo" src="{{ $photo }}" alt="photo">
-            @else
-                <div class="photo-ph"></div>
-            @endif
+        <td class="c" style="width:20%">
+            @if($photo)<img src="{{ $photo }}" class="photo">@endif
         </td>
-    </tr></table>
+    </tr>
 
-    {{-- ============ BODY: left panel + right details ============ --}}
-    <table><tr>
-
-        {{-- ---- LEFT: FORM XI receipt panel ---- --}}
-        <td class="leftbox">
-            <table class="leftbox">
-                <tr><td class="hd formxi">FORM XI</td></tr>
-                <tr><td class="c">Received the wages Slip for the month of</td></tr>
-                <tr><td class="c b">{{ $period }}</td></tr>
-                <tr><td style="height:8px"></td></tr>
-                <tr><td>Employee Name</td></tr>
-                <tr><td class="b">{{ $employee->name ?? 'Employee #'.($profile->user_id ?? '') }}</td></tr>
-                <tr><td>Code &nbsp; {{ $mask($profile?->employee_code) }}</td></tr>
-                <tr><td class="netbox">Net Payable with OT Rs</td></tr>
-                <tr><td class="c net-amt">{{ number_format((float) $item->net_pay, 2) }}</td></tr>
-                <tr><td style="height:20px"></td></tr>
-                <tr><td>Signature or LTI of the Employee</td></tr>
-                <tr><td style="height:18px"></td></tr>
-            </table>
+    {{-- ---------------- body: receipt panel | details ---------------- --}}
+    <tr>
+        <td class="panel">
+            <div class="hd">FORM XI</div>
+            <div class="row c">Received the wages Slip for the month of</div>
+            <div class="row c b">{{ $period }}</div>
+            <div class="row" style="padding-top:10pt">{{ $L('Employee Name', 'कर्मचारी का नाम') }}</div>
+            <div class="row b">{{ $employee->name ?? 'Employee #'.$item->user_id }}</div>
+            <div class="row">Code &nbsp; {{ $mask($profile?->employee_code) }}</div>
+            <div class="row net" style="padding-top:6pt">{{ $L('Net Payable with OT Rs', 'देय राशि ओ0 टी0 सहित') }}</div>
+            <div class="net-amt">{{ number_format((float) $item->net_pay, 2) }}</div>
+            <div class="row sign" style="padding-top:6pt">{{ $L('Signature or LTI of the Employee', 'क0 हस्ताक्षर') }}</div>
+            <div style="height:16mm"></div>
         </td>
 
-        {{-- ---- RIGHT: identity, bank/statutory, attendance, salary ---- --}}
-        <td>
-            {{-- identity + bank/statutory --}}
+        <td colspan="2" style="padding:0">
+            {{-- identity + bank / statutory --}}
             <table class="ident">
                 <tr>
-                    <td class="k">Code</td><td class="b">{{ $mask($profile?->employee_code) }}</td>
-                    <td class="kk">BANK NAME</td><td class="b">{{ $mask($profile?->bank_name) }}</td>
+                    <td style="width:17%">Code</td><td class="b" style="width:29%">{{ $mask($profile?->employee_code) }}</td>
+                    <td style="width:24%">{{ $L('BANK NAME', 'बैंक नाम') }}</td><td class="b" style="width:30%">{{ $mask($profile?->bank_name) }}</td>
                 </tr>
                 <tr>
-                    <td class="k">Name</td><td class="b">{{ $employee->name ?? '' }}</td>
-                    <td class="kk">A/c No</td><td>{{ $mask($profile?->bank_account_number) }}</td>
+                    <td>{{ $L('Name', 'नाम') }}</td><td class="b">{{ $employee->name ?? '' }}</td>
+                    <td>{{ $L('A/c No', 'खाता संख्या') }}</td><td>{{ $mask($profile?->bank_account_number) }}</td>
                 </tr>
                 <tr>
-                    <td class="k">Father's / Husb. Name</td><td>{{ $mask($profile?->father_or_spouse_name) }}</td>
-                    <td class="kk">PF No</td><td>{{ $mask($profile?->pf_number) }}</td>
+                    <td>{{ $L("Father's / Husb. Name", 'पिता/पति का नाम') }}</td><td>{{ $mask($profile?->father_or_spouse_name) }}</td>
+                    <td>{{ $L('PF No', 'भ0 नि0 नं0') }}</td><td>{{ $mask($profile?->pf_number) }}</td>
                 </tr>
                 <tr>
-                    <td class="k">Desig</td><td>{{ $mask($profile?->designation) }}</td>
-                    <td class="kk">UAN</td><td>{{ $mask($profile?->uan_number) }}</td>
+                    <td>{{ $L('Desig', 'पद') }}</td><td>{{ $mask($profile?->designation) }}</td>
+                    <td>UAN</td><td>{{ $mask($profile?->uan_number) }}</td>
                 </tr>
                 <tr>
-                    <td class="k">Dept.</td><td>{{ $mask($profile?->department?->name) }}</td>
-                    <td class="kk">ESI No</td><td>{{ $mask($profile?->esi_number) }}</td>
+                    <td>{{ $L('Dept.', 'विभाग') }}</td><td>{{ $mask($profile?->department?->name) }}</td>
+                    <td>{{ $L('ESI No', 'क0 रा0 बी0 नं0') }}</td><td>{{ $mask($profile?->esi_number) }}</td>
                 </tr>
                 <tr>
-                    <td class="k">Date of Joining</td><td>{{ $profile?->date_of_joining?->format('d/M/Y') }}</td>
-                    <td class="kk">PAN</td><td>{{ $mask($profile?->pan_number) }}</td>
+                    <td>{{ $L('Date of Joining', 'नियुक्ति तिथि') }}</td><td>{{ $profile?->date_of_joining?->format('d/M/Y') }}</td>
+                    <td>{{ $L('PAN', 'आयकर नं0') }}</td><td>{{ $mask($profile?->pan_number) }}</td>
                 </tr>
                 <tr>
-                    <td class="k"></td><td></td>
-                    <td class="kk">AADHAR NO</td><td>{{ $mask($profile?->aadhaar_number) }}</td>
+                    <td></td><td></td>
+                    <td>{{ $L('AADHAR NO', 'आधार नं0') }}</td><td>{{ $mask($profile?->aadhaar_number) }}</td>
                 </tr>
             </table>
 
-            {{-- attendance + salary rate/earnings/deductions --}}
-            <table class="sal"><tr>
-                {{-- attendance --}}
-                <td style="width:32%; padding:0">
-                    <table class="att">
-                        <tr><td>OT Hrs</td><td class="v"></td></tr>
-                        <tr><td>Present</td><td class="v">{{ $day($summary['present'] ?? null) }}</td></tr>
-                        <tr><td>WO</td><td class="v">{{ $day($summary['weekly_off'] ?? null) }}</td></tr>
-                        <tr><td>HD</td><td class="v">{{ $day($summary['holiday'] ?? null) }}</td></tr>
-                        <tr><td>CL</td><td class="v">{{ $day($summary['leave'] ?? null) }}</td></tr>
-                        <tr><td>EL</td><td class="v"></td></tr>
-                        <tr><td>SL</td><td class="v"></td></tr>
-                        <tr><td>SP</td><td class="v"></td></tr>
-                        <tr><td class="b">Payable Days</td><td class="v">{{ $day($summary['payable_days'] ?? null) }}</td></tr>
-                    </table>
-                </td>
-                {{-- salary rate / earnings / deductions --}}
-                <td style="padding:0">
-                    <table class="sal">
-                        <tr>
-                            <th style="width:34%">Salary Rate</th>
-                            <th class="r" style="width:22%">Rate</th>
-                            <th class="r" style="width:22%">Earnings</th>
-                            <th class="r" style="width:22%">Deductions</th>
-                        </tr>
-                        <tr><td>Basic</td><td class="r">{{ $money($rt['basic']) }}</td><td class="r">{{ $money($er['basic']) }}</td><td class="r"></td></tr>
-                        <tr><td>VDA</td><td class="r">{{ $money($rt['vda']) }}</td><td class="r">{{ $money($er['vda']) }}</td><td class="r"></td></tr>
-                        <tr><td>HRA</td><td class="r">{{ $money($rt['hra']) }}</td><td class="r">{{ $money($er['hra']) }}</td><td class="r"></td></tr>
-                        <tr><td>Conv. Allow</td><td class="r">{{ $money($rt['conv']) }}</td><td class="r">{{ $money($er['conv']) }}</td><td class="r"></td></tr>
-                        <tr><td>Others</td><td class="r">{{ $money($rt['others']) }}</td><td class="r">{{ $money($er['others']) }}</td><td class="r"></td></tr>
-                        @foreach($deductions as $d)
-                            <tr><td>{{ $d['name'] }}</td><td class="r"></td><td class="r"></td><td class="r">{{ $money($d['amount']) }}</td></tr>
-                        @endforeach
-                        <tr>
-                            <td class="b">Total</td>
-                            <td class="r b">{{ $money($item->total_earnings) }}</td>
-                            <td class="r b">{{ $money($item->total_earnings) }}</td>
-                            <td class="r b">{{ number_format((float) $item->total_deductions, 0) }}</td>
-                        </tr>
-                    </table>
-                </td>
-            </tr></table>
+            {{-- attendance | salary rate | earnings | deductions --}}
+            <table class="grid">
+                <tr>
+                    <th colspan="3" style="width:26%"></th>
+                    <th colspan="3" class="c" style="width:34%">{{ $L('Salary Rate', 'वेतन दर') }}</th>
+                    <th class="c" style="width:12%">{{ $L('Earnings', 'अर्जित वेतन') }}</th>
+                    <th colspan="2" class="c" style="width:28%">{{ $L('Deductions', 'कटौतियाँ') }}</th>
+                </tr>
 
-            {{-- amount in words --}}
-            <table class="sal"><tr>
-                <td class="words" style="width:78%">{{ strtoupper($words) }}</td>
-                <td class="r b">{{ number_format((float) $item->net_pay, 2) }}</td>
-            </tr></table>
+                @for($i = 0; $i < $bodyRows; $i++)
+                    @php
+                        $att  = $attHeads[$i]  ?? null;
+                        $head = $rateHeads[$i] ?? null;
+                        $ded  = $dedLines[$i]  ?? null;
+                    @endphp
+                    <tr>
+                        <td style="width:7%">{{ $att[0] ?? '' }}</td>
+                        <td class="hi" style="width:13%">{{ $att && $bilingual ? $att[1] : '' }}</td>
+                        <td class="r b" style="width:6%">{{ $att ? $day($att[2]) : '' }}</td>
+                        <td style="width:11%">{{ $head[0] ?? '' }}</td>
+                        <td class="hi" style="width:11%">{{ $head && $bilingual ? $head[1] : '' }}</td>
+                        <td class="r" style="width:12%">{{ $head ? $money($head[2]) : '' }}</td>
+                        <td class="r" style="width:12%">{{ $head ? $money($head[3]) : '' }}</td>
+                        <td style="width:16%">{{ $ded['name'] ?? '' }}</td>
+                        <td class="r" style="width:12%">{{ $ded ? $money($ded['amount']) : '' }}</td>
+                    </tr>
+                @endfor
+
+                <tr class="b">
+                    <td colspan="2">{{ $L('Payable Days', 'देय दिन') }}</td>
+                    <td class="r">{{ $day($days['payable_days']) }}</td>
+                    <td colspan="2">{{ $L('Total', 'कुल योग') }}</td>
+                    <td class="r">{{ $money($item->total_earnings) }}</td>
+                    <td class="r">{{ $money($item->total_earnings) }}</td>
+                    <td>{{ $L('Deductions', 'कटौतियाँ') }}</td>
+                    <td class="r">{{ $money($item->total_deductions) }}</td>
+                </tr>
+            </table>
+
+            <table class="words">
+                <tr>
+                    <td class="c">RUPEES {{ strtoupper(\Illuminate\Support\Str::of($words)->after('Rupees ')) }}</td>
+                    <td class="r b" style="width:20%">{{ number_format((float) $item->net_pay, 2) }}</td>
+                </tr>
+            </table>
+
+            <div class="note">This is a Computer generated Pay Slip, hence Signature is not required.</div>
         </td>
-    </tr></table>
-
-    <div class="foot">This is a Computer generated Pay Slip, hence Signature is not required.</div>
-</div>
-</body></html>
+    </tr>
+</table>

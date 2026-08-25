@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Modules\Company\app\Http\Middleware\EnsureCompanyContext;
@@ -78,6 +79,55 @@ class CompanyController extends Controller
 
         return redirect()->route('hr.overview')
             ->with('success', __(':name is ready.', ['name' => $company->name]));
+    }
+
+    /** Letterhead / profile settings for one of the HR's companies. */
+    public function edit(Request $request, Company $company): View
+    {
+        abort_unless($company->hasMember($request->user()), 403);
+
+        return view('company::settings', ['company' => $company]);
+    }
+
+    /**
+     * Update the company profile + the letterhead printed on statutory payroll
+     * documents. Only the owner may change it — a plain member must not be able
+     * to repoint another tenant's employer identity.
+     */
+    public function update(Request $request, Company $company): RedirectResponse
+    {
+        abort_unless($company->owner_user_id === $request->user()->id, 403);
+
+        $data = $request->validate([
+            'name'        => ['required', 'string', 'max:191'],
+            'industry'    => ['nullable', 'string', 'max:191'],
+            'timezone'    => ['nullable', 'string', 'max:64'],
+            'address'     => ['nullable', 'string', 'max:191'],
+            'city'        => ['nullable', 'string', 'max:191'],
+            'state'       => ['nullable', 'string', 'max:191'],
+            'country'     => ['nullable', 'string', 'max:191'],
+            'postal_code' => ['nullable', 'string', 'max:20'],
+            'pf_number'   => ['nullable', 'string', 'max:60'],
+            'esi_number'  => ['nullable', 'string', 'max:60'],
+            'phone'       => ['nullable', 'string', 'max:30'],
+            'email'       => ['nullable', 'email', 'max:191'],
+            'logo'        => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
+        ]);
+
+        unset($data['logo']);
+
+        // Stored under public/uploads like the employee photo upload, not the
+        // storage disk — this install has no `storage:link` symlink set up.
+        if ($request->hasFile('logo')) {
+            File::ensureDirectoryExists(public_path('uploads/company-logos'));
+            $filename = $request->file('logo')->hashName();
+            $request->file('logo')->move(public_path('uploads/company-logos'), $filename);
+            $data['logo_path'] = 'uploads/company-logos/'.$filename;
+        }
+
+        $company->update($data);
+
+        return back()->with('success', __('Company settings saved.'));
     }
 
     /** Switch the active company (membership-checked). */

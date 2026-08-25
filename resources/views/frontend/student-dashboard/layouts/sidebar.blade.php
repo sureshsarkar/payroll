@@ -453,6 +453,9 @@ margin-top: 10px;
         <div class="sidebar-nav-label">{{ __('Main Menu') }}</div>
         <nav class="sidebar-nav dashboard__sidebar-menu">
             <ul class="list-wrap">
+                {{-- LMS course dashboard/menu — hidden alongside the coach-side
+                     LMS groups (config('payroll.coach.show_lms_menus')). --}}
+                @if (config('payroll.coach.show_lms_menus'))
                 <li class="{{ Route::is('student.dashboard') ? 'active' : '' }} m-0">
                     <a href="{{ route('student.dashboard') }}">
                         <img src="{{ asset('uploads/website-images/dashboard.svg') }}" alt="">
@@ -479,6 +482,7 @@ margin-top: 10px;
                         {{ __('My Attendance') }}
                     </a>
                 </li>
+                @endif
 
                 {{-- Payroll conversion — Employee self-service --}}
                 <li class="{{ Route::is('employee.overview') ? 'active' : '' }} m-0">
@@ -505,6 +509,9 @@ margin-top: 10px;
                         {{ __('My Payslips') }}
                     </a>
                 </li>
+                {{-- LMS course fees/announcements/orders/wishlist/reviews/referral —
+                     hidden alongside the coach-side LMS groups. --}}
+                @if (config('payroll.coach.show_lms_menus'))
                 {{-- Phase 4C 2026-05-19 — Fee Management student view --}}
                 <li class="{{ Route::is('student.fees.*') ? 'active' : '' }} m-0">
                     <a href="{{ route('student.fees.index') }}">
@@ -555,6 +562,7 @@ margin-top: 10px;
                         {{ __('Refer & Earn') }}
                     </a>
                 </li>
+                @endif
             </ul>
         </nav>
     </div>
@@ -592,21 +600,38 @@ margin-top: 10px;
 
 {{-- mobile menu start   --}}
 <nav class="bottom-nav">
-    <a href="{{ route('student.dashboard') }}" class="bottom-nav-item {{ Route::is('student.dashboard') ? 'active' : '' }}">
-        <img src="{{ asset('uploads/website-images/dashboard.svg') }}" alt=""> Dashboard
-    </a>
-    <a href="{{ route('student.enrolled-courses') }}" class="bottom-nav-item {{ Route::is('student.enrolled-courses') ? 'active' : '' }}">
-        <i class="flaticon-mortarboard"></i> Courses
-    </a>
-    <a href="{{ route('student.live-classes.index') }}" class="bottom-nav-item {{ Route::is('student.live-classes.index') ? 'active' : '' }}">
-        <i class="fas fa-film"></i> Live
-        @if(($totalStudentUpcomingLive ?? 0) > 0)
-            <span class="bottom-nav-badge">{{ $totalStudentUpcomingLive }}</span>
-        @endif
-    </a>
-    <a href="{{ route('student.wishlist') }}" class="bottom-nav-item {{ Route::is('student.wishlist') ? 'active' : '' }}">
-        <img src="{{ asset('uploads/website-images/heart.svg') }}" alt=""> Wishlist
-    </a>
+    @if (config('payroll.coach.show_lms_menus'))
+        <a href="{{ route('student.dashboard') }}" class="bottom-nav-item {{ Route::is('student.dashboard') ? 'active' : '' }}">
+            <img src="{{ asset('uploads/website-images/dashboard.svg') }}" alt=""> Dashboard
+        </a>
+        <a href="{{ route('student.enrolled-courses') }}" class="bottom-nav-item {{ Route::is('student.enrolled-courses') ? 'active' : '' }}">
+            <i class="flaticon-mortarboard"></i> Courses
+        </a>
+        <a href="{{ route('student.live-classes.index') }}" class="bottom-nav-item {{ Route::is('student.live-classes.index') ? 'active' : '' }}">
+            <i class="fas fa-film"></i> Live
+            @if(($totalStudentUpcomingLive ?? 0) > 0)
+                <span class="bottom-nav-badge">{{ $totalStudentUpcomingLive }}</span>
+            @endif
+        </a>
+        <a href="{{ route('student.wishlist') }}" class="bottom-nav-item {{ Route::is('student.wishlist') ? 'active' : '' }}">
+            <img src="{{ asset('uploads/website-images/heart.svg') }}" alt=""> Wishlist
+        </a>
+    @else
+        {{-- Employee-side equivalent, mirroring the sidebar's own Employee
+             self-service section above. --}}
+        <a href="{{ route('employee.overview') }}" class="bottom-nav-item {{ Route::is('employee.overview') ? 'active' : '' }}">
+            <i class="fas fa-th-large"></i> Overview
+        </a>
+        <a href="{{ route('employee.attendance.my') }}" class="bottom-nav-item {{ Route::is('employee.attendance.*') ? 'active' : '' }}">
+            <i class="fas fa-calendar-check"></i> Attendance
+        </a>
+        <a href="{{ route('employee.leave.index') }}" class="bottom-nav-item {{ Route::is('employee.leave.*') ? 'active' : '' }}">
+            <i class="fas fa-plane-departure"></i> Leave
+        </a>
+        <a href="{{ route('employee.payslips.index') }}" class="bottom-nav-item {{ Route::is('employee.payslips.*') ? 'active' : '' }}">
+            <i class="fas fa-file-invoice-dollar"></i> Payslips
+        </a>
+    @endif
     <a href="{{ route('student.setting.index') }}" class="bottom-nav-item {{ Route::is('student.setting.index') ? 'active' : '' }}">
         <i class="flaticon-user"></i> Profile
     </a>

@@ -18,4 +18,6 @@ Route::middleware(['web', 'auth', 'instructorrole'])
         Route::get('companies/create', [CompanyController::class, 'create'])->name('companies.create');
         Route::post('companies', [CompanyController::class, 'store'])->name('companies.store');
         Route::post('companies/{company}/switch', [CompanyController::class, 'switch'])->name('companies.switch');
+        Route::get('companies/{company}/settings', [CompanyController::class, 'edit'])->name('companies.edit');
+        Route::put('companies/{company}/settings', [CompanyController::class, 'update'])->name('companies.update');
     });

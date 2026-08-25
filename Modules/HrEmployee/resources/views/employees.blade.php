@@ -17,7 +17,16 @@
                 @foreach($employees as $emp)
                     @php($p = $profiles->get($emp->id))
                     <tr>
-                        <td><strong>{{ $emp->name }}</strong><div class="pv-mut2">#{{ $emp->id }} · {{ $emp->email }}</div></td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:10px">
+                                @if($p?->photo_path && is_file(public_path($p->photo_path)))
+                                    <img src="{{ asset($p->photo_path) }}" alt="" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none">
+                                @else
+                                    <span style="width:34px;height:34px;border-radius:50%;background:var(--pv-brand,#6366f1);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:none">{{ strtoupper(substr($emp->name ?? '?', 0, 1)) }}</span>
+                                @endif
+                                <div><strong>{{ $emp->name }}</strong><div class="pv-mut2">#{{ $emp->id }} · {{ $emp->email }}</div></div>
+                            </div>
+                        </td>
                         <td>{{ $p->employee_code ?? '—' }}</td><td>{{ $p?->department?->name ?? '—' }}</td><td>{{ $p->designation ?? '—' }}</td>
                         <td>{{ optional($p?->date_of_joining)->format('d-M-Y') ?? '—' }}</td>
                         <td><span class="pv-badge {{ $p?->status === 'active' ? 'ok' : '' }}">{{ ucfirst($p->status ?? 'onboarding') }}</span></td>

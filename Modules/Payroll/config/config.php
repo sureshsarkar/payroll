@@ -76,10 +76,31 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Attendance shape used by the Form XI wage slip
+    |--------------------------------------------------------------------------
+    | The slip splits the month into OT hours and weekly-offs, neither of which
+    | the attendance table stores directly. `standard_day_minutes` is the shift
+    | length above which worked time counts as overtime; `weekly_off_day` is the
+    | rest day (Carbon day-of-week: 0 = Sunday).
+    */
+    'attendance' => [
+        'standard_day_minutes' => env('PAYROLL_STANDARD_DAY_MINUTES', 480),
+        'weekly_off_day'       => env('PAYROLL_WEEKLY_OFF_DAY', 0),
+    ],
+
     // Payslip / run behaviour
     'payslip' => [
         'currency_symbol' => '₹',
         'storage_disk'    => 'public',
         'storage_dir'     => 'payslips',
+
+        /*
+        | Print the Hindi half of every Form XI label alongside the English one.
+        | The statutory register is bilingual, so this is on by default; turn it
+        | off for an English-only establishment.
+        */
+        'bilingual' => env('PAYROLL_PAYSLIP_BILINGUAL', true),
     ],
 ];

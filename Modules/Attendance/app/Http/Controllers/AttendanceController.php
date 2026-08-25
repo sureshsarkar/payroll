@@ -193,7 +193,11 @@ class AttendanceController extends Controller
             : "Attendance updated for {$employee->name}.");
     }
 
-    /** Fill all unmarked weekdays in a month with realistic random office times. */
+    /**
+     * Fill all unmarked days in a month with realistic random office times.
+     * Saturdays are filled like any working day; Sundays are left blank by
+     * default (HR can still mark one manually via the single-day endpoint).
+     */
     public function fillMonthWithRandomTimes(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -217,7 +221,7 @@ class AttendanceController extends Controller
         $created = 0;
         for ($day = 1; $day <= $first->daysInMonth; $day++) {
             $date = Carbon::create($data['year'], $data['month'], $day);
-            if ($date->isWeekend() || $existingDates->has($date->toDateString())) {
+            if ($date->isSunday() || $existingDates->has($date->toDateString())) {
                 continue;
             }
 
@@ -235,7 +239,7 @@ class AttendanceController extends Controller
 
         return redirect()->route('hr.attendance.sheet', [
             'year' => $data['year'], 'month' => $data['month'], 'employee_id' => $employee->id,
-        ])->with('success', "Monthly attendance added for {$employee->name}: {$created} weekday(s) filled with random office times.");
+        ])->with('success', "Monthly attendance added for {$employee->name}: {$created} day(s) filled with random office times (Sundays left blank).");
     }
 
     /** HR: export the team monthly sheet as csv/xls/pdf. */
@@ -283,13 +287,31 @@ class AttendanceController extends Controller
                 'record' => $map->get($day),
             ]);
 
+            // Weekly-off count for the header summary block: the configured
+            // rest day of the week, on dates with no attendance row at all
+            // (an employee who worked their weekly off is marked Present that
+            // day and must not be double-counted as also off).
+            $offDay = (int) config('payroll.attendance.weekly_off_day', Carbon::SUNDAY);
+            $weeklyOffs = $days->filter(fn ($d) => $d['date']->dayOfWeek === $offDay && ! $d['record'])->count();
+
+            $company = currentCompany();
+
             $options = new Options();
             $options->set('defaultFont', 'DejaVu Sans');
             $options->set('isRemoteEnabled', false);
             $pdf = new Dompdf($options);
-            $pdf->loadHtml(view('attendance::employee-register-pdf', compact(
-                'employee', 'profile', 'summary', 'first', 'days'
-            ))->render(), 'UTF-8');
+            $pdf->loadHtml(view('attendance::employee-register-pdf', [
+                'employee'   => $employee,
+                'profile'    => $profile,
+                'summary'    => $summary,
+                'first'      => $first,
+                'days'       => $days,
+                'weeklyOffs' => $weeklyOffs,
+                'company'    => [
+                    'name'    => $company->name ?? config('app.name'),
+                    'address' => $company?->addressLine() ?? '',
+                ],
+            ])->render(), 'UTF-8');
             $pdf->setPaper('A4', 'landscape');
             $pdf->render();
 
@@ -344,18 +366,16 @@ class AttendanceController extends Controller
     /* ------------------------------------------------------------------ */
 
     /**
-     * Employees an HR manages. Primary link is employee_profiles.reporting_hr_id;
-     * during the LMS->payroll transition we fall back to the legacy coach_id link
-     * so the screen isn't empty before profiles are assigned.
+     * Employees an HR manages in the active company.
+     *
+     * Delegates to EmployeeProfile::teamUserIds(), which only falls back to
+     * the legacy cross-company coach_id link when NO company is bound. Falling
+     * back whenever the company-scoped list was empty (the old behaviour here)
+     * leaked another company's employees into this HR's attendance screen the
+     * moment the active company itself had none under reporting_hr_id yet.
      */
     private function teamMembers(User $hr): Collection
     {
-        $ids = EmployeeProfile::where('reporting_hr_id', $hr->id)->pluck('user_id');
-
-        if ($ids->isEmpty()) {
-            $ids = User::where('role', 'student')->where('coach_id', $hr->id)->pluck('id');
-        }
-
-        return User::whereIn('id', $ids)->orderBy('name')->get();
+        return User::whereIn('id', EmployeeProfile::teamUserIds($hr))->orderBy('name')->get();
     }
 }

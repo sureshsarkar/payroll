@@ -48,4 +48,27 @@ class PayrollRun extends Model
     {
         return in_array($this->status, [self::DRAFT], true);
     }
+
+    /** HR may send a submitted-but-not-yet-approved run back to draft to fix attendance. */
+    public function isReopenable(): bool
+    {
+        return $this->status === self::HR_SUBMITTED;
+    }
+
+    /**
+     * Super Admin may recompute an approved run in place — e.g. an absence
+     * was corrected after approval. Excludes PAID: once wages are actually
+     * disbursed, a correction belongs in a separate off-cycle/arrears run,
+     * not a silent rewrite of paid history.
+     */
+    public function isRecalculable(): bool
+    {
+        return $this->status === self::ADMIN_APPROVED;
+    }
+
+    /** Any item whose stored numbers predate a later attendance/leave edit. */
+    public function hasStaleItems(): bool
+    {
+        return $this->items->contains(fn (PayrollItem $item) => $item->isStale($this));
+    }
 }

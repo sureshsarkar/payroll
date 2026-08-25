@@ -159,13 +159,21 @@ class HrEmployeeController extends Controller
         }
 
         $data = $request->validate(array_merge([
+            'name' => ['required', 'string', 'max:191'],
+            'email' => ['required', 'email', 'max:191', 'unique:users,email,'.$employee->id],
             'employee_code' => ['nullable', 'string', 'max:40'],
             'department_id' => ['nullable', 'integer', 'exists:departments,id'],
             'designation' => ['nullable', 'string', 'max:255'],
             'employment_type' => ['nullable', 'string', 'max:30'],
             'date_of_joining' => ['nullable', 'date'],
+            'date_of_exit' => ['nullable', 'date'],
             'status' => ['required', 'string', 'max:20'],
         ], $this->employeeDetailRules()));
+
+        $employee->update([
+            'name' => $data['name'],
+            'email' => $data['email'],
+        ]);
 
         $profileData = [
             'employee_code' => $data['employee_code'] ?? null,
@@ -174,6 +182,7 @@ class HrEmployeeController extends Controller
             'designation' => $data['designation'] ?? null,
             'employment_type' => $data['employment_type'] ?? null,
             'date_of_joining' => $data['date_of_joining'] ?? null,
+            'date_of_exit' => $data['date_of_exit'] ?? null,
             'status' => $data['status'],
         ];
         if ($request->hasFile('photo')) {
@@ -190,12 +199,24 @@ class HrEmployeeController extends Controller
         return redirect()->route('hr.employees.edit', $employee)->with('success', 'Employee profile saved.');
     }
 
-    /** List + create departments (company-wide). */
+    /**
+     * List + create departments for the active company.
+     *
+     * `hrs` (for the department-head picker) must be members of the active
+     * company only — it was previously `User::where('role','instructor')`
+     * with no company filter at all, which listed every HR account on the
+     * platform (name + id) to any HR viewing this screen, a cross-tenant
+     * disclosure. Scoped via the `company_user` pivot instead.
+     */
     public function departments(Request $request): View
     {
+        $company = currentCompany();
+
         return view('hremployee::departments', [
             'departments' => Department::withCount('employees')->orderBy('name')->get(),
-            'hrs'         => User::where('role', 'instructor')->orderBy('name')->get(),
+            'hrs' => $company
+                ? $company->users()->where('users.role', 'instructor')->orderBy('users.name')->get()
+                : collect(),
         ]);
     }
 
@@ -207,6 +228,21 @@ class HrEmployeeController extends Controller
             'head_user_id' => ['nullable', 'integer'],
         ]);
 
+        // Drop a head_user_id that isn't actually an HR member of the active
+        // company — the field used to be trusted as-is, which let a department
+        // be pointed at any user id, including one from another tenant.
+        if (! empty($data['head_user_id'])) {
+            $company = currentCompany();
+            $validHead = $company && $company->users()
+                ->where('users.id', $data['head_user_id'])
+                ->where('users.role', 'instructor')
+                ->exists();
+
+            if (! $validHead) {
+                $data['head_user_id'] = null;
+            }
+        }
+
         Department::create($data + ['is_active' => true]);
 
         return back()->with('success', 'Department created.');
@@ -215,15 +251,22 @@ class HrEmployeeController extends Controller
     /* ------------------------------------------------------------------ */
 
     /**
-     * Employees this HR can manage: anyone already reporting to them, plus
-     * their legacy coach_id-linked students (so onboarding has a starting pool).
+     * Employees this HR can manage in the active company.
+     *
+     * Delegates to EmployeeProfile::teamUserIds(), which drops the legacy
+     * cross-company coach_id fallback once a company is bound. Using the old
+     * unscoped `User::where('coach_id', $hr->id)` fallback here let an
+     * employee from a DIFFERENT company than the active one pass this guard
+     * (an HR who owns multiple companies coaches all their employees under
+     * the same coach_id) — the edit page would then open, but the
+     * company-scoped `updateOrCreate(['user_id'=>...])` on save couldn't find
+     * that employee's profile (it belongs to another company) and tried to
+     * INSERT a second row for the same user_id, hitting
+     * employee_profiles_user_id_unique.
      */
     private function linkedEmployees(User $hr): Collection
     {
-        $byProfile = EmployeeProfile::where('reporting_hr_id', $hr->id)->pluck('user_id');
-        $byCoach   = User::where('role', 'student')->where('coach_id', $hr->id)->pluck('id');
-
-        return User::whereIn('id', $byProfile->merge($byCoach)->unique())
+        return User::whereIn('id', EmployeeProfile::teamUserIds($hr))
             ->orderBy('name')->get();
     }
 

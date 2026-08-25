@@ -5,16 +5,27 @@
     @include('payroll::partials.ui')
     <div class="pv-head"><div><h1 class="t">Edit employee</h1><p class="s">{{ $employee->name }} <span class="pv-mut2">#{{ $employee->id }} · {{ $employee->email }}</span></p></div><div class="pv-actions"><a href="{{ route('hr.employees.index') }}" class="pv-btn"><i class="fas fa-arrow-left"></i> Employees</a></div></div>
     <form method="POST" action="{{ route('hr.employees.update', $employee) }}" enctype="multipart/form-data">@csrf @method('PUT')
+        <div class="pv-card"><div class="h"><i class="fas fa-user-circle" style="color:var(--pv-brand)"></i> Account</div><div class="b"><div class="pv-cols c3">
+            <div class="pv-field"><label class="pv-label">Full name *</label><input name="name" value="{{ old('name', $employee->name) }}" class="pv-input" required></div>
+            <div class="pv-field"><label class="pv-label">Login email *</label><input type="email" name="email" value="{{ old('email', $employee->email) }}" class="pv-input" required></div>
+        </div></div></div>
         <div class="pv-card"><div class="h"><i class="fas fa-id-card" style="color:var(--pv-brand)"></i> Employment details</div><div class="b"><div class="pv-cols c3">
             <div class="pv-field"><label class="pv-label">Employee code</label><input name="employee_code" value="{{ old('employee_code', $profile->employee_code) }}" class="pv-input"></div>
             <div class="pv-field"><label class="pv-label">Department</label><select name="department_id" class="pv-select"><option value="">—</option>@foreach($departments as $d)<option value="{{ $d->id }}" @selected(old('department_id', $profile->department_id) == $d->id)>{{ $d->name }}</option>@endforeach</select></div>
             <div class="pv-field"><label class="pv-label">Designation</label><input name="designation" value="{{ old('designation', $profile->designation) }}" class="pv-input"></div>
             <div class="pv-field"><label class="pv-label">Employment type</label><select name="employment_type" class="pv-select">@foreach(['full_time'=>'Full-time','part_time'=>'Part-time','contract'=>'Contract','intern'=>'Intern'] as $v=>$label)<option value="{{ $v }}" @selected(old('employment_type', $profile->employment_type ?? 'full_time') === $v)>{{ $label }}</option>@endforeach</select></div>
             <div class="pv-field"><label class="pv-label">Date of joining</label><input type="date" name="date_of_joining" value="{{ old('date_of_joining', optional($profile->date_of_joining)->format('Y-m-d')) }}" class="pv-input"></div>
+            <div class="pv-field"><label class="pv-label">Date of exit</label><input type="date" name="date_of_exit" value="{{ old('date_of_exit', optional($profile->date_of_exit)->format('Y-m-d')) }}" class="pv-input"></div>
             <div class="pv-field"><label class="pv-label">Status *</label><select name="status" class="pv-select" required>@foreach($statuses as $status)<option value="{{ $status }}" @selected(old('status', $profile->status ?? 'active') === $status)>{{ ucfirst($status) }}</option>@endforeach</select></div>
         </div></div></div>
         <div class="pv-card"><div class="h"><i class="fas fa-user" style="color:var(--pv-brand)"></i> Personal details</div><div class="b"><div class="pv-cols c3">
-            <div class="pv-field"><label class="pv-label">Profile photo</label><input type="file" name="photo" class="pv-input" accept="image/*"></div>
+            <div class="pv-field">
+                <label class="pv-label">Profile photo</label>
+                @if($profile->photo_path && is_file(public_path($profile->photo_path)))
+                    <div style="margin-bottom:6px"><img src="{{ asset($profile->photo_path) }}" alt="" style="width:56px;height:56px;border-radius:50%;object-fit:cover"></div>
+                @endif
+                <input type="file" name="photo" class="pv-input" accept="image/*">
+            </div>
             <div class="pv-field"><label class="pv-label">Father's or spouse's name</label><input name="father_or_spouse_name" value="{{ old('father_or_spouse_name', $profile->father_or_spouse_name) }}" class="pv-input"></div>
             <div class="pv-field"><label class="pv-label">Date of birth</label><input type="date" name="date_of_birth" value="{{ old('date_of_birth', optional($profile->date_of_birth)->format('Y-m-d')) }}" class="pv-input"></div>
             <div class="pv-field"><label class="pv-label">Phone number</label><input name="phone" value="{{ old('phone', $profile->phone) }}" class="pv-input"></div>

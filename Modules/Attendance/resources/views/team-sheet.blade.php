@@ -100,10 +100,10 @@
                             <button class="pv-btn g sm" type="submit" name="quick_preset" value="0940_1900">09:40 in · 19:00 out</button>
                         </div>
                     </form>
-                    <form method="POST" action="{{ route('hr.attendance.sheet.month.random-fill') }}" class="att-month-fill" onsubmit="return confirm('Fill every unmarked weekday in {{ $first->format('F Y') }} for {{ $selected->name }}? Existing attendance will not be changed.')">
+                    <form method="POST" action="{{ route('hr.attendance.sheet.month.random-fill') }}" class="att-month-fill" onsubmit="return confirm('Fill every unmarked day (including Saturdays) in {{ $first->format('F Y') }} for {{ $selected->name }}? Sundays are left blank. Existing attendance will not be changed.')">
                         @csrf
                         <input type="hidden" name="employee_id" value="{{ $selected->id }}"><input type="hidden" name="year" value="{{ $year }}"><input type="hidden" name="month" value="{{ $month }}">
-                        <span class="copy"><strong>Fill the whole month</strong><br>Each unmarked weekday becomes Present with a random check-in from 09:30–09:40 and check-out from 18:30–19:00. Existing entries are kept.</span>
+                        <span class="copy"><strong>Fill the whole month</strong><br>Each unmarked day (Saturdays included) becomes Present with a random check-in from 09:30–09:40 and check-out from 18:30–19:00. Sundays are left blank — mark one manually above if needed. Existing entries are kept.</span>
                         <button class="pv-btn g" type="submit"><i class="fas fa-magic"></i> Fill month with random times</button>
                     </form>
                 </div>

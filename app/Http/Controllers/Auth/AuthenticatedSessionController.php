@@ -174,13 +174,19 @@ class AuthenticatedSessionController extends Controller
         $notification = __('Logged in successfully.');
         $notification = ['messege' => $notification, 'alert-type' => 'success'];
 
+        // LMS→HR conversion — this install has no course/LMS features exposed
+        // any more, so the post-login landing page is the HR/Employee
+        // dashboard, not the old coach/student LMS homepage. The
+        // instructor.dashboard/student.dashboard route NAMES still exist and
+        // resolve (InstructorMiddleware redirects to student.dashboard on a
+        // failed role check) — only the destination CHOICE changes here.
         $intendedUrl = session()->get('url.intended');
         if ($intendedUrl && \Str::contains($intendedUrl, '/admin')) {
             if ($user->role == 'instructor') {
-                return redirect()->route('instructor.dashboard');
+                return redirect()->route('hr.overview');
             }
 
-            return redirect()->route('student.dashboard');
+            return redirect()->route('employee.overview');
         }
 
         // 2026-06-01 (audit [1]) — simplified from
@@ -195,10 +201,10 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->route('cart');
             }
 
-            return redirect()->route('student.dashboard');
+            return redirect()->route('employee.overview');
         }
 
-        return redirect()->route('instructor.dashboard');
+        return redirect()->route('hr.overview');
     }
 
     /**

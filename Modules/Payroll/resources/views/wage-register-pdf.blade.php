@@ -12,36 +12,41 @@
     $mask = fn ($v) => filled($v) ? $v : '';
 @endphp
 <style>
-@page { margin: 5mm 4mm 6mm; }
+@page { margin: 3mm 3mm 4mm; }
 * { box-sizing: border-box; }
-body { margin: 0; color: #000; font-family: DejaVu Sans, sans-serif; font-size: 6px; }
-.sheet { border: 1px solid #000; padding: 4px 6px; }
+body { margin: 0; color: #000; font-family: DejaVu Sans, sans-serif; font-size: 7.5px; }
+.sheet { border: 1px solid #000; padding: 3px 4px; }
 .hdr { width: 100%; border-collapse: collapse; }
 .hdr td { vertical-align: top; padding: 0; }
-.title { text-align: center; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: .3px; }
-.subtitle { text-align: center; font-size: 7px; }
-.form-meta { text-align: right; font-size: 7px; line-height: 10px; }
+.title { text-align: center; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: .3px; }
+.subtitle { text-align: center; font-size: 8.5px; }
+.form-meta { text-align: right; font-size: 8.5px; line-height: 11px; }
 .form-meta .strong { font-weight: bold; }
-.estab { font-size: 8px; line-height: 12px; margin-top: 4px; }
+.estab { font-size: 9.5px; line-height: 13px; margin-top: 3px; }
 .estab .lbl { display: inline-block; min-width: 90px; }
-.reg-for { font-size: 8px; font-weight: bold; margin: 4px 0 3px; }
-.stat-no { font-size: 7px; line-height: 11px; text-align: right; }
+.reg-for { font-size: 9.5px; font-weight: bold; margin: 3px 0 2px; }
+.stat-no { font-size: 8.5px; line-height: 12px; text-align: right; }
 
 table.reg { border-collapse: collapse; width: 100%; table-layout: fixed; margin-top: 2px; }
-.reg th, .reg td { border: 1px solid #000; padding: 1px; vertical-align: top; text-align: center; overflow-wrap: break-word; }
-.reg th { font-weight: bold; font-size: 5.5px; line-height: 7px; background: #fff; }
-.reg td { font-size: 5.5px; }
+.reg th, .reg td { border: 1px solid #000; padding: 0.5px 1px; vertical-align: top; text-align: center; overflow-wrap: break-word; }
+.reg th { font-weight: bold; font-size: 7px; line-height: 8.5px; background: #fff; }
+.reg td { font-size: 7px; }
 .reg .l { text-align: left; }
 .reg .r { text-align: right; }
-.reg .ident { line-height: 8px; }
-.reg .ident .nm { font-weight: bold; font-size: 6px; }
-.reg .ident .sub { font-size: 5px; }
+.reg .ident { line-height: 13px; }
+.reg .ident .nm { font-weight: bold; font-size: 11px; }
+.reg .ident .sub { font-size: 10px; }
 .mini { width: 100%; border-collapse: collapse; }
-.mini td { border: none; padding: 0 1px; font-size: 5.5px; line-height: 8px; }
+.mini td { border: none; padding: 0 0.5px; font-size: 10px; line-height: 13px; }
 .mini td.k { text-align: left; }
 .mini td.v { text-align: right; font-weight: bold; }
-.reg tfoot td { font-weight: bold; }
-.foot { font-size: 6px; margin-top: 4px; text-align: right; color: #333; }
+/* Not bolding every totals cell on purpose: bold DejaVu Sans is measurably
+   wider than regular, and that was enough to wrap "40,000"/"16,000" onto two
+   lines in this row while the identical, non-bold value fit on one line in
+   the data row above — a font-weight side effect, not a column-width one.
+   Keep bold only on the label and the two figures that matter most. */
+.reg tr.totals td.l, .reg tr.totals td.emph { font-weight: bold; }
+.foot { font-size: 7px; margin-top: 3px; text-align: right; color: #333; }
 </style></head>
 <body>
 <div class="sheet">
@@ -80,32 +85,31 @@ table.reg { border-collapse: collapse; width: 100%; table-layout: fixed; margin-
     <div class="reg-for">Register of Payment of Wages/Salary for the Month of {{ strtoupper($run->periodLabel()) }}</div>
 
     <table class="reg">
-        <colgroup>
-            <col style="width:2.4%"><col style="width:4.5%"><col style="width:12.5%">
-            <col style="width:7.5%"><col style="width:8%">
-            <col style="width:3.4%"><col style="width:2.8%"><col style="width:3.2%"><col style="width:3.2%"><col style="width:3.2%"><col style="width:2.6%"><col style="width:3%">
-            <col style="width:3.6%">
-            <col style="width:3.4%"><col style="width:2.6%"><col style="width:2.6%"><col style="width:2.6%"><col style="width:3%"><col style="width:2.8%"><col style="width:3.2%">
-            <col style="width:3.4%"><col style="width:3.4%"><col style="width:2.2%"><col style="width:4.6%">
-        </colgroup>
         <thead>
+            {{-- Column widths are set directly on each header cell rather than
+                 via <colgroup> — dompdf does not reliably apply colgroup widths
+                 on a table-layout:fixed table whose header mixes rowspan and
+                 colspan across two rows (confirmed by testing: colgroup changes,
+                 including extreme ones, produced zero visible effect here).
+                 Identity/attendance/rate hold real text and need room;
+                 earning/deduction sub-columns mostly show short numbers (often
+                 "0") and are sized just wide enough for their typical value;
+                 totals/net-pay carry the longest numbers and get more back. --}}
             <tr>
-                <th rowspan="2">S.<br>No</th>
-                <th rowspan="2">Code<br>Card No</th>
-                <th rowspan="2">Employee Name<br>Father/Husb. Name<br>Desig./Dept</th>
-                <th rowspan="2">Attendance</th>
-                <th rowspan="2">Rate of Salary</th>
+                <th rowspan="2" style="width:1.5%">S.<br>No</th>
+                <th rowspan="2" style="width:5%">Code<br>Card No</th>
+                <th rowspan="2" style="width:15%">Employee Name<br>Father/Husb. Name<br>Desig./Dept</th>
+                <th rowspan="2" style="width:9%">Attendance</th>
+                <th rowspan="2" style="width:9%">Rate of Salary</th>
                 <th colspan="7">Earnings / Arrear</th>
-                <th rowspan="2">Gross<br>Salary</th>
-                <th colspan="7">Deductions</th>
-                <th rowspan="2">Net Pay<br>(in Rs.)<br>2</th>
-                <th rowspan="2">Net Pay<br>(in Rs.)<br>1</th>
-                <th rowspan="2">D.<br>Pay</th>
-                <th rowspan="2">Stamp &amp;<br>Signature</th>
+                <th rowspan="2" style="width:3.6%">Gross<br>Salary</th>
+                <th colspan="8">Deductions</th>
+                <th rowspan="2" style="width:5%">Net Pay<br>(in Rs.)</th>
+                <th rowspan="2" style="width:4%">Stamp &amp;<br>Signature</th>
             </tr>
             <tr>
-                <th>Basic</th><th>VDA</th><th>HRA</th><th>Conv.<br>Allow.</th><th>Others</th><th>OT</th><th>Arrear</th>
-                <th>PF<br>Wages</th><th>PF</th><th>ESI</th><th>TDS</th><th>Loan/<br>Adv</th><th>Others</th><th>Total<br>Ded.</th>
+                <th style="width:3.4%">Basic</th><th style="width:1.8%">VDA</th><th style="width:3.4%">HRA</th><th style="width:2%">Conv.<br>Allow.</th><th style="width:2%">Others</th><th style="width:1.8%">OT</th><th style="width:2%">Arrear</th>
+                <th style="width:2.6%">PF<br>Wages</th><th style="width:2.2%">PF</th><th style="width:1.4%">ESI</th><th style="width:1.4%">TDS</th><th style="width:1.6%">Loan/<br>Adv</th><th style="width:1.8%">Others</th><th style="width:1.6%">LWF</th><th style="width:4.8%">Total<br>Ded.</th>
             </tr>
         </thead>
         <tbody>
@@ -160,17 +164,23 @@ table.reg { border-collapse: collapse; width: 100%; table-layout: fixed; margin-
                 <td class="r">{{ $money($dd['tds']) }}</td>
                 <td class="r">{{ $money($dd['loan_adv']) }}</td>
                 <td class="r">{{ $money($dd['others']) }}</td>
+                <td class="r">{{ $money($dd['lwf']) }}</td>
                 <td class="r">{{ $money($r['total_ded']) }}</td>
                 <td class="r"><strong>{{ $money($r['net_pay']) }}</strong></td>
-                <td class="r"><strong>{{ $money($r['net_pay']) }}</strong></td>
-                <td>0</td>
                 <td>{{ $p?->bank_name ? 'Bank' : '' }}</td>
             </tr>
         @endforeach
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="3" class="l">Total</td>
+            {{-- Totals row lives in <tbody> (not <tfoot>) and un-colspan'd to
+                 exactly mirror the data row's cell structure. The mid-digit
+                 wrapping this row used to show ("40,00|0") turned out to be a
+                 font-weight issue, not a layout one — see the `.reg tr.totals`
+                 rule below — but keeping the row structurally identical to the
+                 data rows above removes one more variable if width issues ever
+                 reappear. --}}
+            <tr class="totals">
+                <td></td>
+                <td></td>
+                <td class="l">Total</td>
                 <td>
                     <table class="mini">
                         <tr><td class="k">P.Days</td><td class="v">{{ $days($totals['pay_days']) }}</td></tr>
@@ -192,13 +202,12 @@ table.reg { border-collapse: collapse; width: 100%; table-layout: fixed; margin-
                 <td class="r">{{ $money($totals['tds']) }}</td>
                 <td class="r">{{ $money($totals['loan_adv']) }}</td>
                 <td class="r">{{ $money($totals['ded_others']) }}</td>
+                <td class="r">{{ $money($totals['lwf']) }}</td>
                 <td class="r">{{ $money($totals['total_ded']) }}</td>
-                <td class="r">{{ $money($totals['net_pay']) }}</td>
-                <td class="r">{{ $money($totals['net_pay']) }}</td>
-                <td>0</td>
+                <td class="r emph">{{ $money($totals['net_pay']) }}</td>
                 <td></td>
             </tr>
-        </tfoot>
+        </tbody>
     </table>
     <div class="foot">System-generated wage/salary register &middot; Amounts in INR &middot; Generated {{ now()->format('d-M-Y H:i') }}</div>
 </div>

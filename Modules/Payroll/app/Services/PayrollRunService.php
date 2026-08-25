@@ -80,6 +80,69 @@ class PayrollRunService
         return ['prepared' => $prepared, 'skipped' => $skipped];
     }
 
+    /**
+     * Send a submitted-but-not-yet-approved run back to draft so HR can fix
+     * attendance and re-prepare it. The items are left as-is (re-preparing
+     * overwrites them); nothing is deleted.
+     */
+    public function reopen(PayrollRun $run): bool
+    {
+        if (! $run->isReopenable()) {
+            return false;
+        }
+
+        $run->update(['status' => PayrollRun::DRAFT, 'submitted_at' => null]);
+
+        return true;
+    }
+
+    /**
+     * Recompute every item in an already-approved run from current attendance/
+     * leave data and regenerate its payslip PDFs — for the case an absence or
+     * leave was corrected after approval. Super-Admin-only, and deliberately
+     * excluded once a run is PAID (see PayrollRun::isRecalculable()).
+     *
+     * @return int number of items recalculated
+     */
+    public function recalculate(PayrollRun $run): int
+    {
+        if (! $run->isRecalculable()) {
+            return 0;
+        }
+
+        $recalculated = 0;
+
+        DB::transaction(function () use ($run, &$recalculated) {
+            foreach ($run->items as $item) {
+                $breakup = $this->calculator->compute($item->user_id, $run->year, $run->month);
+                if ($breakup === null) {
+                    continue;
+                }
+
+                $item->update([
+                    'payable_days'     => (int) round($breakup['payable_days']),
+                    'lop_days'         => $breakup['lop_days'],
+                    'gross'            => $breakup['gross'],
+                    'total_earnings'   => $breakup['total_earnings'],
+                    'total_deductions' => $breakup['total_deductions'],
+                    'lop_amount'       => $breakup['lop_amount'],
+                    'net_pay'          => $breakup['net_pay'],
+                    'earnings'         => $breakup['earnings'],
+                    'deductions'       => $breakup['deductions'],
+                ]);
+                $recalculated++;
+            }
+
+            $run->update(['total_net' => (float) $run->items()->sum('net_pay')]);
+        });
+
+        foreach ($run->items as $item) {
+            $this->generatePayslip($item->refresh());
+        }
+
+        return $recalculated;
+    }
+
     public function submit(PayrollRun $run, ?int $hrId = null): bool
     {
         if ($run->status !== PayrollRun::DRAFT || $run->items()->count() === 0) {

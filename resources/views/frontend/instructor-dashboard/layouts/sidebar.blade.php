@@ -1329,7 +1329,10 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
 
     {{-- GROUP 6 — REPORTS ──────────────────────────────────────── --}}
     {{-- Analytics + the centralised Reports module (Revenue / Payments /
-         Invoices / Attendance), all gated by the analytics permission. --}}
+         Invoices / Attendance) — all driven by Orders/Enrollments, same as
+         Groups 2-5. Hidden by default alongside them; see the comment on
+         Group 2 above. --}}
+    @if (config('payroll.coach.show_lms_menus'))
     @if (checkPermissionView('analytics'))
         <details class="sb-group" data-sb-key="reports" open>
             <summary class="sb-group__head">
@@ -1371,6 +1374,7 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
             </ul>
         </details>
     @endif
+    @endif
 
     {{-- GROUP 7 — CONFIGURATION ────────────────────────────────── --}}
     {{-- Plan & Billing + the Settings hub. The hub's detailed sub-items
@@ -1378,7 +1382,11 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
          Website Builder, Blog, Email Templates, Subscription History, Payout,
          Tax, Pricing Enquiries, Trial Sessions, Membership, Refer & Earn,
          Payment Gateway) render in the settings-hub side-nav on settings
-         routes — surfacing them here too would duplicate that menu. --}}
+         routes — surfacing them here too would duplicate that menu. Every
+         one of those sub-items is LMS/coach-business — HR has its own,
+         separate Company Settings page (hr.companies.edit) — so this whole
+         group is hidden alongside Groups 2-6. --}}
+    @if (config('payroll.coach.show_lms_menus'))
     <details class="sb-group" data-sb-key="configuration" open>
         <summary class="sb-group__head">
             <span>{{ __('Configuration') }}</span>
@@ -1406,6 +1414,7 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
             </li>
         </ul>
     </details>
+    @endif
 
     <div class="sb-divider" style="margin-top:8px;"></div>
 
