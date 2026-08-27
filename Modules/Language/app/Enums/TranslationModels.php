@@ -7,37 +7,19 @@ enum TranslationModels: string
     /**
      * whenever update new case also update getAll() method
      * to return all values in array
+     *
+     * LMS removal phase 2 (2026-08-27) — every case pointed at a translation
+     * model inside a deleted module (Blog, Testimonial, Faq, Course, Frontend,
+     * Menubuilder, PageBuilder, InstructorRequest), and every caller of this
+     * enum lived in those same modules. Nothing in the HR/Payroll product is
+     * translatable through this mechanism yet, so the enum is deliberately left
+     * empty rather than deleted: GenerateTranslationTrait and
+     * TranslateableModelsTrait still type-hint it, and adding a case back is
+     * the whole job when HR gets translatable content.
      */
-    case Blog = "Modules\Blog\app\Models\BlogTranslation";
-    case BlogCategory = "Modules\Blog\app\Models\BlogCategoryTranslation";
-    case Testimonial = "Modules\Testimonial\app\Models\TestimonialTranslation";
-    case Faq = "Modules\Faq\app\Models\FaqTranslation";
-    case CourseCategory = "Modules\Course\app\Models\CourseCategoryTranslation";
-    case CourseLevel = "Modules\Course\app\Models\CourseLevelTranslation";
-    case FeaturedInstructorSection = "Modules\Frontend\app\Models\FeaturedInstructorTranslation";
-    case Menu = "Modules\Menubuilder\app\Models\MenuTranslation";
-    case MenuItem = "Modules\Menubuilder\app\Models\MenuItemTranslation";
-    case CustomPage = "Modules\PageBuilder\app\Models\CustomPageTranslation";
-    case InstructorRequestSetting = "Modules\InstructorRequest\app\Models\InstructorRequestSettingTranslation";
-    case Section = "Modules\Frontend\app\Models\SectionTranslation";
-
-
     public static function getAll(): array
     {
-        return [
-            self::Blog->value,
-            self::BlogCategory->value,
-            self::Testimonial->value,
-            self::Faq->value,
-            self::CourseCategory->value,
-            self::CourseLevel->value,
-            self::FeaturedInstructorSection->value,
-            self::Menu->value,
-            self::MenuItem->value,
-            self::CustomPage->value,
-            self::InstructorRequestSetting->value,
-            self::Section->value,
-        ];
+        return [];
     }
 
     public static function igonreColumns(): array
