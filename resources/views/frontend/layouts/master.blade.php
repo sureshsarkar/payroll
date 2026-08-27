@@ -44,21 +44,22 @@
          Loaded in <head> (before paint, so no light flash) but ONLY on the
          Coach / Staff / Student dashboard surfaces, so the white-label public
          marketing site is never re-themed. --}}
-    @if (request()->is('instructor', 'instructor/*', 'student', 'student/*', 'membership', 'membership/*', 'referral', 'referral/*'))
+    {{-- LMS removal phase 2 (2026-08-27) — added hr*/employee*: the HR surfaces
+         are dashboards too and were missing the dark theme entirely. --}}
+    @if (request()->is('instructor', 'instructor/*', 'student', 'student/*', 'hr', 'hr/*', 'employee', 'employee/*'))
         @include('frontend.layouts.partials._dashboard-dark')
     @endif
 
     {{-- dynamic header scripts --}}
     @include('frontend.layouts.header-scripts')
 
-    @php
-        setEnrollmentIdsInSession();
-        setInstructorCourseIdsInSession();
-        $theme_name = session()->has('demo_theme') ? session()->get('demo_theme') : DEFAULT_HOMEPAGE;
-    @endphp
+    {{-- LMS removal phase 2 (2026-08-27) — this used to call
+         setEnrollmentIdsInSession() and setInstructorCourseIdsInSession(), two
+         LMS helpers that queried enrollments/courses on EVERY page render,
+         including every HR and payroll screen. Both are gone with the LMS. --}}
 </head>
 
-<body class="{{ isRoute('home', "home_{$theme_name}") }}">
+<body>
     @if ($setting->google_tagmanager_status == 'active')
         <!-- Google Tag Manager (noscript) -->
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $setting->google_tagmanager_id }}"
