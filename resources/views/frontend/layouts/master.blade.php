@@ -87,10 +87,15 @@
 
     <!-- header-area -->
 
-    {{-- Public header on non-dashboard pages. Dashboards (/instructor/*, /student/*)
-         render their own modern topbar via frontend/layouts/partials/dashboard-topbar
-         which is injected by their respective master layouts. --}}
-    @if (!request()->is('instructor*') && !request()->is('student*') && !request()->is('notifications*') && !request()->is('referral*'))
+    {{-- Public header on non-dashboard pages. Dashboards (/instructor/*, /student/*,
+         and the HR surfaces /hr/*, /employee/*) render their own modern topbar via
+         frontend/layouts/partials/dashboard-topbar which is injected by their
+         respective master layouts.
+         LMS removal phase 2 (2026-08-27) — added hr*/employee*. The HR modules
+         reuse the instructor/student master layouts but live under their own URL
+         prefixes, so they were falling through this guard and rendering the public
+         marketing header/footer on top of their own topbar. --}}
+    @if (!request()->is('instructor*') && !request()->is('student*') && !request()->is('hr*') && !request()->is('employee*') && !request()->is('notifications*') && !request()->is('referral*'))
         {{-- 2026-06-11 — On a coach domain (resolved_coach_id stamped by
              ResolveCoachByDomain) a platform-themed page like /course/{slug}
              must show the COACH's branded header, not the platform tgmenu with
@@ -120,7 +125,7 @@
 
     <!-- footer-area -->
 
-      @if (!request()->is('instructor*') && !request()->is('student*') && !request()->is('notifications*') && !request()->is('referral*'))
+      @if (!request()->is('instructor*') && !request()->is('student*') && !request()->is('hr*') && !request()->is('employee*') && !request()->is('notifications*') && !request()->is('referral*'))
         {{-- 2026-07-16 — On a coach domain, show the coach's GLOBAL footer (same
              as every other coach page) instead of the platform footer, so pages
              like /course/{slug} stay consistent. Falls back to the platform

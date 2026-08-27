@@ -29,11 +29,11 @@
                     <div class="ad-perm"><span>{{ __('Permission needed') }}</span><code>{{ $deniedPermission }}</code></div>
                 @endif
                 <div class="ad-actions">
-                    <a href="{{ route('instructor.dashboard') }}" class="ad-btn ad-btn--primary">
+                    <a href="{{ route('hr.overview') }}" class="ad-btn ad-btn--primary">
                         <i class="bi bi-grid-1x2"></i> {{ __('Back to Dashboard') }}
                     </a>
                     <button type="button" class="ad-btn"
-                            onclick="if(history.length>1){history.back()}else{window.location.href='{{ route('instructor.dashboard') }}'}">
+                            onclick="if(history.length>1){history.back()}else{window.location.href='{{ route('hr.overview') }}'}">
                         <i class="bi bi-arrow-left"></i> {{ __('Go Back') }}
                     </button>
                 </div>

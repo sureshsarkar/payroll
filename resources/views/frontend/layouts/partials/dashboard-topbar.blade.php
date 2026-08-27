@@ -15,23 +15,31 @@
 @php
     $u = Auth::guard('web')->user();
     $isCoach = $u->role === 'instructor';
-    $dashRoute = $isCoach ? 'instructor.dashboard' : 'student.dashboard';
+    // LMS removal phase 2 (2026-08-27) — these pointed at the course/order
+    // dashboards, which no longer exist. HR & employee surfaces now.
+    $dashRoute    = $isCoach ? 'hr.overview' : 'employee.overview';
     $profileRoute = $isCoach ? 'instructor.setting.index' : 'student.setting.index';
-    $coursesRoute = $isCoach ? 'instructor.courses.index' : 'student.enrolled-courses';
+    $tasksRoute   = $isCoach ? 'hr.leave.index' : 'employee.leave.index';
 
-    // "Tasks" badge — pending items the user should act on.
+    // "Tasks" badge — pending items the user should act on. Was pending course
+    // approvals / pending orders; now pending leave requests, which is the real
+    // action queue in the HR product.
     $tasksCount = 0;
     try {
         if ($isCoach) {
-            // Coaches: pending course approvals + new lesson questions in last 24h (rough proxy)
-            $coachId = $u->role === 'instructor' ? $u->id : $u->coach_id;
-            $tasksCount = \App\Models\Course::where(function ($q) use ($coachId) {
-                $q->where('added_by', $coachId)->orWhere('instructor_id', $coachId);
-            })->where('is_approved', 'pending')->count();
+            // HR: leave requests awaiting approval, scoped to this HR's team via
+            // EmployeeProfile::teamUserIds() (never a raw coach_id fallback).
+            $tasksCount = \Modules\Leave\app\Models\Leave::whereIn(
+                    'user_id',
+                    \Modules\HrEmployee\app\Models\EmployeeProfile::teamUserIds($u)
+                )
+                ->where('status', \Modules\Leave\app\Models\Leave::PENDING)
+                ->count();
         } else {
-            // Students: pending orders
-            $tasksCount = \Modules\Order\app\Models\Order::where('buyer_id', $u->id)
-                ->where('status', 'pending')->count();
+            // Employees: their own leave requests still awaiting a decision.
+            $tasksCount = \Modules\Leave\app\Models\Leave::where('user_id', $u->id)
+                ->where('status', \Modules\Leave\app\Models\Leave::PENDING)
+                ->count();
         }
     } catch (\Throwable $e) {
         $tasksCount = 0;
@@ -320,7 +328,7 @@
         </button>
 
         {{-- Tasks (pending items badge) --}}
-        <a class="mbs-icon-btn mbs-icon-btn--badge" href="{{ $isCoach ? route('instructor.courses.index') : route('student.orders.index') }}"
+        <a class="mbs-icon-btn mbs-icon-btn--badge" href="{{ route($tasksRoute) }}"
            title="{{ __('Pending tasks') }}" aria-label="Tasks">
             <i class="fas fa-check"></i>
             @if ($tasksCount > 0)
