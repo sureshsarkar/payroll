@@ -1051,7 +1051,7 @@ if (! function_exists('panelModuleTitle')) {
         }
 
         if ($panel === 'student') return 'Student Dashboard';
-        if ($panel === 'instructor') return 'Coach Dashboard';
+        if ($panel === 'instructor') return 'HR Dashboard';
         return 'Dashboard';
     }
 }

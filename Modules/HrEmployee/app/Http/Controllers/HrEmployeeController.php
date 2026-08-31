@@ -116,6 +116,7 @@ class HrEmployeeController extends Controller
         $data = $request->validate([
             'name'            => ['required', 'string', 'max:191'],
             'email'           => ['required', 'email', 'max:191', 'unique:users,email'],
+            'password'        => ['nullable', 'string', 'min:8', 'max:100'],
             'designation'     => ['nullable', 'string', 'max:255'],
             'department_id'   => ['nullable', 'integer', 'exists:departments,id'],
             'employment_type' => ['nullable', 'string', 'max:30'],
@@ -123,14 +124,18 @@ class HrEmployeeController extends Controller
             'employee_code'   => ['nullable', 'string', 'max:40'],
         ]);
 
-        $hr       = $request->user();
-        $tempPass = Str::password(10);
+        $hr = $request->user();
+
+        // HR may set the login password directly; otherwise generate a
+        // one-time temporary password and surface it once so it can be shared.
+        $autoPassword = empty($data['password']);
+        $plainPass    = $autoPassword ? Str::password(10) : $data['password'];
 
         $user = User::create([
             'role'     => 'student',            // "Employee" in payroll terms
             'name'     => $data['name'],
             'email'    => $data['email'],
-            'password' => Hash::make($tempPass),
+            'password' => Hash::make($plainPass),
             'status'   => 1,
             'coach_id' => $hr->id,
             'added_by' => $hr->id,
@@ -147,8 +152,11 @@ class HrEmployeeController extends Controller
             'status'          => EmployeeProfile::ACTIVE,
         ]);
 
-        return redirect()->route('hr.employees.index')
-            ->with('success', "Employee '{$data['name']}' created. Temporary password: {$tempPass} (share it with them to log in).");
+        $message = $autoPassword
+            ? "Employee '{$data['name']}' created. Temporary password: {$plainPass} (share it with them to log in)."
+            : "Employee '{$data['name']}' created. They can sign in with their email and the password you set.";
+
+        return redirect()->route('hr.employees.index')->with('success', $message);
     }
 
     public function updateEmployee(Request $request, User $employee): RedirectResponse
@@ -161,6 +169,7 @@ class HrEmployeeController extends Controller
         $data = $request->validate(array_merge([
             'name' => ['required', 'string', 'max:191'],
             'email' => ['required', 'email', 'max:191', 'unique:users,email,'.$employee->id],
+            'password' => ['nullable', 'string', 'min:8', 'max:100'],
             'employee_code' => ['nullable', 'string', 'max:40'],
             'department_id' => ['nullable', 'integer', 'exists:departments,id'],
             'designation' => ['nullable', 'string', 'max:255'],
@@ -170,10 +179,14 @@ class HrEmployeeController extends Controller
             'status' => ['required', 'string', 'max:20'],
         ], $this->employeeDetailRules()));
 
-        $employee->update([
+        $accountData = [
             'name' => $data['name'],
             'email' => $data['email'],
-        ]);
+        ];
+        if (! empty($data['password'])) {
+            $accountData['password'] = Hash::make($data['password']);
+        }
+        $employee->update($accountData);
 
         $profileData = [
             'employee_code' => $data['employee_code'] ?? null,
@@ -196,56 +209,61 @@ class HrEmployeeController extends Controller
         }
         EmployeeProfile::updateOrCreate(['user_id' => $employee->id], $profileData);
 
-        return redirect()->route('hr.employees.edit', $employee)->with('success', 'Employee profile saved.');
+        $saved = ! empty($data['password'])
+            ? 'Employee profile saved. The new login password is now active.'
+            : 'Employee profile saved.';
+
+        return redirect()->route('hr.employees.edit', $employee)->with('success', $saved);
     }
 
-    /**
-     * List + create departments for the active company.
-     *
-     * `hrs` (for the department-head picker) must be members of the active
-     * company only — it was previously `User::where('role','instructor')`
-     * with no company filter at all, which listed every HR account on the
-     * platform (name + id) to any HR viewing this screen, a cross-tenant
-     * disclosure. Scoped via the `company_user` pivot instead.
-     */
+    /** List + create departments for the active company. */
     public function departments(Request $request): View
     {
-        $company = currentCompany();
-
         return view('hremployee::departments', [
             'departments' => Department::withCount('employees')->orderBy('name')->get(),
-            'hrs' => $company
-                ? $company->users()->where('users.role', 'instructor')->orderBy('users.name')->get()
-                : collect(),
         ]);
     }
 
     public function storeDepartment(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name'         => ['required', 'string', 'max:255'],
-            'code'         => ['nullable', 'string', 'max:40'],
-            'head_user_id' => ['nullable', 'integer'],
+            'name' => ['required', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:40'],
         ]);
-
-        // Drop a head_user_id that isn't actually an HR member of the active
-        // company — the field used to be trusted as-is, which let a department
-        // be pointed at any user id, including one from another tenant.
-        if (! empty($data['head_user_id'])) {
-            $company = currentCompany();
-            $validHead = $company && $company->users()
-                ->where('users.id', $data['head_user_id'])
-                ->where('users.role', 'instructor')
-                ->exists();
-
-            if (! $validHead) {
-                $data['head_user_id'] = null;
-            }
-        }
 
         Department::create($data + ['is_active' => true]);
 
         return back()->with('success', 'Department created.');
+    }
+
+    /** Rename / re-code / activate-deactivate a department in the active company. */
+    public function updateDepartment(Request $request, Department $department): RedirectResponse
+    {
+        $data = $request->validate([
+            'name'      => ['required', 'string', 'max:255'],
+            'code'      => ['nullable', 'string', 'max:40'],
+            'is_active' => ['required', 'boolean'],
+        ]);
+
+        $department->update([
+            'name'      => $data['name'],
+            'code'      => $data['code'] ?? null,
+            'is_active' => $request->boolean('is_active'),
+        ]);
+
+        return back()->with('success', 'Department updated.');
+    }
+
+    /** Delete a department — only allowed while no employee is assigned to it. */
+    public function destroyDepartment(Department $department): RedirectResponse
+    {
+        if ($department->employees()->exists()) {
+            return back()->with('error', "Can't delete \"{$department->name}\" — employees are still assigned to it. Move them to another department first.");
+        }
+
+        $department->delete();
+
+        return back()->with('success', 'Department deleted.');
     }
 
     /* ------------------------------------------------------------------ */

@@ -6,7 +6,7 @@
 <h4 class="mb-3">Payroll approvals</h4>
 <div class="card stat-card"><div class="card-body">
     @if($runs->isEmpty())
-        <p class="text-muted mb-0">No payroll runs yet. HR prepares them from the coach panel.</p>
+        <p class="text-muted mb-0">No payroll runs yet. HR prepares them from the HR panel.</p>
     @else
     <table class="table table-sm align-middle mb-0">
         <thead><tr>

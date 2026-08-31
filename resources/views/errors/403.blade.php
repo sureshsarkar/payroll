@@ -22,7 +22,7 @@
                 <span class="ad-code">403 · {{ __('Restricted') }}</span>
                 <h1 class="ad-title">{{ __('Access Denied') }}</h1>
                 <p class="ad-text">
-                    {{ __('You don’t have permission to open this page. Ask your coach or administrator to grant it from') }}
+                    {{ __('You don’t have permission to open this page. Ask your HR or administrator to grant it from') }}
                     <strong>{{ __('Staff → Roles') }}</strong>.
                 </p>
                 @if (! empty($deniedPermission))
@@ -89,7 +89,7 @@
                                 <h1 style="font-size: 300px;">403</h1>
                             </div>
                             <div class="error-content">
-                                <h2 class="title">{{ __('Access Denied') }} <span>{{ __('You don’t have permission to access this page. Please ask your coach or administrator to grant access.') }}</span></h2>
+                                <h2 class="title">{{ __('Access Denied') }} <span>{{ __('You don’t have permission to access this page. Please ask your HR or administrator to grant access.') }}</span></h2>
                                 <div class="tg-button-wrap">
                                     <a href="{{ route('home') }}" class="btn arrow-btn">{{ __('Go Home') }} <img
                                             src="{{ asset('frontend/img/icons/right_arrow.svg') }}" alt="img" class="injectable"></a>

@@ -822,7 +822,7 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
                 <div class="sb-name">{{ userAuth()->name }}</div>
                 <div class="sb-role-badge">
                     <i class="bi bi-patch-check-fill" style="font-size:8px;"></i>
-                    {{ userAuth()->role == 'instructor' ? __('Coach') : (userAuth()->role == 'institute-branch' ? __('Branch') : __('Staff')) }}
+                    {{ userAuth()->role == 'instructor' ? __('HR') : (userAuth()->role == 'institute-branch' ? __('Branch') : __('Staff')) }}
                 </div>
             </div>
         </div>
@@ -1077,7 +1077,7 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
              Coach sees the platform brand here (this is the COACH's
              panel, not their students' view), but if the platform
              admin has set a name in settings.app_name, that wins. --}}
-        <span class="sb-footer-brand">{{ $brand->name ?? 'Coaching Platform' }}</span>
+        <span class="sb-footer-brand">{{ $brand->name ?? 'HR Platform' }}</span>
         <span class="sb-footer-ver">v1.0</span>
     </div>
 

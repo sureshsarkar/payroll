@@ -55,7 +55,7 @@ class Brand
     public static function platform(array $platform): self
     {
         return new self(
-            name:            (string) ($platform['app_name']            ?? config('app.name', 'Coaching Platform')),
+            name:            (string) ($platform['app_name']            ?? config('app.name', 'HR Platform')),
             logoPath:        $platform['logo']                          ?? null,
             faviconPath:     $platform['favicon']                       ?? null,
             primaryColor:    (string) ($platform['primary_color']       ?? '#10b981'),  /* 2026-07-04: last-resort default is the panel's emerald, not the old indigo */

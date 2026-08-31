@@ -23,4 +23,6 @@ Route::middleware(['web', 'auth', 'instructorrole', 'companycontext'])
 
         Route::get('departments', [HrEmployeeController::class, 'departments'])->name('departments.index');
         Route::post('departments', [HrEmployeeController::class, 'storeDepartment'])->name('departments.store');
+        Route::put('departments/{department}', [HrEmployeeController::class, 'updateDepartment'])->name('departments.update');
+        Route::delete('departments/{department}', [HrEmployeeController::class, 'destroyDepartment'])->name('departments.destroy');
     });

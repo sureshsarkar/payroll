@@ -8,6 +8,7 @@
         <div class="pv-card"><div class="h"><i class="fas fa-user-circle" style="color:var(--pv-brand)"></i> Account</div><div class="b"><div class="pv-cols c3">
             <div class="pv-field"><label class="pv-label">Full name *</label><input name="name" value="{{ old('name', $employee->name) }}" class="pv-input" required></div>
             <div class="pv-field"><label class="pv-label">Login email *</label><input type="email" name="email" value="{{ old('email', $employee->email) }}" class="pv-input" required></div>
+            <div class="pv-field"><label class="pv-label">Reset login password</label><input type="text" name="password" value="{{ old('password') }}" class="pv-input" autocomplete="off" minlength="8" placeholder="Min 8 chars — blank = unchanged"><span class="pv-mut2">The employee can also change this from their own profile.</span></div>
         </div></div></div>
         <div class="pv-card"><div class="h"><i class="fas fa-id-card" style="color:var(--pv-brand)"></i> Employment details</div><div class="b"><div class="pv-cols c3">
             <div class="pv-field"><label class="pv-label">Employee code</label><input name="employee_code" value="{{ old('employee_code', $profile->employee_code) }}" class="pv-input"></div>

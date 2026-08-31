@@ -2,7 +2,6 @@
 
 namespace Modules\HrEmployee\app\Models;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,17 +12,12 @@ class Department extends Model
     use BelongsToCompany;
 
     protected $fillable = [
-        'name', 'code', 'head_user_id', 'parent_id', 'is_active',
+        'name', 'code', 'parent_id', 'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
     ];
-
-    public function head(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'head_user_id');
-    }
 
     public function parent(): BelongsTo
     {

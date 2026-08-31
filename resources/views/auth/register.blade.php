@@ -1,5 +1,5 @@
 @extends('frontend.layouts.master')
-@section('meta_title', __('Create coach account') . ' || ' . $brand->name) {{-- P4 — per-coach white-label --}}
+@section('meta_title', __('Create HR account') . ' || ' . $brand->name) {{-- P4 — per-coach white-label --}}
 
 @section('contents')
     {{--
@@ -396,15 +396,15 @@
             <div class="auth-pill-wrap">
                 <span class="auth-pill">
                     <span class="auth-pill__dot"></span>
-                    {{ __('For Coaches') }}
+                    {{ __('For HR') }}
                 </span>
             </div>
 
             {{-- ── Card ───────────────────────────────────────── --}}
             <div class="auth-card">
                 <div class="auth-head">
-                    <h1>{{ __('Create your coach account') }}</h1>
-                    <p>{{ __('Launch your branded coaching business in a few minutes. No card required.') }}</p>
+                    <h1>{{ __('Create your HR account') }}</h1>
+                    <p>{{ __('Set up your HR & payroll workspace in a few minutes. No card required.') }}</p>
                 </div>
 
                 @if($setting->google_login_status == 'active')
