@@ -44,7 +44,7 @@ auth.json
 # --- Project-specific (not committed) ---
 mbs.rar
 mbs.sql
-db/
+# db/
 mbs/
 _decom_*
 *.zip
