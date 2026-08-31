@@ -376,6 +376,10 @@ if (! function_exists('currentAdminPageTitle')) {
 
         // Route-name → friendly label map. Only routes whose route-name
         // segment doesn't naturally read well need an entry here.
+        // LMS removal phase 2 (2026-08-31) — dropped a dozen aliases for
+        // admin.membership-plans.*/user-memberships.*/referral-commissions.*/
+        // referrals.*/coach-landing-pages.*/zoom-health.*. None of those
+        // routes exist any more.
         static $aliases = [
             'admin.dashboard'                                  => 'Dashboard',
             'admin.edit-profile'                               => 'Edit Profile',
@@ -384,16 +388,6 @@ if (! function_exists('currentAdminPageTitle')) {
             'admin.2fa.challenge'                              => 'Two-Factor Verification',
             'admin.role.index'                                 => 'Roles',
             'admin.admin.index'                                => 'Admins',
-            'admin.membership-plans.index'                     => 'Membership Plans',
-            'admin.user-memberships.index'                     => 'User Memberships',
-            'admin.user-memberships.conversion'                => 'Trial Conversion',
-            'admin.referral-commissions.index'                 => 'Referral Commissions',
-            'admin.referrals.index'                            => 'Referrals',
-            'admin.referrals.settings'                         => 'Referral Settings',
-            'admin.coach-landing-pages.index'                  => 'Coach Landing Pages',
-            'admin.coach-landing-pages.templates-report'       => 'Template Performance',
-            'admin.coach-landing-pages.enquiries'              => 'Landing Page Enquiries',
-            'admin.zoom-health.index'                          => 'Zoom Health',
             'admin.notifications.index'                        => 'Notifications',
         ];
 
