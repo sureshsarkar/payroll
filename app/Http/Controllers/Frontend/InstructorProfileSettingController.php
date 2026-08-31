@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Frontend;
 use App\Enums\RedirectMessage;
 use App\Enums\RedirectType;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Frontend\InstructorProfilePayoutUpdateRequest;
 use App\Http\Requests\Frontend\StudentBioUpdateRequest;
 use App\Http\Requests\Frontend\StudentEducationStoreRequest;
 use App\Http\Requests\Frontend\StudentExperienceStoreRequest;
@@ -22,11 +21,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
-use Modules\InstructorRequest\app\Models\InstructorRequest;
-use Modules\InstructorRequest\app\Models\InstructorRequestSetting;
 use Modules\Location\app\Models\City;
 use Modules\Location\app\Models\State;
-use Modules\PaymentWithdraw\app\Models\WithdrawMethod;
 
 class InstructorProfileSettingController extends Controller
 {
@@ -42,11 +38,12 @@ class InstructorProfileSettingController extends Controller
         $educations = UserEducation::where('user_id', $user->id)->get();
         $states = State::where(['country_id' => $user->country_id, 'status' => 1])->get();
         $cities = City::where(['state_id' => $user->state_id, 'status' => 1])->get();
-        $payoutInfo = InstructorRequest::where('user_id', $user->id)->first();
-        $instructorRequestSetting = InstructorRequestSetting::first();
-        $withdrawMethods = WithdrawMethod::where('status', 'active')->get();
-        $instructorRequest = InstructorRequest::where('user_id', auth('web')->user()->id)->first();
-        return view('frontend.instructor-dashboard.profile.index', compact('user', 'experiences', 'educations', 'states', 'cities', 'payoutInfo', 'instructorRequestSetting', 'withdrawMethods', 'instructorRequest'));
+        // LMS removal phase 2 (2026-08-27) — dropped $payoutInfo,
+        // $instructorRequestSetting, $withdrawMethods and $instructorRequest.
+        // They fed the Payout tab (coach withdrawal account for course-sale
+        // earnings) and came from the deleted InstructorRequest and
+        // PaymentWithdraw modules; the tab itself is gone from the view.
+        return view('frontend.instructor-dashboard.profile.index', compact('user', 'experiences', 'educations', 'states', 'cities'));
     }
 
     function updateProfile(StudentProfileUpdateRequest $request): RedirectResponse
@@ -229,17 +226,7 @@ class InstructorProfileSettingController extends Controller
         return $this->redirectWithMessage(RedirectType::UPDATE->value, 'instructor.setting.index');
     }
 
-    function updatePayout(InstructorProfilePayoutUpdateRequest $request): RedirectResponse
-    {
-
-        InstructorRequest::updateOrCreate(
-            ['user_id' => Auth::user()->id],
-            [
-                'payout_account' => $request->payout_account,
-                'payout_information' => $request->payout_information,
-            ]
-        );
-
-        return $this->redirectWithMessage(RedirectType::UPDATE->value, 'instructor.setting.index');
-    }
+    /* LMS removal phase 2 (2026-08-27) — removed updatePayout(), which saved the
+     * coach's withdrawal account onto their InstructorRequest row. Its route
+     * (instructor.setting.payout.update) and its form section are both gone. */
 }

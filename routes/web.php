@@ -1,11 +1,6 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Webhook\StripeWebhookController;
-use App\Http\Controllers\Webhook\RazorpayWebhookController;
-use App\Http\Controllers\Webhook\BkashWebhookController;
-use App\Http\Controllers\Webhook\PaypalWebhookController;
-use App\Http\Controllers\Webhook\MercadoPagoWebhookController;
 use App\Http\Controllers\Frontend\InstructorProfileSettingController;
 use App\Http\Controllers\Frontend\StudentProfileSettingController;
 use App\Http\Controllers\Frontend\TinymceImageUploadController;
@@ -15,44 +10,12 @@ use Illuminate\Support\Facades\Route;
 // even during maintenance for the monitor to detect that you're maintenance-down).
 Route::get('/up', \App\Http\Controllers\HealthCheckController::class)->name('healthcheck');
 
-/* Payment webhooks — POST endpoints called by gateway servers, NOT browsers.
- * No auth, no CSRF (exempted in VerifyCsrfToken middleware). Each handler
- * verifies the gateway signature internally.
- *
- * Throttle policy:
- *  - Stripe / Razorpay / PayPal: HMAC or PayPal-API verified before any
- *    work. The signature check rejects 99.99% of garbage in <1ms, so a
- *    permissive throttle:120,1 is just a safety net against burst spam.
- *  - bKash / MercadoPago: NO inbound signature; the handler re-queries
- *    the gateway's API to verify. An attacker spamming these would burn
- *    our gateway API quota and our outbound HTTP timeouts. Tighter
- *    throttle:30,1 here. */
-Route::post('webhooks/stripe',      [StripeWebhookController::class, 'handle'])
-    ->middleware('throttle:120,1')->name('webhooks.stripe');
-Route::post('webhooks/razorpay',    [RazorpayWebhookController::class, 'handle'])
-    ->middleware('throttle:120,1')->name('webhooks.razorpay');
-Route::post('webhooks/bkash',       [BkashWebhookController::class, 'handle'])
-    ->middleware('throttle:30,1')->name('webhooks.bkash');
-Route::post('webhooks/paypal',      [PaypalWebhookController::class, 'handle'])
-    ->middleware('throttle:120,1')->name('webhooks.paypal');
-Route::post('webhooks/mercadopago', [MercadoPagoWebhookController::class, 'handle'])
-    ->middleware('throttle:30,1')->name('webhooks.mercadopago');
-
-/**
- * 2026-05-21 — Caddy SSL on-demand allow-list endpoint (Path B P6+).
- * Caddy calls this with ?domain=<host> before issuing a Let's
- * Encrypt cert; we return 200 only for hostnames that exist in
- * coach_domains with verified_at set, 403 otherwise. Prevents the
- * Let's Encrypt rate-limit DoS hazard documented in
- * docs/PATH_B_WHITELABEL_OPERATOR_GUIDE.md.
- *
- * Sits OUTSIDE the web middleware group — no session, no CSRF
- * (Caddy makes an unauthenticated GET). Rate-limited to deflect
- * mass-probing of the coach catalog.
- */
-Route::get('internal/ssl-allowed', [\App\Http\Controllers\Internal\SslAllowlistController::class, 'check'])
-    ->middleware('throttle:60,1')
-    ->name('internal.ssl-allowed');
+/* LMS removal phase 2 (2026-08-27) — removed the five payment-gateway
+ * webhook endpoints (Stripe / Razorpay / bKash / PayPal / MercadoPago). They
+ * settled LMS course orders and coach memberships; there is nothing left to
+ * buy. Also removed the Caddy SSL on-demand allow-list endpoint, which
+ * answered "may I issue a cert for this host?" from coach_domains — there are
+ * no coach custom domains any more. */
 
 Route::group(['middleware' => 'maintenance.mode'], function () {
 

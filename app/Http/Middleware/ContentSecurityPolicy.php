@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\CoachSiteSettings;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -34,11 +33,11 @@ use Symfony\Component\HttpFoundation\Response;
  *   to render `<script nonce="...">` tags that survive a tightened
  *   policy (script-src 'self' 'nonce-...' ...).
  *
- * Coach-aware allowlists:
- *   If the coach has GTM / GA4 / Meta Pixel / Hotjar configured in
- *   CoachSiteSettings, the corresponding script-src / connect-src /
- *   frame-src origins are added to the policy. Coaches without those
- *   configured get a tighter policy — no third-party origins.
+ * LMS removal phase 2 (2026-08-27):
+ *   The coach-aware allowlist is gone. It read CoachSiteSettings for the
+ *   coach resolved from the request host and widened script-src /
+ *   connect-src / img-src / frame-src for that coach's GTM, GA4, Meta Pixel
+ *   and Hotjar. Every request now gets the same, tighter base policy.
  *
  * No-op when:
  *   - Response isn't HTML (skip JSON / file downloads / images).
@@ -70,10 +69,7 @@ class ContentSecurityPolicy
             return $response;
         }
 
-        $coachId = $request->attributes->get('resolved_coach_id');
-        $settings = $coachId ? $this->loadSettings((int) $coachId) : null;
-
-        $policy = $this->buildPolicy($nonce, $settings);
+        $policy = $this->buildPolicy($nonce);
         $response->headers->set($headerName, $policy);
 
         return $response;
@@ -91,18 +87,6 @@ class ContentSecurityPolicy
         return filter_var(env('CSP_ENFORCE', false), FILTER_VALIDATE_BOOLEAN);
     }
 
-    /**
-     * Load CoachSiteSettings for the resolved coach. Failure here MUST
-     * NOT block the request — we still want to ship a base policy.
-     */
-    private function loadSettings(int $coachId): ?CoachSiteSettings
-    {
-        try {
-            return CoachSiteSettings::where('coach_id', $coachId)->first();
-        } catch (\Throwable $e) {
-            return null;
-        }
-    }
 
     /**
      * Build the CSP directive string. The base policy is intentionally
@@ -111,7 +95,7 @@ class ContentSecurityPolicy
      * images from many origins (S3, gravatar, CDN partners). Tightening
      * those is a separate effort — out of scope for this middleware.
      */
-    private function buildPolicy(string $nonce, ?CoachSiteSettings $s): string
+    private function buildPolicy(string $nonce): string
     {
         // Always-allowed origins for script-src (CDNs we ship from).
         // 'strict-dynamic' tells modern browsers to ignore 'self' and
@@ -192,35 +176,9 @@ class ContentSecurityPolicy
             'https:',
         ];
 
-        // Coach-aware allowlists. Only added if the coach has the
-        // integration configured.
-        if ($s) {
-            if (!empty($s->analytics_gtm_id) || !empty($s->analytics_ga4_id)) {
-                $scriptSrc[] = 'https://www.googletagmanager.com';
-                $scriptSrc[] = 'https://*.googletagmanager.com';
-                $scriptSrc[] = 'https://www.google-analytics.com';
-                $connectSrc[] = 'https://www.google-analytics.com';
-                $connectSrc[] = 'https://*.google-analytics.com';
-                $connectSrc[] = 'https://www.googletagmanager.com';
-                $imgSrc[]    = 'https://www.google-analytics.com';
-                $imgSrc[]    = 'https://www.googletagmanager.com';
-                $frameSrc[]  = 'https://www.googletagmanager.com';
-            }
-            if (!empty($s->analytics_meta_pixel_id)) {
-                $scriptSrc[]  = 'https://connect.facebook.net';
-                $connectSrc[] = 'https://www.facebook.com';
-                $connectSrc[] = 'https://connect.facebook.net';
-                $imgSrc[]     = 'https://www.facebook.com';
-                $imgSrc[]     = 'https://*.facebook.com';
-            }
-            if (!empty($s->analytics_hotjar_id ?? null)) {
-                $scriptSrc[]  = 'https://static.hotjar.com';
-                $scriptSrc[]  = 'https://script.hotjar.com';
-                $connectSrc[] = 'https://*.hotjar.com';
-                $connectSrc[] = 'wss://*.hotjar.com';
-                $frameSrc[]   = 'https://vars.hotjar.com';
-            }
-        }
+        // LMS removal phase 2 (2026-08-27) — the per-coach analytics allowlist
+        // (GTM / GA4 / Meta Pixel / Hotjar origins, added only when that coach
+        // had the integration configured) went with CoachSiteSettings.
 
         $directives = [
             "default-src 'self'",

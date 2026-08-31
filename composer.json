@@ -9,7 +9,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
-        "anayarojo/shoppingcart": "^4.2",
         "bacon/bacon-qr-code": "^3.1",
         "doctrine/dbal": "^3.7",
         "dompdf/dompdf": "^3.0",

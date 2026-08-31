@@ -75,10 +75,10 @@
     @section('meta_title', __('Access Denied') . ' || ' . ($setting->app_name ?? config('app.name', 'MBSGuru')))
 
     @section('contents')
-        <x-frontend.breadcrumb :title="__('Access Denied')" :links="[
-            ['url' => route('home'), 'text' => __('Home')],
-            ['url' => route('checkout.index'), 'text' => __('Access Denied')],
-        ]" />
+        {{-- LMS removal phase 2 (2026-08-27) — the second crumb pointed at
+             checkout.index, which is gone (and was a nonsensical target for a
+             403 page anyway). --}}
+        <x-frontend.breadcrumb :title="__('Access Denied')" :links="[['url' => route('home'), 'text' => __('Home')]]" />
 
         <section class="error-area pt-0">
             <div class="container">

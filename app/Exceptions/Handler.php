@@ -2,7 +2,6 @@
 
 namespace App\Exceptions;
 
-use App\Models\CoachLandingPage;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Session\TokenMismatchException;
@@ -98,8 +97,9 @@ class Handler extends ExceptionHandler
      */
     private function logoutGracefully($request)
     {
-        $coachId = (int) ($request->attributes->get('resolved_coach_id') ?? 0);
-
+        // LMS removal phase 2 (2026-08-27) — dropped the white-label branch that
+        // returned the user to their coach's branded home instead of the
+        // platform login. There are no coach sites.
         Auth::guard('web')->logout();
         if ($request->hasSession()) {
             $request->session()->invalidate();
@@ -107,13 +107,6 @@ class Handler extends ExceptionHandler
         }
         $notification = ['messege' => __('Logged out successfully.'), 'alert-type' => 'success'];
 
-        if ($coachId > 0) {
-            $slug = CoachLandingPage::where('added_by', $coachId)->value('slug');
-            if ($slug) {
-                return redirect()->route('coach.site.path', ['site_slug' => $slug])->with($notification);
-            }
-            return redirect()->to('/')->with($notification);
-        }
         return redirect()->route('login')->with($notification);
     }
 }

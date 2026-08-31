@@ -453,36 +453,9 @@ margin-top: 10px;
         <div class="sidebar-nav-label">{{ __('Main Menu') }}</div>
         <nav class="sidebar-nav dashboard__sidebar-menu">
             <ul class="list-wrap">
-                {{-- LMS course dashboard/menu — hidden alongside the coach-side
-                     LMS groups (config('payroll.coach.show_lms_menus')). --}}
-                @if (config('payroll.coach.show_lms_menus'))
-                <li class="{{ Route::is('student.dashboard') ? 'active' : '' }} m-0">
-                    <a href="{{ route('student.dashboard') }}">
-                        <img src="{{ asset('uploads/website-images/dashboard.svg') }}" alt="">
-                        {{ __('Dashboard') }}
-                    </a>
-                </li>
-                 <li class="{{ Route::is('student.enrolled-courses') ? 'active' : '' }} m-0">
-                    <a href="{{ route('student.enrolled-courses') }}">
-                        <i class="flaticon-mortarboard"></i>
-                        {{ __('My Courses') }}
-                    </a>
-                </li>
-                  <li class="{{ Route::is('student.live-classes.index') ? 'active' : '' }} m-0">
-                    <a href="{{ route('student.live-classes.index') }}">
-                        <i class="fas fa-film"></i>
-                        {{ __('Live Classes') }}
-                        <span class="sb-pill red">{{ $totalStudentUpcomingLive??0 }}  Live </span>
-                    </a>
-                </li>
-                {{-- Audit 2026-05-18 Req 1 — student sees their own attendance --}}
-                <li class="{{ Route::is('student.attendance.index') ? 'active' : '' }} m-0">
-                    <a href="{{ route('student.attendance.index') }}">
-                        <i class="fas fa-clipboard-check"></i>
-                        {{ __('My Attendance') }}
-                    </a>
-                </li>
-                @endif
+                {{-- LMS removal phase 2 (2026-08-27) — removed the gated LMS block
+                     (Dashboard / My Courses / Live Classes / per-course Attendance).
+                     Those routes are gone; the Employee entries below are the menu. --}}
 
                 {{-- Payroll conversion — Employee self-service --}}
                 <li class="{{ Route::is('employee.overview') ? 'active' : '' }} m-0">
@@ -509,60 +482,9 @@ margin-top: 10px;
                         {{ __('My Payslips') }}
                     </a>
                 </li>
-                {{-- LMS course fees/announcements/orders/wishlist/reviews/referral —
-                     hidden alongside the coach-side LMS groups. --}}
-                @if (config('payroll.coach.show_lms_menus'))
-                {{-- Phase 4C 2026-05-19 — Fee Management student view --}}
-                <li class="{{ Route::is('student.fees.*') ? 'active' : '' }} m-0">
-                    <a href="{{ route('student.fees.index') }}">
-                        <i class="fas fa-coins" style="color:#f59e0b;"></i>
-                        {{ __('My Fees') }}
-                    </a>
-                </li>
-                {{-- 2026-05-20 — Student announcements (Phase E) --}}
-                <li class="{{ Route::is('student.announcements.*') ? 'active' : '' }} m-0">
-                    <a href="{{ route('student.announcements.index') }}">
-                        <i class="fas fa-bullhorn" style="color:#10b981;"></i>
-                        {{ __('Announcements') }}
-                    </a>
-                </li>
-                <li class="{{ Route::is('student.orders.index') ? 'active' : '' }} m-0">
-                    <a href="{{ route('student.orders.index') }}">
-                        <img src="{{ asset('uploads/website-images/order-history.svg') }}" alt="">
-                        {{ __('Order History') }}
-                    </a>
-                </li>
-               
-                <li class="{{ Route::is('student.wishlist') ? 'active' : '' }} m-0">
-                    <a href="{{ route('student.wishlist') }}">
-                        <img src="{{ asset('uploads/website-images/heart.svg') }}" alt="">
-                        {{ __('Wishlist') }}
-                    </a>
-                </li>
-                <li class="{{ Route::is('student.reviews.index') ? 'active' : '' }} m-0">
-                    <a href="{{ route('student.reviews.index') }}">
-                        <img src="{{ asset('uploads/website-images/reviews.svg') }}" alt="">
-                        {{ __('Reviews') }}
-                    </a>
-                </li>
-                {{-- Audit 2026-05-18 Req 2 — membership hidden from student panel.
-                     Students buy courses directly; no membership subscription concept
-                     on the student side. The route still exists for backwards
-                     compatibility with bookmarks, but the menu entry is removed.
-                <li class="{{ Route::is('membership.*') ? 'active' : '' }} m-0">
-                    <a href="{{ route('membership.index') }}">
-                        <i class="fas fa-shield-alt"></i>
-                        {{ __('Membership') }}
-                    </a>
-                </li>
-                --}}
-                <li class="{{ Route::is('referral.*') ? 'active' : '' }} m-0">
-                    <a href="{{ route('referral.index') }}">
-                        <i class="fas fa-gift"></i>
-                        {{ __('Refer & Earn') }}
-                    </a>
-                </li>
-                @endif
+                {{-- LMS removal phase 2 (2026-08-27) — removed the gated LMS block
+                     (My Fees / Announcements / Order History / Wishlist / Reviews /
+                     Refer & Earn). All of those routes are gone. --}}
             </ul>
         </nav>
     </div>
@@ -600,38 +522,21 @@ margin-top: 10px;
 
 {{-- mobile menu start   --}}
 <nav class="bottom-nav">
-    @if (config('payroll.coach.show_lms_menus'))
-        <a href="{{ route('student.dashboard') }}" class="bottom-nav-item {{ Route::is('student.dashboard') ? 'active' : '' }}">
-            <img src="{{ asset('uploads/website-images/dashboard.svg') }}" alt=""> Dashboard
-        </a>
-        <a href="{{ route('student.enrolled-courses') }}" class="bottom-nav-item {{ Route::is('student.enrolled-courses') ? 'active' : '' }}">
-            <i class="flaticon-mortarboard"></i> Courses
-        </a>
-        <a href="{{ route('student.live-classes.index') }}" class="bottom-nav-item {{ Route::is('student.live-classes.index') ? 'active' : '' }}">
-            <i class="fas fa-film"></i> Live
-            @if(($totalStudentUpcomingLive ?? 0) > 0)
-                <span class="bottom-nav-badge">{{ $totalStudentUpcomingLive }}</span>
-            @endif
-        </a>
-        <a href="{{ route('student.wishlist') }}" class="bottom-nav-item {{ Route::is('student.wishlist') ? 'active' : '' }}">
-            <img src="{{ asset('uploads/website-images/heart.svg') }}" alt=""> Wishlist
-        </a>
-    @else
-        {{-- Employee-side equivalent, mirroring the sidebar's own Employee
-             self-service section above. --}}
-        <a href="{{ route('employee.overview') }}" class="bottom-nav-item {{ Route::is('employee.overview') ? 'active' : '' }}">
-            <i class="fas fa-th-large"></i> Overview
-        </a>
-        <a href="{{ route('employee.attendance.my') }}" class="bottom-nav-item {{ Route::is('employee.attendance.*') ? 'active' : '' }}">
-            <i class="fas fa-calendar-check"></i> Attendance
-        </a>
-        <a href="{{ route('employee.leave.index') }}" class="bottom-nav-item {{ Route::is('employee.leave.*') ? 'active' : '' }}">
-            <i class="fas fa-plane-departure"></i> Leave
-        </a>
-        <a href="{{ route('employee.payslips.index') }}" class="bottom-nav-item {{ Route::is('employee.payslips.*') ? 'active' : '' }}">
-            <i class="fas fa-file-invoice-dollar"></i> Payslips
-        </a>
-    @endif
+    {{-- LMS removal phase 2 (2026-08-27) — the LMS arm of this nav (Dashboard /
+         Courses / Live / Wishlist) is gone, so the employee items that were its
+         @else branch are now simply the bottom nav. --}}
+    <a href="{{ route('employee.overview') }}" class="bottom-nav-item {{ Route::is('employee.overview') ? 'active' : '' }}">
+        <i class="fas fa-th-large"></i> Overview
+    </a>
+    <a href="{{ route('employee.attendance.my') }}" class="bottom-nav-item {{ Route::is('employee.attendance.*') ? 'active' : '' }}">
+        <i class="fas fa-calendar-check"></i> Attendance
+    </a>
+    <a href="{{ route('employee.leave.index') }}" class="bottom-nav-item {{ Route::is('employee.leave.*') ? 'active' : '' }}">
+        <i class="fas fa-plane-departure"></i> Leave
+    </a>
+    <a href="{{ route('employee.payslips.index') }}" class="bottom-nav-item {{ Route::is('employee.payslips.*') ? 'active' : '' }}">
+        <i class="fas fa-file-invoice-dollar"></i> Payslips
+    </a>
     <a href="{{ route('student.setting.index') }}" class="bottom-nav-item {{ Route::is('student.setting.index') ? 'active' : '' }}">
         <i class="flaticon-user"></i> Profile
     </a>

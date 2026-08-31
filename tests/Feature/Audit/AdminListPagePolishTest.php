@@ -25,7 +25,9 @@ class AdminListPagePolishTest extends TestCase
     private const REQUIRED_LABEL_COUNTS = [
         'views/admin/admin-list/admin.blade.php'         => 2,  // edit + delete
         'views/admin/roles/index.blade.php'              => 2,
-        'views/admin/membership/plans/index.blade.php'   => 2,
+        // LMS removal phase 2 (2026-08-27) — dropped
+        // views/admin/membership/plans/index.blade.php. The membership-plans
+        // admin CRUD is deleted along with the coach subscription system.
     ];
 
     public function test_icon_only_action_buttons_carry_aria_label(): void

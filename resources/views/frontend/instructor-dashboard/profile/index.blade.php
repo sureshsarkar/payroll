@@ -113,13 +113,9 @@
                     <i class="fas fa-share-alt"></i> {{ __('Social') }}
                 </button>
             </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link {{ session('profile_tab') == 'payout' ? 'active' : '' }}" id="itemSeven-tab-btn" data-bs-toggle="tab"
-                    data-bs-target="#itemSeven-tab-pane" type="button" role="tab"
-                    aria-controls="itemSeven-tab-pane" aria-selected="false">
-                    <i class="fas fa-wallet"></i> {{ __('Payout') }}
-                </button>
-            </li>
+            {{-- LMS removal phase 2 (2026-08-27) — removed the Payout tab. It
+                 configured the coach's withdrawal account (PaymentWithdraw +
+                 InstructorRequest modules) for course-sale earnings. --}}
             <li class="nav-item" role="presentation">
                 <button class="nav-link {{ session('profile_tab') == 'password' ? 'active' : '' }}" id="itemTwo-tab" data-bs-toggle="tab"
                     data-bs-target="#itemTwo-tab-pane" type="button" role="tab"
@@ -145,8 +141,6 @@
                 @include('frontend.instructor-dashboard.profile.sections.education-and-experience')
 
                 @include('frontend.instructor-dashboard.profile.sections.location')
-
-                @include('frontend.instructor-dashboard.profile.sections.payout')
 
                 @include('frontend.instructor-dashboard.profile.sections.social')
             </div>

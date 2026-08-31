@@ -124,25 +124,14 @@ class AdminLayoutHardeningTest extends TestCase
 
     /* ────────────────────────────────────────────────────── H6 ───── */
 
-    public function test_dashboard_uses_shared_stat_card_partial(): void
-    {
-        $partial = resource_path('views/admin/partials/stat-card.blade.php');
-        $this->assertFileExists(
-            $partial,
-            'admin/partials/stat-card.blade.php missing — dashboard cards revert to 8 hand-rolled blocks of ~17 lines each'
-        );
-
-        $dashboard = (string) file_get_contents(
-            resource_path('views/admin/dashboard.blade.php')
-        );
-
-        // At least the 8 dashboard stat cards must go through the partial.
-        $usageCount = substr_count($dashboard, "admin.partials.stat-card");
-        $this->assertGreaterThanOrEqual(
-            8, $usageCount,
-            "Dashboard should use admin.partials.stat-card at least 8 times (one per stat tile). Found {$usageCount}."
-        );
-    }
+    // LMS removal phase 2 (2026-08-27) — removed
+    // test_dashboard_uses_shared_stat_card_partial(). resources/views/admin/
+    // dashboard.blade.php is deleted: its 8 stat tiles (orders, courses,
+    // pending approvals, etc.) all read LMS models. admin.dashboard now
+    // redirects straight to admin.payroll.dashboard. The reusable
+    // admin/partials/stat-card.blade.php partial itself is left in place —
+    // it is generic, not LMS-specific — for whenever the payroll dashboard
+    // grows stat tiles of its own.
 
     /* ────────────────────────────────────────────────────── H7 ───── */
 

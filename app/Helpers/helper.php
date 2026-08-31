@@ -1,10 +1,6 @@
 <?php
 
-use App\Enums\ThemeList;
 use App\Exceptions\AccessPermissionDeniedException;
-use App\Models\CoachStaff;
-use App\Models\Course;
-use Gloudemans\Shoppingcart\Facades\Cart;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -15,17 +11,11 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Modules\BasicPayment\app\Models\BasicPayment;
-use Modules\BasicPayment\app\Models\PaymentGateway;
-use Modules\BkashPG\app\Models\BkashPGModel;
-use Modules\CryptoPayment\app\Models\CryptoPG;
 use Modules\Currency\app\Models\MultiCurrency;
 use Modules\GlobalSetting\app\Models\CustomCode;
 use Modules\GlobalSetting\app\Models\Setting;
 use Modules\Language\app\Models\Language;
 use Modules\Location\app\Models\Country;
-use Modules\MercadoPagoPG\app\Models\MercadoPagoPG;
-use Modules\Order\app\Models\Enrollment;
 use Nwidart\Modules\Facades\Module;
 use Spatie\LaravelImageOptimizer\Facades\ImageOptimizer;
 
@@ -193,95 +183,10 @@ function admin_lang()
 {
     return Session::get('admin_lang');
 }
-if (! function_exists('getSocialLinks')) {
-    function getSocialLinks()
-    {
-        return Cache::rememberForever('getSocialLinks', function () {
-            return \Modules\SocialLink\app\Models\SocialLink::select('link', 'icon', 'name')->get();
-        });
-    }
-}
+/* LMS removal phase 2 (2026-08-27) — removed getSocialLinks() (SocialLink
+ * module), coachCommerceUrl() (white-label /cart + /checkout URL builder)
+ * and orderInvoiceBrand() (per-coach branding on a course order invoice). */
 
-if (! function_exists('coachCommerceUrl')) {
-    /**
-     * 2026-06-10 — White-label commerce URL.
-     *
-     * On a VERIFIED coach DOMAIN (resolved_coach_id stamped by
-     * ResolveCoachByDomain) it returns the CLEAN ROOT url — photongears.io/cart,
-     * /checkout — so the coach site keeps its own domain at the root. On the
-     * path surface (/coach/{slug}/...) it returns the slug-prefixed url so that
-     * mode keeps working. $segment is the bare path ('cart' | 'checkout').
-     * Never trusts client input — the domain context is server-resolved.
-     */
-    function coachCommerceUrl(string $segment, ?string $coachSlug = null): string
-    {
-        $segment = ltrim($segment, '/');
-        if ((int) request()->attributes->get('resolved_coach_id') > 0) {
-            return url('/' . $segment);                 // clean root URL on a coach domain
-        }
-        return url('/coach/' . trim((string) $coachSlug, '/') . '/' . $segment);
-    }
-}
-
-if (! function_exists('orderInvoiceBrand')) {
-    /**
-     * 2026-06-12 — White-label invoice "Billed From" brand.
-     *
-     * Returns the OWNING COACH's brand for an order (name / logo / email /
-     * phone) so a coach's invoice shows the COACH — not the platform's
-     * "MBSGuru". Resolution: order.primary_coach_id → seller_id → the first
-     * item's course.instructor_id. Falls back to the platform setting only for
-     * genuine platform-direct orders. Never throws (invoices must always render).
-     */
-    function orderInvoiceBrand($order): object
-    {
-        $platform = cache('setting');
-        $fallback = (object) [
-            'name'     => $platform->app_name ?? config('app.name'),
-            'logo'     => ! empty($platform->logo) ? asset($platform->logo) : null,
-            'email'    => $platform->contact_message_receiver_mail ?? null,
-            'phone'    => null,
-            'address'  => $platform->site_address ?? null,
-            'is_coach' => false,
-        ];
-
-        try {
-            $coachId = (int) ($order->primary_coach_id ?? $order->seller_id ?? 0);
-            if ($coachId <= 0) {
-                $coachId = (int) (optional(optional($order->orderItems->first())->course)->instructor_id ?? 0);
-            }
-            if ($coachId <= 0) {
-                return $fallback;
-            }
-
-            $brand = app(\App\Services\BrandResolver::class)->forCoach($coachId);
-            $coach = \App\Models\User::find($coachId);
-
-            $name = ($brand && ! $brand->isPlatformDefault && ! empty($brand->name))
-                ? $brand->name
-                : ($coach->name ?? $fallback->name);
-
-            // Only the coach's OWN uploaded logo — never the platform logo.
-            $logo = ($brand && ($brand->ownLogo ?? false) && ! ($brand->isPlatformDefault ?? true)
-                     && method_exists($brand, 'logoUrl') && $brand->logoUrl())
-                ? $brand->logoUrl()
-                : null;
-
-            return (object) [
-                'name'     => $name,
-                'logo'     => $logo,
-                'email'    => ($brand && ! empty($brand->supportEmail)) ? $brand->supportEmail : ($coach->email ?? null),
-                'phone'    => ($brand && ! empty($brand->supportPhone)) ? $brand->supportPhone : null,
-                'address'  => null, // coach addresses aren't stored; never leak the platform address on a coach invoice
-                'is_coach' => true,
-            ];
-        } catch (\Throwable $e) {
-            return $fallback;
-        }
-    }
-}
-
-// calculate currency
 function currency($price)
 {
     getSessionCurrency();
@@ -580,255 +485,14 @@ if (! function_exists('getSettingStatus')) {
         return false;
     }
 }
-if (! function_exists('checkCrentials')) {
-    function checkCrentials()
-    {
-        if (Cache::has('setting') && $settings = Cache::get('setting')) {
-            if ($settings->recaptcha_status !== 'inactive' && ($settings->recaptcha_site_key == 'recaptcha_site_key' || $settings->recaptcha_secret_key == 'recaptcha_secret_key' || $settings->recaptcha_site_key == '' || $settings->recaptcha_secret_key == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Google Recaptcha credentails not found'),
-                    'description' => __('This may create a problem while submitting any form submission from website. Please fill up the credential from google account.'),
-                    'route' => 'admin.credential-setting',
-                ];
-            }
+/* LMS removal phase 2 (2026-08-27) — also removed checkCrentials(), the
+ * admin credential-health banner. Most of its checks were for the payment
+ * gateways (Stripe/Razorpay/PayPal/bKash/Coingate/MercadoPago) configured
+ * by the deleted BasicPayment + gateway modules, and it linked to
+ * admin.basicpayment. Also removed setEnrollmentIdsInSession() and
+ * setInstructorCourseIdsInSession(), which the root layout called on every
+ * page render. */
 
-            if ($settings->pixel_status !== 'inactive' && ($settings->pixel_app_id == 'pixel_app_id' || $settings->pixel_app_id == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Facebook Pixel credentails not found'),
-                    'description' => __('This may create a problem to analyze your website. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.credential-setting',
-                ];
-            }
-
-            if ($settings->facebook_login_status !== 'inactive' && ($settings->facebook_app_id == 'facebook_app_id' || $settings->facebook_app_secret == 'facebook_app_secret' || $settings->facebook_redirect_url == 'facebook_redirect_url' || $settings->facebook_app_id == '' || $settings->facebook_app_secret == '' || $settings->facebook_redirect_url == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Facebook login credentails not found'),
-                    'description' => __('This may create a problem while logging in using facebook. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.credential-setting',
-                ];
-            }
-
-            if ($settings->google_login_status !== 'inactive' && ($settings->gmail_client_id == 'gmail_client_id' || $settings->gmail_secret_id == 'gmail_secret_id' || $settings->gmail_client_id == '' || $settings->gmail_secret_id == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Google login credentails not found'),
-                    'description' => __('This may create a problem while logging in using google. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.credential-setting',
-                ];
-            }
-
-            if ($settings->google_tagmanager_status !== 'inactive' && ($settings->google_tagmanager_id == 'google_tagmanager_id' || $settings->google_tagmanager_id == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Google tag manager credentials not found'),
-                    'description' => __('This may create a problem to analyze your website. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.credential-setting',
-                ];
-            }
-            if ($settings->google_analytic_status !== 'inactive' && ($settings->google_analytic_id == 'google_analytic_id' || $settings->google_analytic_id == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Google analytic credentials not found'),
-                    'description' => __('This may create a problem to analyze your website. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.credential-setting',
-                ];
-            }
-
-            if ($settings->tawk_status !== 'inactive' && ($settings->tawk_chat_link == 'tawk_chat_link' || $settings->tawk_chat_link == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Tawk Chat Link credentails not found'),
-                    'description' => __('This may create a problem to analyze your website. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.credential-setting',
-                ];
-            }
-
-            if ($settings->pusher_status !== 'inactive' && ($settings->pusher_app_id == 'pusher_app_id' || $settings->pusher_app_key == 'pusher_app_key' || $settings->pusher_app_secret == 'pusher_app_secret' || $settings->pusher_app_cluster == 'pusher_app_cluster' || $settings->pusher_app_id == '' || $settings->pusher_app_key == '' || $settings->pusher_app_secret == '' || $settings->pusher_app_cluster == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Pusher credentails not found'),
-                    'description' => __('This may create a problem while logging in using google. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.credential-setting',
-                ];
-            }
-
-            if ($settings->mail_host == 'mail_host' || $settings->mail_username == 'mail_username' || $settings->mail_password == 'mail_password' || $settings->mail_host == '' || $settings->mail_port == '' || $settings->mail_username == '' || $settings->mail_password == '') {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Mail credentails not found'),
-                    'description' => __('This may create a problem while sending email. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.email-configuration',
-                ];
-            }
-            if ($settings->wasabi_status !== 'inactive' && ($settings->wasabi_access_id == 'wasabi_access_id' || $settings->wasabi_access_id == '' || $settings->wasabi_secret_key == 'wasabi_secret_key' || $settings->wasabi_secret_key == '' || $settings->wasabi_bucket == 'wasabi_secret_key' || $settings->wasabi_bucket == '' || $settings->wasabi_region == 'wasabi_region' || $settings->wasabi_region == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Wasabi cloud storage credentials not found'),
-                    'description' => __('This may create a problem to analyze your website. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.credential-setting',
-                ];
-            }
-            if ($settings->aws_status !== 'inactive' && ($settings->aws_access_id == 'aws_access_id' || $settings->aws_access_id == '' || $settings->aws_secret_key == 'aws_secret_key' || $settings->aws_secret_key == '' || $settings->aws_bucket == 'aws_secret_key' || $settings->aws_bucket == '' || $settings->aws_region == 'aws_region' || $settings->aws_region == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('AWS cloud storage credentials not found'),
-                    'description' => __('This may create a problem to analyze your website. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.credential-setting',
-                ];
-            }
-        }
-
-        if (! Cache::has('basic_payment') && Module::isEnabled('BasicPayment')) {
-            Cache::rememberForever('basic_payment', function () {
-                $payment_info = BasicPayment::get();
-                $basic_payment = [];
-                foreach ($payment_info as $payment_item) {
-                    $basic_payment[$payment_item->key] = $payment_item->value;
-                }
-
-                return (object) $basic_payment;
-            });
-        }
-
-        if (Cache::has('basic_payment') && $basicPayment = Cache::get('basic_payment')) {
-            if ($basicPayment->stripe_status !== 'inactive' && ($basicPayment->stripe_key == 'stripe_key' || $basicPayment->stripe_secret == 'stripe_secret' || $basicPayment->stripe_key == '' || $basicPayment->stripe_secret == '')) {
-
-                return (object) [
-                    'status' => true,
-                    'message' => __('Stripe credentails not found'),
-                    'description' => __('This may create a problem while making payment. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.basicpayment',
-                ];
-            }
-
-            if ($basicPayment->paypal_status !== 'inactive' && ($basicPayment->paypal_client_id == 'paypal_client_id' || $basicPayment->paypal_secret_key == 'paypal_secret_key' || $basicPayment->paypal_client_id == '' || $basicPayment->paypal_secret_key == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Paypal credentails not found'),
-                    'description' => __('This may create a problem while making payment. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.basicpayment',
-                ];
-            }
-        }
-
-        if (! Cache::has('payment_setting') && Module::isEnabled('BasicPayment')) {
-            Cache::rememberForever('payment_setting', function () {
-                $payment_info = PaymentGateway::get();
-                $payment_setting = [];
-                foreach ($payment_info as $payment_item) {
-                    $payment_setting[$payment_item->key] = $payment_item->value;
-                }
-                // Audit 2026-05-18 phase 5 — transparently decrypt secret
-                // keys (razorpay_secret / paystack_secret_key / etc.) when
-                // building the cache. Legacy plaintext values pass through
-                // unchanged (decrypt() checks the enc:v1: prefix first).
-                $payment_setting = \App\Support\SecretSettings::decryptForTable('payment_gateways', $payment_setting);
-
-                return (object) $payment_setting;
-            });
-        }
-
-        if (Cache::has('payment_setting') && $paymentAddons = Cache::get('payment_setting')) {
-            if ($paymentAddons->razorpay_status !== 'inactive' && ($paymentAddons->razorpay_key == 'razorpay_key' || $paymentAddons->razorpay_secret == 'razorpay_secret' || $paymentAddons->razorpay_key == '' || $paymentAddons->razorpay_secret == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Razorpay credentails not found'),
-                    'description' => __('This may create a problem while making payment. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.paymentgateway',
-                ];
-            }
-
-            if ($paymentAddons->flutterwave_status !== 'inactive' && ($paymentAddons->flutterwave_public_key == 'flutterwave_public_key' || $paymentAddons->flutterwave_secret_key == 'flutterwave_secret_key' || $paymentAddons->flutterwave_public_key == '' || $paymentAddons->flutterwave_secret_key == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Flutterwave credentails not found'),
-                    'description' => __('This may create a problem while making payment. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.paymentgateway',
-                ];
-            }
-
-            if ($paymentAddons->paystack_status !== 'inactive' && ($paymentAddons->paystack_public_key == 'paystack_public_key' || $paymentAddons->paystack_secret_key == 'paystack_secret_key' || $paymentAddons->paystack_public_key == '' || $paymentAddons->paystack_secret_key == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Paystack credentails not found'),
-                    'description' => __('This may create a problem while making payment. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.paymentgateway',
-                ];
-            }
-
-            if ($paymentAddons->mollie_status !== 'inactive' && ($paymentAddons->mollie_key == 'mollie_key' || $paymentAddons->mollie_key == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Mollie credentails not found'),
-                    'description' => __('This may create a problem while making payment. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.paymentgateway',
-                ];
-            }
-
-            if ($paymentAddons->instamojo_status !== 'inactive' && ($paymentAddons->instamojo_api_key == 'instamojo_api_key' || $paymentAddons->instamojo_auth_token == 'instamojo_auth_token' || $paymentAddons->instamojo_api_key == '' || $paymentAddons->instamojo_auth_token == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Instamojo credentails not found'),
-                    'description' => __('This may create a problem while making payment. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.paymentgateway',
-                ];
-            }
-        }
-
-        if (Cache::has('bkashConfig') && Module::isEnabled('BkashPG')) {
-            Cache::rememberForever('bkashConfig', function () {
-                return (object) BkashPGModel::pluck('value', 'key')->toArray();
-            });
-        }
-        if (Cache::has('bkashConfig') && $bkashAddons = Cache::get('bkashConfig')) {
-            if ($bkashAddons->bkash_status !== 'inactive' && ($bkashAddons->bkash_key == 'bkash_key' || $bkashAddons->bkash_secret == 'bkash_secret' || $bkashAddons->bkash_username == 'bkash_username' || $bkashAddons->bkash_password == 'bkash_password' || $bkashAddons->bkash_key == '' || $bkashAddons->bkash_secret == '' || $bkashAddons->bkash_username == '' || $bkashAddons->bkash_password == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Bkash credentials not found'),
-                    'description' => __('This may create a problem while making payment. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.basicpayment',
-                ];
-            }
-        }
-
-        if (Cache::has('cryptoConfig') && Module::isEnabled('CryptoPayment')) {
-            Cache::rememberForever('cryptoConfig', function () {
-                return (object) CryptoPG::pluck('value', 'key')->toArray();
-            });
-        }
-        if (Cache::has('cryptoConfig') && $cryptoAddons = Cache::get('cryptoConfig')) {
-            if ($cryptoAddons->crypto_status !== 'inactive' && ($cryptoAddons->crypto_token == 'crypto_token' || $cryptoAddons->crypto_token == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Coingate credentials not found'),
-                    'description' => __('This may create a problem while making payment. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.basicpayment',
-                ];
-            }
-        }
-
-        if (Cache::has('mercadopagoConfig') && Module::isEnabled('MercadoPagoPG')) {
-            Cache::rememberForever('mercadopagoConfig', function () {
-                return (object) MercadoPagoPG::pluck('value', 'key')->toArray();
-            });
-        }
-        if (Cache::has('mercadopagoConfig') && $mercadopagoConfig = Cache::get('mercadopagoConfig')) {
-            if ($mercadopagoConfig->mercadopago_status !== 'inactive' && ($mercadopagoConfig->public_key == 'public_key' || $mercadopagoConfig->access_token == 'access_token' || $bkashAddons->public_key == '' || $bkashAddons->access_token == '')) {
-                return (object) [
-                    'status' => true,
-                    'message' => __('Mercado Pago credentials not found'),
-                    'description' => __('This may create a problem while making payment. Please fill up the credential to avoid any problem.'),
-                    'route' => 'admin.basicpayment',
-                ];
-            }
-        }
-
-        return false;
-    }
-}
 
 if (! function_exists('isRoute')) {
     function isRoute(string|array $route, ?string $returnValue = null)
@@ -958,35 +622,6 @@ if (! function_exists('minutesToHours')) {
     }
 }
 
-/** Set enrollment ids in session */
-if (! function_exists('setEnrollmentIdsInSession')) {
-    function setEnrollmentIdsInSession()
-    {
-        if (auth('web')->check()) {
-            $enrollmentsIds = Enrollment::where('user_id', userAuth()->id)->pluck('course_id')->toArray();
-            session()->put('enrollments', $enrollmentsIds);
-
-            return;
-        }
-
-        session()->put('enrollments', []);
-    }
-}
-/** Set instructor course ids in session */
-if (! function_exists('setInstructorCourseIdsInSession')) {
-    function setInstructorCourseIdsInSession()
-    {
-        if (auth('web')->check() && userAuth()->role == 'instructor') {
-            $enrollmentsIds = Course::where('instructor_id', userAuth()->id)->pluck('id')->toArray();
-            session()->put('instructor_courses', $enrollmentsIds);
-
-            return;
-        }
-
-        session()->put('instructor_courses', []);
-    }
-}
-
 if (! function_exists('processText')) {
     function processText($text)
     {
@@ -1084,13 +719,20 @@ if (! function_exists('replaceImageSources')) {
 if (! function_exists('adminSearchRouteList')) {
     /**
      * Per-request memoized list of admin routes that the navbar
-     * search-box autocompletes against. Builds ~80 route() URLs on
-     * first call; cached in a static so re-rendering partials or
-     * widgets on the same request doesn't repeat the work.
+     * search-box autocompletes against.
      *
      * NOT cross-request cached — the URLs are locale-sensitive
      * (`route()` generates language-prefixed paths for some setups),
      * and the locale can change session-to-session.
+     *
+     * LMS removal phase 2 (2026-08-27) — this listed ~80 entries, almost all
+     * of them storefront/LMS admin screens: courses and their taxonomy,
+     * orders, coupons, customers, instructors, instructor requests, blogs,
+     * FAQs, testimonials, badges, certificates, newsletters, withdrawals,
+     * memberships, referrals, coach commissions, custom domains, the theme
+     * studio, the payment-gateway modules and every marketing section of the
+     * homepage builder. All of those routes are gone. What is left is the
+     * super-admin surface that actually survives, plus payroll.
      */
     function adminSearchRouteList(): object
     {
@@ -1098,111 +740,25 @@ if (! function_exists('adminSearchRouteList')) {
         if ($_memo !== null) {
             return $_memo;
         }
-        $route_list = [
-            (object) ['name' => __('Dashboard'), 'route' => route('admin.dashboard'), 'permission' => 'dashboard.view'],
-            (object) ['name' => __('Courses'), 'route' => route('admin.courses.index'), 'permission' => 'course.management'],
-            (object) ['name' => __('Course Categories'), 'route' => route('admin.course-category.index'), 'permission' => 'course.management'],
-            (object) ['name' => __('Course languages'), 'route' => route('admin.course-language.index'), 'permission' => 'course.management'],
-            (object) ['name' => __('Course levels'), 'route' => route('admin.course-level.index'), 'permission' => 'course.management'],
-            (object) ['name' => __('Course Reviews'), 'route' => route('admin.course-review.index'), 'permission' => 'course.management'],
-            (object) ['name' => __('Course Delete Requests'), 'route' => route('admin.course-delete-request.index'), 'permission' => 'course.management'],
-            (object) ['name' => __('Certificate Builder'), 'route' => route('admin.certificate-builder.index'), 'permission' => 'course.certificate.management'],
-            (object) ['name' => __('Badges'), 'route' => route('admin.badges.index'), 'permission' => 'badge.management'],
-            (object) ['name' => __('Blog Categories'), 'route' => route('admin.blog-category.index'), 'permission' => 'blog.category.view'],
-            (object) ['name' => __('Blog List'), 'route' => route('admin.blogs.index'), 'permission' => 'blog.view'],
-            (object) ['name' => __('Blog Comments'), 'route' => route('admin.blog-comment.index'), 'permission' => 'blog.comment.view'],
-            (object) ['name' => __('Order History'), 'route' => route('admin.orders'), 'permission' => 'order.management'],
-            (object) ['name' => __('Pending Payment'), 'route' => route('admin.pending-orders'), 'permission' => 'order.management'],
-            (object) ['name' => __('Coupon List'), 'route' => route('admin.coupon.index'), 'permission' => 'coupon.management'],
-            (object) ['name' => __('Withdraw Method'), 'route' => route('admin.withdraw-method.index'), 'permission' => 'withdraw.management'],
-            (object) ['name' => __('Withdraw list'), 'route' => route('admin.withdraw-list'), 'permission' => 'withdraw.management'],
-            (object) ['name' => __('Instructor Request List'), 'route' => route('admin.instructor-request.index'), 'permission' => 'instructor.request.list'],
-            (object) ['name' => __('Instructor Request Settings'), 'route' => route('admin.instructor-request-setting.index'), 'permission' => 'instructor.request.list'],
-            (object) ['name' => __('All Students'), 'route' => route('admin.all-customers'), 'permission' => 'customer.view'],
-            (object) ['name' => __('All Instructors'), 'route' => route('admin.all-instructors'), 'permission' => 'customer.view'],
-            (object) ['name' => __('Active Users'), 'route' => route('admin.active-customers'), 'permission' => 'customer.view'],
-            (object) ['name' => __('Non verified Users'), 'route' => route('admin.non-verified-customers'), 'permission' => 'customer.view'],
-            (object) ['name' => __('Banned Users'), 'route' => route('admin.banned-customers'), 'permission' => 'customer.view'],
-            (object) ['name' => __('Send bulk mail Users'), 'route' => route('admin.send-bulk-mail'), 'permission' => 'customer.view'],
-            (object) ['name' => __('Countries'), 'route' => route('admin.country.index'), 'permission' => 'location.view'],
-            (object) ['name' => __('Site Themes'), 'route' => route('admin.site-appearance.index'), 'permission' => 'appearance.management'],
-            (object) ['name' => __('Section Setting'), 'route' => route('admin.section-setting.index'), 'permission' => 'appearance.management'],
-            (object) ['name' => __('Site Colors'), 'route' => route('admin.site-color-setting.index'), 'permission' => 'appearance.management'],
-            (object) ['name' => __('About Section'), 'route' => route('admin.about-section.index', ['code' => 'en']), 'permission' => 'section.management'],
-            (object) ['name' => __('Featured Course Section'), 'route' => route('admin.featured-course-section.index'), 'permission' => 'section.management'],
-            (object) ['name' => __('Newsletter Section'), 'route' => route('admin.newsletter-section.index'), 'permission' => 'section.management'],
-            (object) ['name' => __('Featured Instructor'), 'route' => route('admin.featured-instructor-section.edit', ['featured_instructor_section' => 1, 'code' => 'en']), 'permission' => 'section.management'],
-            (object) ['name' => __('Counter Section'), 'route' => route('admin.counter-section.index'), 'permission' => 'section.management'],
-            (object) ['name' => __('Faq Section'), 'route' => route('admin.faq-section.index', ['code' => 'en']), 'permission' => 'section.management'],
-            (object) ['name' => __('Certificate Section'), 'route' => route('admin.certificate-section.index', ['code' => 'en']), 'permission' => 'section.management'],
-            (object) ['name' => __('Our Features Section'), 'route' => route('admin.our-features-section.index', ['code' => 'en']), 'permission' => 'section.management'],
-            (object) ['name' => __('Banner Section'), 'route' => route('admin.banner-section.index'), 'permission' => 'section.management'],
-            (object) ['name' => __('Contact Page Section'), 'route' => route('admin.contact-section.index'), 'permission' => 'section.management'],
-            (object) ['name' => __('Brands'), 'route' => route('admin.brand.index'), 'permission' => 'brand.managemen'],
-            (object) ['name' => __('Footer Setting'), 'route' => route('admin.footersetting.index'), 'permission' => 'footer.management'],
-            (object) ['name' => __('Menu Builder'), 'route' => route('admin.menubuilder.index'), 'permission' => 'menu.view'],
-            (object) ['name' => __('Page Builder'), 'route' => route('admin.page-builder.index'), 'permission' => 'page.management'],
-            (object) ['name' => __('Page Template Builder'), 'route' => route('admin.page-template-builder.index'), 'permission' => 'page.management'],
-            (object) ['name' => __('Social Links'), 'route' => route('admin.social-link.index'), 'permission' => 'social.link.management'],
-            (object) ['name' => __('FAQS'), 'route' => route('admin.faq.index'), 'permission' => 'faq.view'],
-            (object) ['name' => __('Subscriber List'), 'route' => route('admin.subscriber-list'), 'permission' => 'newsletter.view'],
-            (object) ['name' => __('Subscriber Send bulk mail'), 'route' => route('admin.send-mail-to-newsletter'), 'permission' => 'newsletter.view'],
-            (object) ['name' => __('Testimonial'), 'route' => route('admin.testimonial.index'), 'permission' => 'testimonial.view'],
-            (object) ['name' => __('Contact Messages'), 'route' => route('admin.contact-messages'), 'permission' => 'contect.message.view'],
-            (object) ['name' => __('Landing Page Messages'), 'route' => route('admin.landing-page.message'), 'permission' => 'landing-page.message.view'],
-            (object) ['name' => __('General Settings'), 'route' => route('admin.general-setting'), 'permission' => 'setting.view', 'tab' => 'general_tab'],
-            (object) ['name' => __('Logo & Favicon'), 'route' => route('admin.general-setting'), 'permission' => 'setting.view', 'tab' => 'logo_favicon_tab'],
-            (object) ['name' => __('Video Watermark'), 'route' => route('admin.general-setting'), 'permission' => 'setting.view', 'tab' => 'watermark_tab'],
-            (object) ['name' => __('Cookie Consent'), 'route' => route('admin.general-setting'), 'permission' => 'setting.view', 'tab' => 'cookie_consent_tab'],
-            (object) ['name' => __('Breadcrumb image'), 'route' => route('admin.general-setting'), 'permission' => 'setting.view', 'tab' => 'breadcrump_img_tab'],
-            (object) ['name' => __('Copyright Text'), 'route' => route('admin.general-setting'), 'permission' => 'setting.view', 'tab' => 'copyright_text_tab'],
-            (object) ['name' => __('Maintenance Mode'), 'route' => route('admin.general-setting'), 'permission' => 'setting.view', 'tab' => 'mmaintenance_mode_tab'],
-            (object) ['name' => __('Credential Settings'), 'route' => route('admin.credential-setting'), 'permission' => 'setting.view', 'tab' => 'google_recaptcha_tab'],
-            (object) ['name' => __('Google reCaptcha'), 'route' => route('admin.credential-setting'), 'permission' => 'setting.view', 'tab' => 'google_recaptcha_tab'],
-            (object) ['name' => __('Google Tag Manager'), 'route' => route('admin.credential-setting'), 'permission' => 'setting.view', 'tab' => 'google_tag_tab'],
-            (object) ['name' => __('Wasabi Cloud Storage'), 'route' => route('admin.credential-setting'), 'permission' => 'setting.view', 'tab' => 'wasabi_tab'],
-            (object) ['name' => __('AWS Cloud Storage'), 'route' => route('admin.credential-setting'), 'permission' => 'setting.view', 'tab' => 'aws_tab'],
-            (object) ['name' => __('Google Analytic'), 'route' => route('admin.credential-setting'), 'permission' => 'setting.view', 'tab' => 'google_analytic_tab'],
-            (object) ['name' => __('Facebook Pixel'), 'route' => route('admin.credential-setting'), 'permission' => 'setting.view', 'tab' => 'facebook_pixel_tab'],
-            (object) ['name' => __('Social Login'), 'route' => route('admin.credential-setting'), 'permission' => 'setting.view', 'tab' => 'social_login_tab'],
-            (object) ['name' => __('Tawk Chat'), 'route' => route('admin.credential-setting'), 'permission' => 'setting.view', 'tab' => 'tawk_chat_tab'],
-            (object) ['name' => __('Email Configuration'), 'route' => route('admin.email-configuration'), 'permission' => 'setting.view', 'tab' => 'setting_tab'],
-            (object) ['name' => __('Email Template'), 'route' => route('admin.email-configuration'), 'permission' => 'setting.view', 'tab' => 'email_template_tab'],
-            (object) ['name' => __('SEO Setup'), 'route' => route('admin.seo-setting'), 'permission' => 'setting.view'],
-            (object) [
-                'name' => __('Custom CSS'),
-                'route' => route('admin.custom-code', ['type' => 'css']),
-                'permission' => 'setting.view',
-            ],
-            (object) [
-                'name' => __('Custom JS'),
-                'route' => route('admin.custom-code', ['type' => 'js']),
-                'permission' => 'setting.view',
-            ],
-            (object) [
-                'name' => __('Marketing Settings'),
-                'route' => route('admin.marketing-setting'),
-                'permission' => 'setting.view',
-            ],
-            (object) ['name' => __('Clear cache'), 'route' => route('admin.cache-clear'), 'permission' => 'setting.view'],
-            (object) ['name' => __('Database Clear'), 'route' => route('admin.database-clear'), 'permission' => 'setting.view'],
-            (object) ['name' => __('Zoom Health'), 'route' => route('admin.zoom-health.index'), 'permission' => 'setting.view'],
-            (object) ['name' => __('Admin Commission'), 'route' => route('admin.commission-setting'), 'permission' => 'setting.view'],
-            (object) ['name' => __('Manage Language'), 'route' => route('admin.languages.index'), 'permission' => 'language.view'],
-            (object) ['name' => __('Payment Gateway'), 'route' => route('admin.basicpayment'), 'permission' => 'basic.payment.view'],
-            (object) ['name' => __('Multi Currency'), 'route' => route('admin.currency.index'), 'permission' => 'currency.view'],
-            (object) ['name' => __('Manage Admin'), 'route' => route('admin.admin.index'), 'permission' => 'admin.view'],
-            (object) ['name' => __('Role & Permissions'), 'route' => route('admin.role.index'), 'permission' => 'role.view'],
-        ];
 
-        if (ThemeList::BUSINESS->value == DEFAULT_HOMEPAGE) {
-            $route_list[] = (object) ['name' => __('Slider Section'), 'route' => route('admin.slider-section.index', ['code' => 'en']), 'permission' => 'section.management'];
-        } else {
-            $route_list[] = (object) ['name' => __('Hero Section'), 'route' => route('admin.hero-section.index', ['code' => 'en']), 'permission' => 'section.management'];
-        }
-        if (in_array(DEFAULT_HOMEPAGE, [ThemeList::MAIN->value, ThemeList::ONLINE->value, ThemeList::UNIVERSITY->value, ThemeList::LANGUAGE->value])) {
-            $route_list[] = (object) ['name' => __('Counter Section'), 'route' => route('admin.counter-section.index'), 'permission' => 'section.management'];
-        }
+        $route_list = [
+            (object) ['name' => __('Dashboard'),           'route' => route('admin.dashboard'),         'permission' => null],
+            (object) ['name' => __('Payroll Dashboard'),   'route' => route('admin.payroll.dashboard'), 'permission' => null],
+            (object) ['name' => __('Payroll Runs'),        'route' => route('admin.payroll.index'),     'permission' => null],
+            (object) ['name' => __('Activity Logs'),       'route' => route('admin.activity-logs'),     'permission' => null],
+            (object) ['name' => __('Admin List'),          'route' => route('admin.admin.index'),       'permission' => 'admin.view'],
+            (object) ['name' => __('Role & Permissions'),  'route' => route('admin.role.index'),        'permission' => 'role.view'],
+            (object) ['name' => __('General Setting'),     'route' => route('admin.general-setting'),   'permission' => 'setting.management'],
+            (object) ['name' => __('Email Configuration'), 'route' => route('admin.email-configuration'), 'permission' => 'setting.management'],
+            (object) ['name' => __('SEO Setting'),         'route' => route('admin.seo-setting'),       'permission' => 'setting.management'],
+            (object) ['name' => __('Marketing Setting'),   'route' => route('admin.marketing-setting'), 'permission' => 'setting.management'],
+            (object) ['name' => __('Credential Setting'),  'route' => route('admin.credential-setting'), 'permission' => 'setting.management'],
+            (object) ['name' => __('Custom Code'),         'route' => route('admin.custom-code'),       'permission' => 'setting.management'],
+            (object) ['name' => __('Languages'),           'route' => route('admin.languages.index'),   'permission' => 'language.management'],
+            (object) ['name' => __('Currencies'),          'route' => route('admin.currency.index'),    'permission' => 'currency.management'],
+            (object) ['name' => __('Countries'),           'route' => route('admin.country.index'),     'permission' => 'location.management'],
+            (object) ['name' => __('Profile'),             'route' => route('admin.edit-profile'),      'permission' => null],
+        ];
 
         usort($route_list, function ($a, $b) {
             return strcmp($a->name, $b->name);
@@ -1340,138 +896,24 @@ if (! function_exists('apiCurrency')) {
     }
 }
 
-if (! function_exists('sessionCartToDatabase')) {
-    /**
-     * Transfers items from the session cart to the authenticated user's database cart.
-     *
-     * @param  \App\Models\User  $user  The authenticated user.
-     */
-    function sessionCartToDatabase(): void
-    {
-        if (Cart::content()->count() > 0 && auth()->check()) {
-            $user = userAuth();
-            $carts = Cart::content();
-            foreach ($carts as $item) {
-                $course = Course::active()->find($item->id);
-                if ($course && ! isOwnCourse($user, $course) && ! hasCourseInPurchased($user, $course)) {
-                    $user->carts()->create(['course_id' => $item->id,'batch_id'=>$item->options->batch_id??""]);
-                }
-            }
-            Cart::destroy();
-        }
-    }
-}
-if (! function_exists('isOwnCourse')) {
-    function isOwnCourse($user, $course)
-    {
-        return $course->instructor_id == $user->id;
-    }
-}
-if (! function_exists('hasCourseInPurchased')) {
-    function hasCourseInPurchased($user, $course)
-    {
-        return $user->enrollments()->where('course_id', $course->id)->exists();
-    }
-}
-if (! function_exists('hasCourseInCart')) {
-    function hasCourseInCart($user, $course)
-    {
-        return $user->carts()->where('course_id', $course->id)->exists();
-    }
-}
-
 if (! function_exists('pre')) {
     function pre($data)
     {
         echo '<pre>';
         print_r($data);
     }
-
-    if (! function_exists('checkPermission')) {
-        function checkPermission($pageName, $methodName = null)
-        {
-            // SECURITY (2026-06-01) — a REAL coach is a top-level account
-            // (coach_id IS NULL). A coach-staff member always has coach_id set.
-            // Requiring empty(coach_id) here means a staff account whose role
-            // string is somehow 'instructor' can NOT short-circuit to
-            // full-access; it falls through to the per-slug CoachStaff check.
-            if(auth('web')->user()->role=='instructor' && empty(auth('web')->user()->coach_id)){
-                return 1;
-            }
-
-            // 2026-07-04 FIX — the required permission slug is derived from the
-            // ($pageName, controller-action) pair, NOT from the request URL's
-            // last segment. The old URL-segment logic silently denied a permitted
-            // staff member whenever a module's permission slug differed from its
-            // route path (e.g. slug `coach-coupons` on URL `/instructor/coupons`
-            // built the bogus slug `coach-coupons-coupons`, so the coach panel
-            // showed a "page not available" error even though the staff HELD the
-            // permission). Mapping action→suffix makes it route-independent.
-            $logednuserid = auth('web')->user()->id;
-            $user = CoachStaff::find($logednuserid);
-            if (! $user) {
-                return 0;
-            }
-            $slugs = $user->permissions->pluck('slug')->all();
-
-            // index / listing / access (no action, or a read action) → the BARE
-            // resource slug. Write actions map to their granular suffix.
-            $need = $pageName;
-            switch ($methodName) {
-                case 'create':
-                case 'store':
-                    $need = $pageName . '-create';
-                    break;
-                case 'edit':
-                case 'update':
-                    $need = $pageName . '-edit';
-                    break;
-                case 'destroy':
-                case 'delete':
-                    $need = $pageName . '-delete';
-                    break;
-                case 'show':
-                    $need = $pageName . '-show';
-                    break;
-                // index / null / any custom read method → bare $pageName
-            }
-
-            return in_array($need, $slugs, true) ? 1 : 0;
-        }
-    }
-
-    if (! function_exists('checkPermissionView')) {
-        function checkPermissionView($customSlug = null)
-        {
-             if(auth('web')->user()->role=='instructor' && empty(auth('web')->user()->coach_id)){
-                return 1;
-            }
-             if(auth('web')->user()->role=='student'){
-                // 2026-06-16 audit L7 — fail CLOSED. Students hold no coach-staff
-                // permissions; returning 1 rendered coach-panel action buttons if
-                // a student ever reached a coach Blade. Routes are middleware-gated
-                // so this was defense-in-depth, but the helper must deny.
-                return 0;
-            }
-            //  return 1;
-             $logednuserid = auth('web')->user()->id;
-            $user = CoachStaff::find($logednuserid); 
-            $userPermissions = $user->permissions->toArray();
-            $flag = 0;
-            if (! empty($userPermissions)) {
-                foreach ($userPermissions as $key => $value) {
-                    if ($value['slug'] == $customSlug) {
-                        $flag = 1;
-                    }
-                }
-            }
-
-            return $flag;
-        }
-    }
-
 }
 
+/* LMS removal phase 2 (2026-08-27) — removed from this file:
+ *   sessionCartToDatabase()  — merged the guest cart into the DB on login.
+ *   isOwnCourse() / hasCourseInPurchased() / hasCourseInCart().
+ *   checkPermission() / checkPermissionView() — the coach-staff permission
+ *     gate. It read CoachStaff->permissions slugs and paired with the
+ *     CoachPermission middleware and the Staff Roles screens, all deleted.
+ *   brandedUrl() — rewrote the platform host in outbound mail to a coach's
+ *     verified custom domain.
+ *   offlineEnabledMethods() — the coach's enabled offline payment methods.
+ */
 
 // ─────────────────────────────────────────────────────────────────────
 // P1-4 (2026-05-29) — CSP nonce helper.
@@ -1482,32 +924,6 @@ if (! function_exists('pre')) {
 // survive a tightened policy. Returns '' if no request is bound
 // (e.g. CLI / artisan tinker) — callers should treat empty as "no nonce".
 // ─────────────────────────────────────────────────────────────────────
-if (! function_exists('brandedUrl')) {
-    /**
-     * Tenant-safe URL: when $coachId has a VERIFIED custom domain, rewrite the
-     * platform host in $value (a URL or a block of HTML) to that coach's host
-     * so white-label emails never link a coach's student back to the platform.
-     * Only the platform host is rewritten (external links untouched). No coach
-     * domain / no coach -> returned unchanged.
-     */
-    function brandedUrl(?string $value, ?int $coachId): ?string
-    {
-        if (! $coachId || $value === null || $value === '') {
-            return $value;
-        }
-        try {
-            $host = \App\Models\CoachDomain::primaryHostFor((int) $coachId);
-            $appHost = parse_url((string) config('app.url'), PHP_URL_HOST);
-            if (! $host || ! $appHost) {
-                return $value;
-            }
-            return preg_replace('#//' . preg_quote($appHost, '#') . '(?=[/:"\'\s]|$)#', '//' . $host, $value);
-        } catch (\Throwable $e) {
-            return $value;
-        }
-    }
-}
-
 if (! function_exists('csp_nonce')) {
     function csp_nonce(): string
     {
@@ -1572,29 +988,6 @@ if (! function_exists('safe_embed_url')) {
     }
 }
 
-if (! function_exists('offlineEnabledMethods')) {
-    /**
-     * The offline payment methods the CURRENT coach accepts (per-coach config),
-     * as [key => [label, icon]] for the acting coach/staff. Used by every offline
-     * payment form so a coach only sees the methods they've enabled. Defaults to
-     * all methods when unconfigured. Tenant-safe (keyed to the acting coach).
-     */
-    function offlineEnabledMethods(): array
-    {
-        $u = userAuth();
-        $coachId = $u ? ($u->role === 'instructor' ? (int) $u->id : (int) $u->coach_id) : 0;
-        $keys = $coachId > 0
-            ? \App\Models\OfflinePayment::enabledMethodsForCoach($coachId)
-            : \App\Models\OfflinePayment::METHODS;
-
-        $out = [];
-        foreach ($keys as $k) {
-            $out[$k] = \App\Models\OfflinePayment::METHOD_META[$k] ?? [ucfirst($k), 'fa-money-bill'];
-        }
-        return $out;
-    }
-}
-
 if (! function_exists('panelModuleTitle')) {
     /**
      * Descriptive browser-tab module name for the Coach / Staff / Student
@@ -1614,53 +1007,24 @@ if (! function_exists('panelModuleTitle')) {
         // Friendly module names keyed by URL path segment. Keep in sync with
         // the sidebar modules; unmapped segments fall back to a Title Case of
         // the segment so new modules still read reasonably.
+        // LMS removal phase 2 (2026-08-27) — the map was ~45 LMS/coach
+        // segments (courses, batches, live classes, orders, coupons, payouts,
+        // certificates, website builder, staff roles, trial sessions...).
+        // Replaced with the HR & payroll surface; unmapped segments still fall
+        // back to a Title Case of the segment.
         $map = [
-            'analytics'            => 'Analytics',
-            'live-classes'         => 'Live Classes',
-            'instant-meetings'     => 'Instant Meeting 1:1',
-            'courses'              => 'Courses',
-            'course-batches'       => 'Course Batches',
-            'coach-orders'         => 'Orders',
-            'coach-students'       => 'Students',
-            'landing-page-enquiry' => 'Enquiries',
-            'pricing-enquiries'    => 'Enquiries',
-            'trainers'             => 'Trainers',
-            'trial-sessions'       => 'Trial Sessions',
-            'announcements'        => 'Announcements',
-            'coupons'              => 'Coupons',
-            'blogs'                => 'Blog',
-            'setting'              => 'Settings',
-            'brand-settings'       => 'Settings',
-            'website-builder'      => 'Website Builder',
-            'web-page'             => 'Website Builder',
-            'coach-staff'          => 'Staff',
-            'coach-staff-role'     => 'Staff Roles',
-            'coach-staff-permission' => 'Staff Permissions',
-            'staff-role'           => 'Staff Roles',
-            'staff-permission'     => 'Staff Permissions',
-            'teacher-batches'      => 'Teacher Batches',
-            'payout'               => 'Payouts',
-            'certificate'          => 'Certificates',
-            'certificate-builder'  => 'Certificate Builder',
-            'membership'           => 'Membership',
-            'my-plan'              => 'Plan & Billing',
-            'subscription-histories' => 'Subscription History',
-            'referral'             => 'Referrals',
-            'wishlist'             => 'Wishlist',
-            'reviews'              => 'Reviews',
-            'enrolled-courses'     => 'My Courses',
-            'my-certificates'      => 'My Certificates',
-            'profile'              => 'Profile',
-            'orders'               => 'Orders',
-            'fees'                 => 'Fees',
-            'offline-payments'     => 'Offline Payments',
-            'attendance'           => 'Attendance',
-            'tax'                  => 'Tax',
-            'tax-settings'         => 'Tax Settings',
-            'zoom-setting'         => 'Zoom Settings',
-            'youtube-setting'      => 'YouTube Settings',
-            'payment-gateways'     => 'Payment Gateways',
-            'email-templates'      => 'Email Templates',
+            'overview'           => 'Overview',
+            'employees'          => 'Employees',
+            'departments'        => 'Departments',
+            'attendance'         => 'Attendance',
+            'leave'              => 'Leave',
+            'payroll'            => 'Payroll',
+            'payslips'           => 'Payslips',
+            'salary-structures'  => 'Salary Structures',
+            'companies'          => 'Companies',
+            'setting'            => 'Settings',
+            'profile'            => 'Profile',
+            'notifications'      => 'Notifications',
         ];
 
         $segments = array_values(array_filter(explode('/', trim((string) request()->path(), '/'))));
@@ -1723,16 +1087,13 @@ if (! function_exists('adminMenuCounts')) {
                 }
             };
 
+            // LMS removal phase 2 (2026-08-27) — dropped domains_active,
+            // referrals, referrals_review, pending_orders and booking_enq. Each
+            // counted a table this phase drops. Coaches/students stay: they are
+            // just users.role, and read as HR users vs employees now.
             return [
-                'coaches'          => $safe(fn () => \App\Models\User::where('role', 'instructor')->count()),
-                'students'         => $safe(fn () => \App\Models\User::where('role', 'student')->count()),
-                'domains_active'   => $safe(fn () => \App\Models\CoachDomain::where('status', 'active')->count()),
-                // Same model + status the dashboard's Referrals panel reads, so a
-                // badge can never show a different number than the panel does.
-                'referrals'        => $safe(fn () => \App\Models\Referral::count()),
-                'referrals_review' => $safe(fn () => \App\Models\Referral::where('status', 'pending')->count()),
-                'pending_orders'   => $safe(fn () => \Modules\Order\app\Models\Order::where('payment_status', 'pending')->count()),
-                'booking_enq'      => $safe(fn () => \DB::table('coach_pricing_enquiries')->count()),
+                'coaches'  => $safe(fn () => \App\Models\User::where('role', 'instructor')->count()),
+                'students' => $safe(fn () => \App\Models\User::where('role', 'student')->count()),
             ];
         });
     }
