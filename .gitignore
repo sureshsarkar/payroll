@@ -43,7 +43,9 @@ auth.json
 
 # --- Project-specific (not committed) ---
 mbs.rar
-mbs.sql
+# mbs.sql
+
+
 # db/
 mbs/
 _decom_*
@@ -54,7 +56,7 @@ mbs_backup.zip
 # Catch-all for accidentally-dropped SQL dumps (phpMyAdmin exports etc.)
 # A real schema migration belongs under database/migrations/ — never as a
 # loose .sql in the project root.
-/*.sql
+# /*.sql
 
 # --- Database backups (P0-1, 2026-05-29) ---
 # storage/backups/ accumulates SQL dumps from spatie/laravel-backup and from
@@ -106,6 +108,6 @@ yarn-error.log
 # --- Payroll conversion baseline: exclude bulky user media from code repo ---
 /public/uploads
 /slidus.com
-*.sql
+# *.sql
 *.bak
 *.zip
