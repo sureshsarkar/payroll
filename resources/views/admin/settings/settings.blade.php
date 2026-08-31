@@ -100,21 +100,10 @@
                             </div>
                         </div>
                     @endadminCan
-                    @if (checkAdminHasPermission('basic.payment.view'))
-                        <div class="col-lg-6">
-                            <div class="card card-large-icons">
-                                <div class="card-icon bg-primary text-white">
-                                    <i class="fas fa-credit-card"></i>
-                                </div>
-                                <div class="card-body">
-                                    <h4>{{ __('Payment Gateway') }}</h4>
-                                    <a href="{{ route('admin.basicpayment') }}"
-                                        class="card-cta">{{ __('Change Setting') }} <i
-                                            class="fas fa-chevron-right"></i></a>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
+                    {{-- LMS removal phase 2 (2026-08-27) — removed the Payment
+                         Gateway card. It opened the BasicPayment module, which
+                         configured the gateways that took course/membership
+                         payments. Nothing is sold any more. --}}
                     @if (checkAdminHasPermission('admin.view') || checkAdminHasPermission('role.view'))
                         <div class="col-lg-6">
                             <div class="card card-large-icons">

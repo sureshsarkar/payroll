@@ -29,11 +29,11 @@
                     <div class="ad-perm"><span>{{ __('Permission needed') }}</span><code>{{ $deniedPermission }}</code></div>
                 @endif
                 <div class="ad-actions">
-                    <a href="{{ route('instructor.dashboard') }}" class="ad-btn ad-btn--primary">
+                    <a href="{{ route('hr.overview') }}" class="ad-btn ad-btn--primary">
                         <i class="bi bi-grid-1x2"></i> {{ __('Back to Dashboard') }}
                     </a>
                     <button type="button" class="ad-btn"
-                            onclick="if(history.length>1){history.back()}else{window.location.href='{{ route('instructor.dashboard') }}'}">
+                            onclick="if(history.length>1){history.back()}else{window.location.href='{{ route('hr.overview') }}'}">
                         <i class="bi bi-arrow-left"></i> {{ __('Go Back') }}
                     </button>
                 </div>
@@ -75,10 +75,10 @@
     @section('meta_title', __('Access Denied') . ' || ' . ($setting->app_name ?? config('app.name', 'MBSGuru')))
 
     @section('contents')
-        <x-frontend.breadcrumb :title="__('Access Denied')" :links="[
-            ['url' => route('home'), 'text' => __('Home')],
-            ['url' => route('checkout.index'), 'text' => __('Access Denied')],
-        ]" />
+        {{-- LMS removal phase 2 (2026-08-27) — the second crumb pointed at
+             checkout.index, which is gone (and was a nonsensical target for a
+             403 page anyway). --}}
+        <x-frontend.breadcrumb :title="__('Access Denied')" :links="[['url' => route('home'), 'text' => __('Home')]]" />
 
         <section class="error-area pt-0">
             <div class="container">

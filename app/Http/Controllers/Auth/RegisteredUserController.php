@@ -54,13 +54,9 @@ class RegisteredUserController extends Controller
         $lastId = User::latest()->value('id');
 
         $coach_unique_id = ($request->role=='instructor')?"MBS".$lastId:"MBS".$lastId;
-        // Referral attribution. Order of preference:
-        //   1. explicit `referral_code` field on the form (most authoritative — user typed it)
-        //   2. `mbs_ref` cookie dropped by TrackReferralCookie middleware on ?ref=CODE visit
-        $refCode = trim((string) ($request->input('referral_code') ?: $request->cookie('mbs_ref')));
-        $refCode = $refCode !== '' ? strtoupper($refCode) : null;
-        $referrer = $refCode ? User::where('referral_code', $refCode)->first() : null;
-
+        // LMS removal phase 2 (2026-08-27) — dropped referral attribution
+        // (referral_code field / mbs_ref cookie → referred_by_user_id) along
+        // with the referral wallet it fed.
         $user = User::create([
             'coach_unique_id' => $coach_unique_id,
             'role' => $request->role,
@@ -71,44 +67,12 @@ class RegisteredUserController extends Controller
             'is_banned' => 'no',
             'password' => Hash::make($request->password),
             'verification_token' => Str::random(100),
-            'referred_by_user_id' => $referrer?->id,
-            'referred_at' => $referrer ? now() : null,
         ]);
 
-        // TENANT ISOLATION (2026-06-16) — if registration happens on a coach
-        // white-label surface, attribute the new student to that coach so they
-        // become (and can log back in as) that coach's student. No-op on the
-        // platform host. The coach-site register flow already links explicitly;
-        // this covers the platform form when served on a resolved coach domain.
-        \App\Support\TenantAccess::autoLinkIfStudent(
-            $user,
-            \App\Support\TenantAccess::surfaceCoachId($request),
-            'invite'
-        );
-
-        // Create a referral lifecycle row (separate from the legacy
-        // referred_by_user_id snapshot) and run fraud guards. Reward stays
-        // pending until the user activates their first paid membership.
-        try {
-            app(\App\Services\ReferralRewardService::class)
-                ->attributeOnSignup($user, $refCode, $request->ip());
-        } catch (\Throwable $e) {
-            \Log::warning('Referral attribution failed: ' . $e->getMessage());
-        }
-
-        // New coaches get a free trial membership so they can immediately use
-        // gated features (course creation, live classes, etc.) without paying
-        // upfront. Admin can disable the trial by setting the plan inactive.
-        if ($user->role === 'instructor') {
-            try {
-                $trial = app(\App\Services\MembershipService::class)->grantTrial($user);
-                if ($trial) {
-                    $user->notify(new \App\Notifications\CoachTrialWelcomeToUser($trial));
-                }
-            } catch (\Throwable $e) {
-                \Log::warning('Grant coach free trial failed: ' . $e->getMessage());
-            }
-        }
+        // LMS removal phase 2 (2026-08-27) — also dropped from this method: the
+        // white-label tenant auto-link (TenantAccess::autoLinkIfStudent), the
+        // referral lifecycle row + fraud guard (ReferralRewardService), and the
+        // free coach-trial membership grant with its welcome notification.
 
         $settings = cache()->get('setting');
         $marketingSettings = cache()->get('marketing_setting');

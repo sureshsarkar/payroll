@@ -191,11 +191,10 @@ abstract class InAppNotification extends Notification implements ShouldQueue
 
         if ($this->emailTemplate !== '') {
             try {
-                // Tenant-specific override first (the coach customised this
-                // template for their own site); fall back to the platform
-                // default when they haven't. 2026-06-26.
-                $row = \App\Models\CoachEmailTemplate::override($coachId ? (int) $coachId : null, $this->emailTemplate)
-                    ?: \Modules\GlobalSetting\app\Models\EmailTemplate::where('name', $this->emailTemplate)->first();
+                // LMS removal phase 2 (2026-08-27) — dropped the per-coach
+                // CoachEmailTemplate::override() lookup that took precedence
+                // here. There is one set of email templates now.
+                $row = \Modules\GlobalSetting\app\Models\EmailTemplate::where('name', $this->emailTemplate)->first();
                 if ($row) {
                     $vars = $this->renderPlaceholders($notifiable);
                     $subject  = $this->substitute((string) $row->subject, $vars);

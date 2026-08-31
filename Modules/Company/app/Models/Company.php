@@ -23,7 +23,22 @@ class Company extends Model
     protected $fillable = [
         'name', 'slug', 'code', 'owner_user_id', 'industry', 'timezone', 'status',
         'address', 'city', 'state', 'country', 'postal_code',
+        'logo_path', 'pf_number', 'esi_number', 'phone', 'email',
     ];
+
+    /** "phone · email" (or just whichever is set) for the payslip letterhead. */
+    public function contactLine(): string
+    {
+        return collect([$this->phone, $this->email])->filter()->implode(' · ');
+    }
+
+    /** Address parts joined into the single line printed under the company name. */
+    public function addressLine(): string
+    {
+        return collect([$this->address, $this->city, $this->state, $this->postal_code])
+            ->filter()
+            ->implode(', ');
+    }
 
     public function owner(): BelongsTo
     {

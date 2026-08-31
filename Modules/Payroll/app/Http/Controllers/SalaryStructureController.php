@@ -70,13 +70,14 @@ class SalaryStructureController extends Controller
         return back()->with('success', 'Salary structure saved.');
     }
 
+    /**
+     * Employees an HR manages in the active company. Delegates to
+     * EmployeeProfile::teamUserIds() — see AttendanceController::teamMembers()
+     * for why falling back to coach_id whenever the scoped list was empty
+     * leaked cross-company employees into salary structures.
+     */
     private function teamMembers(User $hr): Collection
     {
-        $ids = EmployeeProfile::where('reporting_hr_id', $hr->id)->pluck('user_id');
-        if ($ids->isEmpty()) {
-            $ids = User::where('role', 'student')->where('coach_id', $hr->id)->pluck('id');
-        }
-
-        return User::whereIn('id', $ids)->orderBy('name')->get();
+        return User::whereIn('id', EmployeeProfile::teamUserIds($hr))->orderBy('name')->get();
     }
 }

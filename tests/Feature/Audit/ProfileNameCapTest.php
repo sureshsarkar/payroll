@@ -47,18 +47,11 @@ class ProfileNameCapTest extends TestCase
         );
     }
 
-    public function test_student_api_profile_update_caps_name_at_100(): void
-    {
-        $contents = file_get_contents(
-            base_path('app/Http/Controllers/API/DashboardController.php')
-        );
-        // We tolerate the rule appearing once (the update_profile method).
-        $this->assertMatchesRegularExpression(
-            "/'name'\s*=>\s*\[\s*'required'\s*,\s*'string'\s*,\s*'max:100'/",
-            $contents,
-            'API\\DashboardController::update_profile must use max:100'
-        );
-    }
+    // LMS removal phase 2 (2026-08-27) — removed
+    // test_student_api_profile_update_caps_name_at_100(). It inspected
+    // app/Http/Controllers/API/DashboardController.php, the LMS mobile API's
+    // student profile endpoint. The whole app/Http/Controllers/API directory
+    // is deleted; there is no mobile client for the HR/Payroll product.
 
     /**
      * Assert that the given Laravel validation rule contains max:100

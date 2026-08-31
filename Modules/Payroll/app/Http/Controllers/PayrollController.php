@@ -15,6 +15,7 @@ use Modules\Attendance\app\Services\AttendanceService;
 use Modules\HrEmployee\app\Models\EmployeeProfile;
 use Modules\Payroll\app\Models\PayrollRun;
 use Modules\Payroll\app\Services\PayrollRunService;
+use Modules\Payroll\app\Support\Establishment;
 use Modules\Payroll\app\Support\FormXiPayslip;
 use Modules\Payroll\app\Support\WageRegisterFormatter;
 
@@ -72,9 +73,12 @@ class PayrollController extends Controller
     /** HR: view a run's computed items. */
     public function show(PayrollRun $run): View
     {
+        $items = $run->items()->with('employee')->get();
+
         return view('payroll::run-show', [
-            'run'   => $run,
-            'items' => $run->items()->with('employee')->get(),
+            'run'       => $run,
+            'items'     => $items,
+            'staleIds'  => $items->filter(fn ($item) => $item->isStale($run))->pluck('id'),
         ]);
     }
 
@@ -105,10 +109,13 @@ class PayrollController extends Controller
 
     /**
      * Export a single employee's Form IV wage/salary slip (one row of the
-     * register) for the given run's month.
+     * register, exactly as the statutory register renders it) for the given
+     * run's month.
      */
-    public function exportEmployee(PayrollRun $run, User $employee)
+    public function exportEmployee(Request $request, PayrollRun $run, User $employee)
     {
+        $this->guardTeamAccess($request, $employee);
+
         $items = $run->items()->with('employee')->where('user_id', $employee->id)->get();
         abort_if($items->isEmpty(), 404);
 
@@ -124,14 +131,54 @@ class PayrollController extends Controller
      * Export a single employee's statutory pay slip (Form XI, Rule 26(2)) for
      * the given run's month — the individual bilingual-ready wage slip.
      */
-    public function exportPayslip(PayrollRun $run, User $employee, FormXiPayslip $payslip)
+    public function exportPayslip(Request $request, PayrollRun $run, User $employee, FormXiPayslip $payslip)
     {
+        $this->guardTeamAccess($request, $employee);
+
         $item = $run->items()->with('employee')->where('user_id', $employee->id)->firstOrFail();
 
         return response($payslip->render($item), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="'.$payslip->filename($item).'"',
         ]);
+    }
+
+    /**
+     * Every Form XI slip in the run as one PDF, an employee per page. An HR
+     * only gets their own team's slips even though the run may hold other
+     * HRs' employees too (a company can have several HR staff); Super Admin
+     * gets every slip in the run.
+     */
+    public function exportPayslips(Request $request, PayrollRun $run, FormXiPayslip $payslip)
+    {
+        $items = $run->items()->with('employee')->get();
+        if (! $request->user('admin')) {
+            $teamIds = $this->teamMembers($request->user())->pluck('id');
+            $items = $items->whereIn('user_id', $teamIds)->values();
+        }
+        abort_if($items->isEmpty(), 404);
+
+        $filename = 'Payslips - '.$run->periodLabel().'.pdf';
+
+        return response($payslip->renderMany($items), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ]);
+    }
+
+    /**
+     * A regular HR (web/instructor guard) may only export slips for their own
+     * team; Super Admin (admin guard) can export any employee in a run they
+     * can already see. Without this, one HR could export another HR's team
+     * member's payslip in the same company just by guessing the user id.
+     */
+    private function guardTeamAccess(Request $request, User $employee): void
+    {
+        if ($request->user('admin')) {
+            return;
+        }
+
+        abort_unless($this->teamMembers($request->user())->pluck('id')->contains($employee->id), 403);
     }
 
     /**
@@ -163,7 +210,7 @@ class PayrollController extends Controller
             'run'           => $run,
             'rows'          => $register['rows'],
             'totals'        => $register['totals'],
-            'establishment' => config('payroll.establishment'),
+            'establishment' => Establishment::forRun($run),
         ])->render(), 'UTF-8');
         $pdf->setPaper('A4', 'landscape');
         $pdf->render();
@@ -180,6 +227,19 @@ class PayrollController extends Controller
             $ok ? 'Payroll submitted for approval.' : 'Run cannot be submitted (empty or already submitted).');
     }
 
+    /**
+     * HR: pull a submitted run back to draft — e.g. attendance was corrected
+     * after submitting and the numbers need to be re-prepared before approval.
+     */
+    public function reopen(PayrollRun $run): RedirectResponse
+    {
+        $ok = $this->runs->reopen($run);
+
+        return redirect()->route('hr.payroll.show', $run)->with($ok ? 'success' : 'error',
+            $ok ? 'Run reopened for correction — prepare it again to pick up the updated attendance.'
+                : 'Only a submitted (not yet approved) run can be reopened.');
+    }
+
     /** Super Admin: company-wide list of payroll runs to review/approve. */
     public function adminIndex(): View
     {
@@ -191,9 +251,12 @@ class PayrollController extends Controller
     /** Super Admin: review a run's items before approving. */
     public function adminShow(PayrollRun $run): View
     {
+        $items = $run->items()->with('employee')->get();
+
         return view('payroll::admin-run-show', [
-            'run'   => $run,
-            'items' => $run->items()->with('employee')->get(),
+            'run'      => $run,
+            'items'    => $items,
+            'staleIds' => $items->filter(fn ($item) => $item->isStale($run))->pluck('id'),
         ]);
     }
 
@@ -207,13 +270,30 @@ class PayrollController extends Controller
             $ok ? 'Payroll approved. Payslips generated.' : 'Only submitted runs can be approved.');
     }
 
+    /**
+     * Super Admin: recompute an already-approved run's items from current
+     * attendance/leave data and regenerate its payslip PDFs — for when an
+     * absence or leave was corrected after approval, so the payslip stops
+     * showing pre-correction numbers.
+     */
+    public function recalculate(PayrollRun $run): RedirectResponse
+    {
+        $count = $this->runs->recalculate($run);
+
+        return back()->with($count > 0 ? 'success' : 'error',
+            $count > 0
+                ? "Recalculated {$count} payslip(s) from current attendance/leave data."
+                : 'Only an approved (not yet paid) run can be recalculated.');
+    }
+
+    /**
+     * Employees an HR manages in the active company. Delegates to
+     * EmployeeProfile::teamUserIds() — see AttendanceController::teamMembers()
+     * for why falling back to coach_id whenever the scoped list was empty
+     * leaked cross-company employees into payroll runs.
+     */
     private function teamMembers(User $hr): Collection
     {
-        $ids = EmployeeProfile::where('reporting_hr_id', $hr->id)->pluck('user_id');
-        if ($ids->isEmpty()) {
-            $ids = User::where('role', 'student')->where('coach_id', $hr->id)->pluck('id');
-        }
-
-        return User::whereIn('id', $ids)->orderBy('name')->get();
+        return User::whereIn('id', EmployeeProfile::teamUserIds($hr))->orderBy('name')->get();
     }
 }

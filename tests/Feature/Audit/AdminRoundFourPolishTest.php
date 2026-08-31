@@ -104,23 +104,11 @@ class AdminRoundFourPolishTest extends TestCase
 
     /* ──────────────────────────────────── aria-labels rollout ─── */
 
-    public function test_remaining_list_pages_have_aria_labels_on_icon_buttons(): void
-    {
-        $expected = [
-            'views/admin/landing-pages/index.blade.php'           => 2,
-            'views/admin/referrals/index.blade.php'               => 2,
-            'views/admin/referral-commissions/index.blade.php'    => 3,
-            'views/admin/membership/users/index.blade.php'        => 4,
-        ];
-        foreach ($expected as $rel => $minCount) {
-            $src = (string) file_get_contents(resource_path($rel));
-            $count = substr_count($src, 'aria-label=');
-            $this->assertGreaterThanOrEqual(
-                $minCount, $count,
-                "{$rel} has only {$count} aria-label attributes; expected ≥ {$minCount}. Icon-only action buttons should each carry one so screen readers can disambiguate rows."
-            );
-        }
-    }
+    // LMS removal phase 2 (2026-08-27) — removed
+    // test_remaining_list_pages_have_aria_labels_on_icon_buttons(). All four
+    // pages it checked (coach landing pages, referrals, referral
+    // commissions, coach memberships) are deleted along with the coach
+    // business those admin screens managed.
 
     /* ───────────────────────────────────── 2FA challenge polish ─── */
 

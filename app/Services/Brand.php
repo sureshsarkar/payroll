@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\CoachBrandSetting;
 
 /**
  * Brand — immutable value object returned by BrandResolver.
@@ -46,38 +45,9 @@ class Brand
         public readonly bool    $ownLogo = false,
     ) {}
 
-    /**
-     * Compose a coach override on top of the platform defaults +
-     * hardcoded last-resort fallbacks.
-     */
-    public static function compose(CoachBrandSetting $row, array $platform): self
-    {
-        $get = fn (string $coachField, string $platformKey, ?string $hardFallback) =>
-            $row->{$coachField}
-                ?? ($platform[$platformKey] ?? null)
-                ?? $hardFallback;
-
-        return new self(
-            name:            (string) ($row->brand_name        ?? $platform['app_name']            ?? config('app.name', 'Coaching Platform')),
-            logoPath:        $row->logo_path                   ?? ($platform['logo'] ?? null),
-            faviconPath:     $row->favicon_path                ?? ($platform['favicon'] ?? null),
-            primaryColor:    (string) ($row->primary_color     ?? $platform['primary_color']       ?? '#10b981'),  /* 2026-07-04: last-resort default is the panel's emerald, not the old indigo */
-            accentColor:     (string) ($row->accent_color      ?? $platform['secondary_color']     ?? '#059669'),  /* emerald-600 accent to pair with the primary */
-            supportEmail:    (string) ($row->support_email     ?? $platform['site_email']
-                                                                ?? $platform['mail_sender_email']
-                                                                ?? config('mail.from.address', 'support@example.com')),
-            supportPhone:    $row->support_phone               ?? ($platform['site_phone'] ?? null),
-            termsUrl:        $row->terms_url                   ?? null,
-            privacyUrl:      $row->privacy_url                 ?? null,
-            footerText:      (string) ($row->footer_text       ?? $platform['copyright_text']      ?? '© ' . date('Y')),
-            emailSignature:  $row->email_signature             ?? null,
-            isPlatformDefault: ! $row->brand_name && ! $row->logo_path,
-            // The logo is "owned" only if THIS coach uploaded one. When null,
-            // logoPath above falls back to the platform logo — which must NOT
-            // be shown on a coach domain, so flag it so the view uses the name.
-            ownLogo:         $row->logo_path !== null,
-        );
-    }
+    /* LMS removal phase 2 (2026-08-27) — removed compose(), which merged a
+     * CoachBrandSetting row over the platform defaults. There is one brand
+     * now; platform() below is the only constructor. */
 
     /**
      * Platform-only brand, used when no coach is in context.

@@ -27,8 +27,10 @@ class TwoFactorController extends Controller
 
     private function dashboardRouteFor($user): string
     {
+        // LMS removal phase 2 (2026-08-27) — the LMS dashboards these named
+        // are gone; land users on the HR / employee dashboards instead.
         $isCoach = $user->role === 'instructor' || !empty($user->coach_id);
-        return $isCoach ? 'instructor.dashboard' : 'student.dashboard';
+        return $isCoach ? 'hr.overview' : 'employee.overview';
     }
 
     /* =================================== Setup =================================== */

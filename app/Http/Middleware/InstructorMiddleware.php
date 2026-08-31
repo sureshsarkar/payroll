@@ -50,12 +50,14 @@ class InstructorMiddleware
             && !in_array($user->role, ['student', 'admin'], true);
 
         if (!$isCoach && !$isCoachStaff) {
-            // Audit 2026-05-18 phase 5 — for students, send them to the
-            // STUDENT dashboard, not logout. Better UX than a flash of
-            // "you've been logged out" when they merely visited the wrong URL.
+            // Audit 2026-05-18 phase 5 — for students, send them to their own
+            // dashboard, not logout. Better UX than a flash of "you've been
+            // logged out" when they merely visited the wrong URL.
+            // LMS removal phase 2 (2026-08-27) — target moved from the deleted
+            // `student.dashboard` (LMS) to `employee.overview` (HR).
             if ($user->role === 'student') {
-                return redirect()->route('student.dashboard')->with([
-                    'messege'    => __('That section is for coaches. We brought you to your student dashboard.'),
+                return redirect()->route('employee.overview')->with([
+                    'messege'    => __('That section is for HR. We brought you to your employee dashboard.'),
                     'alert-type' => 'info',
                 ]);
             }

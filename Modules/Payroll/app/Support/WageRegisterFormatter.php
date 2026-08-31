@@ -110,7 +110,10 @@ class WageRegisterFormatter
      */
     private function bucketDeductions($lines, float $basic): array
     {
-        $b = ['pf_wages' => 0.0, 'pf' => 0.0, 'esi' => 0.0, 'tds' => 0.0, 'loan_adv' => 0.0, 'others' => 0.0];
+        $b = [
+            'pf_wages' => 0.0, 'pf' => 0.0, 'esi' => 0.0, 'tds' => 0.0, 'loan_adv' => 0.0,
+            'lwf' => 0.0, 'lop' => 0.0, 'others' => 0.0,
+        ];
 
         foreach ($lines as $line) {
             $name   = Str::lower((string) ($line['name'] ?? ''));
@@ -121,6 +124,8 @@ class WageRegisterFormatter
                 Str::contains($name, ['esic', 'esi', 'state insurance'])                    => 'esi',
                 Str::contains($name, ['tds', 'income tax'])                                 => 'tds',
                 Str::contains($name, ['loan', 'advance', 'recovery'])                       => 'loan_adv',
+                Str::contains($name, ['lwf', 'labour welfare', 'labor welfare'])             => 'lwf',
+                Str::contains($name, ['loss of pay', 'lop'])                                 => 'lop',
                 default                                                                     => 'others',
             };
             $b[$key] += $amount;
@@ -146,6 +151,7 @@ class WageRegisterFormatter
         $t = [
             'basic' => 0, 'vda' => 0, 'hra' => 0, 'conv' => 0, 'others' => 0, 'ot' => 0, 'arrear' => 0,
             'gross' => 0, 'pf_wages' => 0, 'pf' => 0, 'esi' => 0, 'tds' => 0, 'loan_adv' => 0,
+            'lwf' => 0, 'lop' => 0,
             'ded_others' => 0, 'total_ded' => 0, 'net_pay' => 0, 'pay_days' => 0, 'work_days' => 0,
         ];
 
@@ -153,7 +159,7 @@ class WageRegisterFormatter
             foreach (['basic', 'vda', 'hra', 'conv', 'others', 'ot', 'arrear'] as $k) {
                 $t[$k] += $r['earnings'][$k];
             }
-            foreach (['pf_wages', 'pf', 'esi', 'tds', 'loan_adv'] as $k) {
+            foreach (['pf_wages', 'pf', 'esi', 'tds', 'loan_adv', 'lwf', 'lop'] as $k) {
                 $t[$k] += $r['deductions'][$k];
             }
             $t['ded_others'] += $r['deductions']['others'];

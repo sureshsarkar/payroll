@@ -9,7 +9,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
-        "anayarojo/shoppingcart": "^4.2",
         "bacon/bacon-qr-code": "^3.1",
         "doctrine/dbal": "^3.7",
         "dompdf/dompdf": "^3.0",
@@ -24,6 +23,7 @@
         "league/flysystem-aws-s3-v3": "^3.28",
         "mews/purifier": "^3.4",
         "mollie/laravel-mollie": "^2.25",
+        "mpdf/mpdf": "^8.3",
         "nwidart/laravel-modules": "^10.0",
         "pion/laravel-chunk-upload": "^1.5",
         "pragmarx/google2fa": "^9.0",
@@ -60,8 +60,7 @@
             "Modules\\": "Modules/"
         },
         "files": [
-            "app/Helpers/helper.php",
-            "Modules/Menubuilder/app/Helpers/helper.php"
+            "app/Helpers/helper.php"
         ]
     },
     "autoload-dev": {

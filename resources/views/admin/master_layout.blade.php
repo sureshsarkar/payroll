@@ -107,26 +107,11 @@
                             @endif
                         @endif
 
-                        @if (count(allCurrencies()?->where('status', 'active')) > 1)
-                            <form action="{{ route('set-currency') }}" class="set-currency-header">
-                                <label for="set-currency-select" class="sr-only">{{ __('Currency') }}</label>
-                                <select id="set-currency-select" name="currency"
-                                    class="change-currency bg-transparent form-control-sm border-light ml-2 select_js"
-                                    aria-label="{{ __('Currency') }}">
-                                    @forelse (allCurrencies()?->where('status', 'active') as $currency)
-                                        <option class="text-dark" value="{{ $currency->currency_code }}"
-                                            {{ getSessionCurrency() == $currency->currency_code ? 'selected' : '' }}>
-                                            {{ $currency->currency_name }}
-                                        </option>
-                                    @empty
-                                        <option value="USD" {{ getSessionCurrency() == 'USD' ? 'selected' : '' }}>
-                                            {{ __('USD') }}
-                                        </option>
-                                    @endforelse
-                                </select>
-                                <noscript><button type="submit" class="btn btn-sm btn-light ml-1">{{ __('Set') }}</button></noscript>
-                            </form>
-                        @endif
+                        {{-- LMS removal phase 2 (2026-08-27) — removed the header
+                             currency switcher. `set-currency` was served by the
+                             storefront's HomePageController and only ever changed
+                             the display currency of course prices. Payroll amounts
+                             are rendered in the company's own currency. --}}
 
 
                     <li class="dropdown dropdown-list-toggle">

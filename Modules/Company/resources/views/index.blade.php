@@ -26,11 +26,14 @@
                     </div>
                     <div style="color:#94a3b8;font-size:12px;margin-top:2px;">{{ $company->industry ?: __('No industry set') }} · {{ $company->timezone }}</div>
                 </div>
-                @if ($company->id !== $activeId)
-                    <form method="POST" action="{{ route('hr.companies.switch', $company) }}">@csrf
-                        <button type="submit" style="border:1px solid #cbd5e1;background:#fff;padding:7px 13px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;">{{ __('Switch') }}</button>
-                    </form>
-                @endif
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <a href="{{ route('hr.companies.edit', $company) }}" style="border:1px solid #cbd5e1;background:#fff;padding:7px 13px;border-radius:8px;font-weight:600;font-size:13px;color:#334155;text-decoration:none;">{{ __('Settings') }}</a>
+                    @if ($company->id !== $activeId)
+                        <form method="POST" action="{{ route('hr.companies.switch', $company) }}">@csrf
+                            <button type="submit" style="border:1px solid #cbd5e1;background:#fff;padding:7px 13px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;">{{ __('Switch') }}</button>
+                        </form>
+                    @endif
+                </div>
             </div>
         @empty
             <div style="border:1px dashed #cbd5e1;border-radius:11px;padding:28px;text-align:center;color:#64748b;">

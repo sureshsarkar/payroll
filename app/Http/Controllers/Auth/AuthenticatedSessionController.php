@@ -6,7 +6,6 @@ use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Rules\CustomRecaptcha;
-use Gloudemans\Shoppingcart\Facades\Cart;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,15 +23,6 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
-        // echo userAuth()->role;die;
-        // if (Auth::check()) {
-        //     if (userAuth()->role != 'student') {
-        //         return redirect()->route('instructor.dashboard');
-        //     } else {
-        //         return redirect()->route('student.dashboard');
-        //     }
-        // }
-
         return view('auth.login');
     }
 
@@ -107,34 +97,13 @@ class AuthenticatedSessionController extends Controller
             return redirect()->back()->with($notification);
         }
 
-        // TENANT ISOLATION (2026-06-16) — if this login is happening on a coach
-        // white-label surface (resolved by ResolveCoachByDomain), the user must
-        // belong to that coach. On the platform host the surface id is 0 and
-        // this is a no-op. Defence-in-depth: RedirectCustomDomainToScoped sends
-        // /login on a coach domain to /coach/{slug}/login, but we also guard the
-        // platform form directly. See \App\Support\TenantAccess.
-        $surfaceCoachId = \App\Support\TenantAccess::surfaceCoachId($request);
-        if ($surfaceCoachId > 0 && ! \App\Support\TenantAccess::userMayAccessCoach($user, $surfaceCoachId)) {
-            RateLimiter::hit($throttleKey, 900);
-            throw ValidationException::withMessages([
-                'email' => __('These credentials are not authorized for this website.'),
-            ]);
-        }
-
-        // PLATFORM CONFINEMENT (2026-06-16) — on the bare platform host, a student
-        // who belongs to a coach is confined to their coach's website. Redirect
-        // them there WITHOUT creating a platform session. Platform-native
-        // students (no coach link) fall through and sign in normally.
-        if ($surfaceCoachId === 0 && ($user->role ?? '') === 'student') {
-            $confineUrl = \App\Support\TenantAccess::confineUrlForStudent($user);
-            if ($confineUrl) {
-                RateLimiter::clear($throttleKey);
-                return redirect()->to($confineUrl)->with([
-                    'messege'    => __('Please sign in on your coach\'s website to access your dashboard.'),
-                    'alert-type' => 'info',
-                ]);
-            }
-        }
+        // LMS removal phase 2 (2026-08-27) — dropped two white-label login
+        // guards (App\Support\TenantAccess): the tenant-isolation check that
+        // rejected credentials not belonging to the coach whose domain the
+        // login form was served on, and the platform-confinement redirect that
+        // bounced a coach's student to their coach's own site rather than
+        // creating a platform session. There is a single surface now; company
+        // scoping is enforced by the `companycontext` middleware after login.
 
         // Authenticate user. Reject the attempt result rather than silently
         // continuing — earlier this ignored the return value, so an
@@ -166,39 +135,37 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('web.2fa.challenge');
         }
 
-        // session cart to database
-        $cart_count = Cart::content()->count();
-        sessionCartToDatabase();
+        // LMS removal phase 2 (2026-08-27) — dropped the guest-cart merge
+        // (Cart::content() + sessionCartToDatabase()) that ran on every login.
+        // There is no cart.
 
         // Redirect user to dashboard based on role
         $notification = __('Logged in successfully.');
         $notification = ['messege' => $notification, 'alert-type' => 'success'];
 
+        // LMS→HR conversion — this install has no course/LMS features any more,
+        // so the post-login landing page is the HR/Employee dashboard. The old
+        // instructor.dashboard / student.dashboard routes no longer exist.
         $intendedUrl = session()->get('url.intended');
         if ($intendedUrl && \Str::contains($intendedUrl, '/admin')) {
             if ($user->role == 'instructor') {
-                return redirect()->route('instructor.dashboard');
+                return redirect()->route('hr.overview');
             }
 
-            return redirect()->route('student.dashboard');
+            return redirect()->route('employee.overview');
         }
 
         // 2026-06-01 (audit [1]) — simplified from
         // `role === 'instructor' || role !== 'student'` (the first clause was
         // redundant: any instructor already satisfies `!== 'student'`) plus a
-        // confusing elseif with no guaranteed return. Behaviour is identical:
-        // a student lands on their dashboard (or cart if they have items);
-        // every non-student role (instructor + coach staff) uses the
-        // instructor panel.
+        // confusing elseif with no guaranteed return. An employee (role
+        // 'student') lands on their own dashboard; every other role
+        // (instructor + staff) uses the HR panel.
         if ($user->role === 'student') {
-            if ($cart_count > 0) {
-                return redirect()->route('cart');
-            }
-
-            return redirect()->route('student.dashboard');
+            return redirect()->route('employee.overview');
         }
 
-        return redirect()->route('instructor.dashboard');
+        return redirect()->route('hr.overview');
     }
 
     /**
@@ -206,16 +173,11 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        // 2026-06-11 — White-label logout. Capture the coach context BEFORE
-        // invalidating the session. ResolveCoachByDomain stamps
-        // resolved_coach_id on the request when the host is a coach domain
-        // (custom or subdomain); on the platform host it's 0/null. The global
-        // logout button (student panel sidebar + public header) posts here, so
-        // without this a student/coach who logs out ON a coach domain was
-        // bounced to the PLATFORM login page — leaking MBSGuru chrome onto the
-        // coach's brand. Keep them on-brand: send them to the coach's home.
-        $coachId = (int) ($request->attributes->get('resolved_coach_id') ?? 0);
-
+        // LMS removal phase 2 (2026-08-27) — dropped the white-label logout
+        // branch. It captured resolved_coach_id before invalidating the session
+        // and bounced the user back to that coach's branded home so logging out
+        // on a coach domain never showed platform chrome. There are no coach
+        // domains; everyone returns to the single login page.
         Auth::guard('web')->logout();
 
         // Standard Laravel logout sequence:
@@ -229,19 +191,6 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         $notification = ['messege' => __('Logged out successfully.'), 'alert-type' => 'success'];
-
-        // On a coach domain → return to THAT coach's branded home (dynamic,
-        // slug resolved from the coach's landing page; no hardcoding). Falls
-        // back to the domain root (the middleware renders the coach home there)
-        // if the slug can't be resolved, so we never leak the platform page.
-        if ($coachId > 0) {
-            $slug = \App\Models\CoachLandingPage::where('added_by', $coachId)->value('slug');
-            if ($slug) {
-                return redirect()->route('coach.site.path', ['site_slug' => $slug])->with($notification);
-            }
-
-            return redirect()->to('/')->with($notification);
-        }
 
         return redirect()->route('login')->with($notification);
     }

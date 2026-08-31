@@ -806,16 +806,9 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
     {{-- Top green stripe --}}
     <div class="csb-topstripe"></div>
 
-    {{-- Landing Page Banner --}}
-    @if ($landingPageDomain != '')
-        <div class="sb-landing-banner">
-            <span class="sb-landing-dot"></span>
-            <a href="https://{{ $landingPageDomain }}" target="_blank">
-                <i class="bi bi-box-arrow-up-right" style="font-size:10px;"></i>
-                {{ __('Public Landing Page') }}
-            </a>
-        </div>
-    @endif
+    {{-- LMS removal phase 2 (2026-08-27) — removed the "Public Landing Page"
+         banner. It linked to the coach's published white-label marketing site;
+         there are no coach sites and $landingPageDomain is always ''. --}}
 
     {{-- Profile --}}
     <div class="sb-profile">
@@ -835,21 +828,11 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
         </div>
     </div>
 
-    {{-- Stats Strip --}}
-    <div class="sb-stats">
-        <div class="sb-stat">
-            <div class="sb-stat-val g">{{ $totalCoachStudents ?? 0 }}</div>
-            <div class="sb-stat-lbl">{{ __('Students') }}</div>
-        </div>
-        <div class="sb-stat">
-            <div class="sb-stat-val b">{{ $totalCouachCourses ?? 0 }}</div>
-            <div class="sb-stat-lbl">{{ __('Courses') }}</div>
-        </div>
-        <div class="sb-stat">
-            <div class="sb-stat-val o">{{ $totalCoachOrders ?? 0 }}</div>
-            <div class="sb-stat-lbl">{{ __('Orders') }}</div>
-        </div>
-    </div>
+    {{-- LMS removal phase 2 (2026-08-27) — the stats strip showed Students /
+         Courses / Orders from the coach counters AppServiceProvider computed on
+         every view render. Courses and Orders no longer exist and the counters
+         are hard zeros, so the strip is gone rather than showing three 0s. The
+         HR dashboard (hr.overview) carries the real headline numbers. --}}
 
     {{-- ════════════════════════════════════════════════════════════════
          2026-05-20 — Sidebar IA upgrade. 4 semantic sections, collapsible
@@ -898,19 +881,20 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
                     // 2026-07-18 (Dashboard Nav Enhancement #3) — "Start Live Class"
                     // removed from Quick Add; live classes are reached from their
                     // own module only, so the shortcut is no longer duplicated here.
-                    $quickAddItems = $sbIsTeacher ? [
-                        ['route' => 'instructor.announcements.create',    'icon' => 'bi-megaphone',     'label' => __('Add Announcement'), 'perm' => 'announcements'],
-                        ['route' => 'instructor.fees.index',              'icon' => 'bi-coin',          'label' => __('Add Fee Demand'),   'perm' => 'fees'],
-                    ] : [
-                        ['route' => 'instructor.courses.create',          'icon' => 'bi-mortarboard',   'label' => __('Add Course'),       'perm' => 'courses'],
-                        ['route' => 'instructor.course-batches.index',    'icon' => 'bi-collection',    'label' => __('Add Batch'),        'perm' => 'course-batches'],
-                        ['route' => 'instructor.announcements.create',    'icon' => 'bi-megaphone',     'label' => __('Add Announcement'), 'perm' => 'announcements'],
-                        ['route' => 'instructor.fees.index',              'icon' => 'bi-coin',          'label' => __('Add Fee Demand'),   'perm' => 'fees'],
-                        ['route' => 'instructor.my-students.create',      'icon' => 'bi-people',        'label' => __('Add Student'),      'perm' => 'coach-students'],
+                    // LMS removal phase 2 (2026-08-27) — was Add Course / Add
+                    // Batch / Add Announcement / Add Fee Demand / Add Student,
+                    // all gated by coach-staff permission slugs. Now the HR
+                    // create actions. The per-item 'perm' slug is gone with the
+                    // CoachPermission middleware and checkPermissionView().
+                    $quickAddItems = [
+                        ['route' => 'hr.employees.create',   'icon' => 'bi-person-plus',     'label' => __('Add Employee')],
+                        ['route' => 'hr.departments.index',  'icon' => 'bi-diagram-3',       'label' => __('Add Department')],
+                        ['route' => 'hr.salary.index',       'icon' => 'bi-cash-stack',      'label' => __('Add Salary Structure')],
+                        ['route' => 'hr.payroll.index',      'icon' => 'bi-calculator',      'label' => __('Run Payroll')],
+                        ['route' => 'hr.companies.create',   'icon' => 'bi-building-add',    'label' => __('Add Company')],
                     ];
                 @endphp
                 @foreach ($quickAddItems as $it)
-                    @continue(!empty($it['perm']) && ! checkPermissionView($it['perm']))
                     @php try { $url = route($it['route']); } catch (\Throwable $e) { $url = null; } @endphp
                     @if ($url)
                         <a href="{{ $url }}" role="menuitem" class="sb-quick-add__item">
@@ -987,21 +971,10 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
         </div>
     @endif
 
-    {{-- GROUP 1 — OVERVIEW ─────────────────────────────────────── --}}
-    <details class="sb-group" data-sb-key="overview" open>
-        <summary class="sb-group__head">
-            <span>{{ __('Overview') }}</span>
-            <i class="bi bi-chevron-down sb-group__chev"></i>
-        </summary>
-        <ul class="sb-nav">
-            <li class="{{ Route::is('instructor.dashboard') ? 'active' : '' }}">
-                <a href="{{ route('instructor.dashboard') }}">
-                    <span class="sb-icon"><i class="bi bi-grid-1x2"></i></span>
-                    {{ __('Dashboard') }}
-                </a>
-            </li>
-        </ul>
-    </details>
+    {{-- LMS removal phase 2 (2026-08-27) — the Overview group held a single
+         link to instructor.dashboard, the LMS coach homepage. That route is
+         gone; hr.overview is the first entry of the Payroll & HR group below,
+         so a separate Overview group would just duplicate it. --}}
 
     {{-- GROUP — PAYROLL & HR (LMS→Payroll conversion) ───────────── --}}
     <details class="sb-group" data-sb-key="payroll-hr" open>
@@ -1055,357 +1028,32 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
         </ul>
     </details>
 
-    {{-- GROUP 2 — ACADEMIC MANAGEMENT ──────────────────────────── --}}
-    {{-- 2026-08-18 — LMS→Payroll conversion: hidden by default. Restore via
-         PAYROLL_SHOW_LMS_COACH_MENUS=true (config payroll.coach.show_lms_menus). --}}
-    @if (config('payroll.coach.show_lms_menus'))
-    <details class="sb-group" data-sb-key="academic" open>
-        <summary class="sb-group__head">
-            <span>{{ __('Academic Management') }}</span>
-            <i class="bi bi-chevron-down sb-group__chev"></i>
-        </summary>
-        <ul class="sb-nav">
-            @if (checkPermissionView('courses'))
-                <li class="{{ Route::is('instructor.courses.index') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.courses.index') }}">
-                        <span class="sb-icon"><i class="bi bi-mortarboard"></i></span>
-                        <span>{{ __('Courses') }}</span>
-                        @if (($totalCouachCourses ?? 0) > 0)
-                            <span class="sb-pill sb-pill--muted">{{ number_format($totalCouachCourses) }}</span>
-                        @endif
-                    </a>
-                </li>
-            @endif
+    {{-- LMS removal phase 2 (2026-08-27) — deleted the six LMS/coach groups that
+         used to sit here behind the payroll.coach.show_lms_menus flag:
+         Academic Management (courses, batches, chapters, live classes, quizzes),
+         People (students, staff, roles, permissions, trainers), Sales (orders,
+         coupons, fees, offline payments, payouts, subscriptions), Communication
+         (announcements, lesson Q&A, enquiries), Reports (analytics, revenue,
+         invoices) and Configuration (Zoom, YouTube, brand, website builder,
+         blog, tax, payment gateways). Every route they linked to is gone, so
+         the flag no longer has anything to reveal — the gate and its contents
+         went together rather than being left as dead markup. --}}
 
-            @if (checkPermissionView('course-batches'))
-                <li class="{{ Route::is('instructor.course-batches.*') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.course-batches.index') }}">
-                        <span class="sb-icon"><i class="bi bi-collection"></i></span>
-                        <span>{{ $sbIsTeacher ? __('My Batches') : __('Batches') }}</span>
-                        @if ($sbb['batches_active'] > 0)
-                            <span class="sb-pill sb-pill--muted">{{ number_format($sbb['batches_active']) }}</span>
-                        @endif
-                    </a>
-                </li>
-            @endif
+    <div class="sb-divider" style="margin-top:8px;"></div>
 
-            @if (checkPermissionView('live-classes'))
-                <li class="{{ Route::is('instructor.live-classes.*') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.live-classes.index') }}">
-                        <span class="sb-icon"><i class="bi bi-camera-reels"></i></span>
-                        <span>{{ __('Live Classes') }}</span>
-                        @if (($totalCoachUpcomingLive ?? 0) > 0)
-                            <span class="sb-pill sb-pill--live"><span class="sb-pill__dot"></span>{{ $totalCoachUpcomingLive }} LIVE</span>
-                        @endif
-                    </a>
-                </li>
-            @endif
-
-            {{-- 2026-07-06 (Role Permission Test doc, issue D) — Instant Meeting
-                 gets its OWN permission gate. It was nested inside the live-classes
-                 gate, so granting Live Classes wrongly surfaced Instant Meeting too. --}}
-            @if (checkPermissionView('instant-meetings'))
-                <li class="{{ Route::is('instructor.instant-meetings.*') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.instant-meetings.index') }}">
-                        <span class="sb-icon"><i class="bi bi-person-video3"></i></span>
-                        <span>{{ __('Instant Meeting 1:1') }}</span>
-                    </a>
-                </li>
-            @endif
-
-            {{-- 2026-06-12 — per-coach certificate builder. Gated by its own
-                 certificate view permission. --}}
-            @if (checkPermissionView('certificate'))
-                <li class="{{ Route::is('instructor.certificate-builder.*') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.certificate-builder.index') }}">
-                        <span class="sb-icon"><i class="bi bi-award"></i></span>
-                        <span>{{ __('Certificate') }}</span>
-                    </a>
-                </li>
-            @endif
-
-            @if (Module::has('CourseBundle') && Module::isEnabled('CourseBundle'))
-                <li class="{{ Route::is('instructor.course.bundle.*') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.course.bundle.index') }}">
-                        <span class="sb-icon"><i class="bi bi-boxes"></i></span>
-                        {{ __('Course Bundle') }}
-                    </a>
-                </li>
-            @endif
-        </ul>
-    </details>
-    @endif
-
-    {{-- GROUP 3 — PEOPLE MANAGEMENT ────────────────────────────── --}}
-    @if (config('payroll.coach.show_lms_menus'))
-    <details class="sb-group" data-sb-key="people" open>
-        <summary class="sb-group__head">
-            <span>{{ __('People Management') }}</span>
-            <i class="bi bi-chevron-down sb-group__chev"></i>
-        </summary>
-        <ul class="sb-nav">
-            @if (checkPermissionView('coach-students'))
-                <li class="{{ Route::is('instructor.my-students.index') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.my-students.index') }}">
-                        <span class="sb-icon"><i class="bi bi-people"></i></span>
-                        <span>{{ $sbIsTeacher ? __('My Students') : __('Students') }}</span>
-                        @if (! $sbIsTeacher && ($totalCoachStudents ?? 0) > 0)
-                            <span class="sb-pill sb-pill--muted">{{ number_format($totalCoachStudents) }}</span>
-                        @endif
-                    </a>
-                </li>
-                {{-- 2026-07-15 — date-specific temporary batch slots. --}}
-                <li class="{{ Route::is('instructor.temporary-slots.*') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.temporary-slots.index') }}">
-                        <span class="sb-icon"><i class="bi bi-calendar-day"></i></span>
-                        <span>{{ __('Temporary Slots') }}</span>
-                    </a>
-                </li>
-            @endif
-
-            {{-- 2026-05-20 — grant teachers access to specific batches. Coach-only
-                 by default; a regular teacher never has the 'teacher-batches' slug
-                 (default-deny), so this stays hidden for them. 2026-07-07: gate on
-                 the permission (not raw role) so it stays consistent with the now
-                 permission-gated route — a coach who deliberately delegates
-                 teacher-batch management to a senior staff can reach it. --}}
-            @if (checkPermissionView('teacher-batches'))
-                <li class="{{ Route::is('instructor.teacher-batches.*') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.teacher-batches.index') }}">
-                        <span class="sb-icon"><i class="bi bi-person-check"></i></span>
-                        <span>{{ __('Teacher Access') }}</span>
-                    </a>
-                </li>
-            @endif
-
-            {{-- 2026-07-18 (Dashboard Nav Enhancement) — Trainers + Trainer Bookings
-                 SURFACED here (were previously off-menu). This is the single master
-                 CRUD for trainers + their session-package bookings; the Website
-                 Builder only renders the public-facing trainer profile/booking
-                 section (same trainer master data — no duplicate CRUD). Gated by the
-                 granular `trainers` permission; tenant-scoped in TrainerController. --}}
-            @if (checkPermissionView('trainers'))
-                {{-- 2026-07-18 — resolve defensively: on a prod build that predates
-                     the Trainers feature (or has a stale route cache) route() would
-                     throw and 500 the whole panel. try/caught → the item simply
-                     hides until the routes exist, matching the Quick Add pattern. --}}
-                @php
-                    try { $sbTrainersUrl = route('instructor.trainers.index'); } catch (\Throwable $e) { $sbTrainersUrl = null; }
-                    try { $sbTrainerBookingsUrl = route('instructor.trainers.bookings'); } catch (\Throwable $e) { $sbTrainerBookingsUrl = null; }
-                @endphp
-                @if ($sbTrainersUrl)
-                    <li class="{{ Route::is('instructor.trainers.index', 'instructor.trainers.create', 'instructor.trainers.edit', 'instructor.trainers.show') ? 'active' : '' }}">
-                        <a href="{{ $sbTrainersUrl }}">
-                            <span class="sb-icon"><i class="bi bi-person-badge"></i></span>
-                            <span>{{ __('Trainers') }}</span>
-                        </a>
-                    </li>
-                @endif
-                @if ($sbTrainerBookingsUrl)
-                    <li class="{{ Route::is('instructor.trainers.bookings', 'instructor.trainers.bookings.*') ? 'active' : '' }}">
-                        <a href="{{ $sbTrainerBookingsUrl }}">
-                            <span class="sb-icon"><i class="bi bi-calendar2-week"></i></span>
-                            <span>{{ __('Trainer Bookings') }}</span>
-                        </a>
-                    </li>
-                @endif
-            @endif
-        </ul>
-    </details>
-    @endif
-
-    {{-- GROUP 4 — SALES & OPERATIONS ───────────────────────────── --}}
-    @if (config('payroll.coach.show_lms_menus'))
-    <details class="sb-group" data-sb-key="sales" open>
-        <summary class="sb-group__head">
-            <span>{{ __('Sales & Operations') }}</span>
-            <i class="bi bi-chevron-down sb-group__chev"></i>
-        </summary>
-        <ul class="sb-nav">
-            @if (checkPermissionView('course-batches'))
-                <li class="{{ Route::is('instructor.fees.*') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.fees.index') }}">
-                        <span class="sb-icon"><i class="bi bi-coin"></i></span>
-                        <span>{{ __('Fees') }}</span>
-                        @if ($sbb['fees_overdue'] > 0)
-                            <span class="sb-pill sb-pill--warning"><i class="bi bi-exclamation-triangle-fill" style="font-size:9px;"></i> {{ $sbb['fees_overdue'] }} {{ __('overdue') }}</span>
-                        @endif
-                    </a>
-                </li>
-            @endif
-
-            @if (checkPermissionView('coach-orders'))
-                <li class="{{ Route::is('instructor.my-sells.index') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.my-sells.index') }}">
-                        <span class="sb-icon"><i class="bi bi-bar-chart-line"></i></span>
-                        <span>{{ __('Orders') }}</span>
-                        @if ($sbb['orders_pending'] > 0)
-                            <span class="sb-pill sb-pill--warning">{{ $sbb['orders_pending'] }} {{ __('pending') }}</span>
-                        @endif
-                    </a>
-                </li>
-            @endif
-
-            {{-- 2026-07-11 — Offline Payment (record-only). Its OWN permission slug
-                 so a coach can grant staff offline-payment access independently.
-                 Tenant-scoped in the controller. --}}
-            @if (checkPermissionView('offline-payments'))
-                <li class="{{ Route::is('instructor.offline-payments.*') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.offline-payments.index') }}">
-                        <span class="sb-icon"><i class="bi bi-cash-stack"></i></span>
-                        <span>{{ __('Offline Payment') }}</span>
-                    </a>
-                </li>
-            @endif
-
-            @if (checkPermissionView('coach-coupons'))
-                <li class="{{ Route::is('instructor.coupons.*') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.coupons.index') }}">
-                        <span class="sb-icon"><i class="bi bi-ticket-perforated"></i></span>
-                        <span>{{ __('Coupons') }}</span>
-                    </a>
-                </li>
-            @endif
-
-            {{-- 2026-07-18 — Enquiries (landing-page leads) sit in Sales & Operations
-                 as the top of the lead pipeline. Same route/permission as before. --}}
-            @if (checkPermissionView('landing-page-enquiry'))
-                <li class="{{ Route::is('instructor.landing-page-enquiry.*') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.landing-page-enquiry.index') }}">
-                        <span class="sb-icon"><i class="bi bi-chat-dots"></i></span>
-                        <span>{{ __('Enquiries') }}</span>
-                        @if ($sbb['enquiries_new'] > 0)
-                            <span class="sb-pill sb-pill--danger">{{ $sbb['enquiries_new'] }} {{ __('NEW') }}</span>
-                        @endif
-                    </a>
-                </li>
-            @endif
-        </ul>
-    </details>
-    @endif
-
-    {{-- GROUP 5 — COMMUNICATION ────────────────────────────────── --}}
-    {{-- Only currently-functional communication surfaces: Announcements +
-         Email Notifications. SMS / WhatsApp are intentionally NOT here (no
-         placeholder / dummy toggle) — documented for a future phase. --}}
-    @if (config('payroll.coach.show_lms_menus'))
-    <details class="sb-group" data-sb-key="communication" open>
-        <summary class="sb-group__head">
-            <span>{{ __('Communication') }}</span>
-            <i class="bi bi-chevron-down sb-group__chev"></i>
-        </summary>
-        <ul class="sb-nav">
-            {{-- 2026-07-04 — gate by its OWN permission slug, not course-batches
-                 (was a copy-paste proxy that bundled announcements with batches). --}}
-            @if (checkPermissionView('announcements'))
-                <li class="{{ Route::is('instructor.announcements.*') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.announcements.index') }}">
-                        <span class="sb-icon"><i class="bi bi-megaphone"></i></span>
-                        <span>{{ __('Announcements') }}</span>
-                        @if ($sbb['announcement_drafts'] > 0)
-                            <span class="sb-pill sb-pill--warning">{{ $sbb['announcement_drafts'] }} {{ __('draft') }}</span>
-                        @endif
-                    </a>
-                </li>
-            @endif
-
-            {{-- 2026-07-18 — Email Notifications cross-linked from the Settings hub
-                 (per-coach email template editor, route instructor.email-templates.*,
-                 perm settings-email). Single source — no duplicate module. --}}
-            @if (checkPermissionView('settings-email'))
-                @php try { $sbEmailTplUrl = route('instructor.email-templates.index'); } catch (\Throwable $e) { $sbEmailTplUrl = null; } @endphp
-                @if ($sbEmailTplUrl)
-                    <li class="{{ Route::is('instructor.email-templates.*') ? 'active' : '' }}">
-                        <a href="{{ $sbEmailTplUrl }}">
-                            <span class="sb-icon"><i class="bi bi-envelope-paper"></i></span>
-                            <span>{{ __('Email Notifications') }}</span>
-                        </a>
-                    </li>
-                @endif
-            @endif
-        </ul>
-    </details>
-    @endif
-
-    {{-- GROUP 6 — REPORTS ──────────────────────────────────────── --}}
-    {{-- Analytics + the centralised Reports module (Revenue / Payments /
-         Invoices / Attendance), all gated by the analytics permission. --}}
-    @if (checkPermissionView('analytics'))
-        <details class="sb-group" data-sb-key="reports" open>
-            <summary class="sb-group__head">
-                <span>{{ __('Reports') }}</span>
-                <i class="bi bi-chevron-down sb-group__chev"></i>
-            </summary>
+    {{-- Account settings — profile, password, education, experience. --}}
+    <div class="sb-section" style="padding-top:6px;">
+        <nav>
             <ul class="sb-nav">
-                <li class="{{ Route::is('instructor.analytics.*') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.analytics.index') }}">
-                        <span class="sb-icon"><i class="bi bi-graph-up-arrow"></i></span>
-                        {{ __('Analytics') }}
+                <li class="{{ Route::is('instructor.setting.*') ? 'active' : '' }}">
+                    <a href="{{ route('instructor.setting.index') }}">
+                        <span class="sb-icon"><i class="bi bi-gear"></i></span>
+                        {{ __('Settings') }}
                     </a>
                 </li>
-                {{-- 2026-07-18 (Dashboard Nav Enhancement #6/#7) — Reports module.
-                     Each route() is try/caught so a prod build predating this
-                     module hides the item instead of 500-ing the panel. --}}
-                @php try { $sbReportsUrl = route('instructor.reports.index'); } catch (\Throwable $e) { $sbReportsUrl = null; } @endphp
-                @if ($sbReportsUrl)
-                    <li class="{{ Route::is('instructor.reports.index') && !request()->route('type') ? 'active' : '' }}">
-                        <a href="{{ $sbReportsUrl }}">
-                            <span class="sb-icon"><i class="bi bi-collection"></i></span>
-                            {{ __('Reports Overview') }}
-                        </a>
-                    </li>
-                    @foreach ([
-                        ['type' => 'revenue',    'label' => __('Revenue'),    'icon' => 'bi-cash-stack'],
-                        ['type' => 'payments',   'label' => __('Payments'),   'icon' => 'bi-credit-card'],
-                        ['type' => 'invoices',   'label' => __('Invoices'),   'icon' => 'bi-receipt'],
-                        ['type' => 'attendance', 'label' => __('Attendance'), 'icon' => 'bi-calendar-check'],
-                    ] as $rep)
-                        <li class="{{ Route::is('instructor.reports.show') && request()->route('type') === $rep['type'] ? 'active' : '' }}">
-                            <a href="{{ route('instructor.reports.show', $rep['type']) }}">
-                                <span class="sb-icon"><i class="bi {{ $rep['icon'] }}"></i></span>
-                                {{ $rep['label'] }}
-                            </a>
-                        </li>
-                    @endforeach
-                @endif
             </ul>
-        </details>
-    @endif
-
-    {{-- GROUP 7 — CONFIGURATION ────────────────────────────────── --}}
-    {{-- Plan & Billing + the Settings hub. The hub's detailed sub-items
-         (General, Zoom Live, Youtube, Staff, Roles, Permissions, Brand,
-         Website Builder, Blog, Email Templates, Subscription History, Payout,
-         Tax, Pricing Enquiries, Trial Sessions, Membership, Refer & Earn,
-         Payment Gateway) render in the settings-hub side-nav on settings
-         routes — surfacing them here too would duplicate that menu. --}}
-    <details class="sb-group" data-sb-key="configuration" open>
-        <summary class="sb-group__head">
-            <span>{{ __('Configuration') }}</span>
-            <i class="bi bi-chevron-down sb-group__chev"></i>
-        </summary>
-        <ul class="sb-nav">
-            {{-- My Plan & Billing (2026-06-24, Phase 4) — read-only plan view.
-                 2026-07-06 (Role Permission Test doc, issue A) — gated by the
-                 new `my-plan` permission so a coach's billing isn't exposed to
-                 every staff member by default. --}}
-            @if (checkPermissionView('my-plan'))
-                <li class="{{ Route::is('instructor.my-plan.*') ? 'active' : '' }}">
-                    <a href="{{ route('instructor.my-plan.index') }}">
-                        <span class="sb-icon"><i class="bi bi-card-checklist"></i></span>
-                        <span>{{ __('Plan & Billing') }}</span>
-                    </a>
-                </li>
-            @endif
-
-            <li class="{{ Route::is('instructor.youtube-setting.*', 'instructor.zoom-setting.*', 'instructor.coach-staff.*', 'instructor.coach-staff-role.*', 'instructor.coach-staff-permission.*', 'instructor.setting.*', 'instructor.brand-settings.*', 'instructor.website-builder.*', 'instructor.payout.*', 'instructor.subscription-histories.*', 'instructor.tax.*', 'instructor.blogs.*', 'instructor.pricing-enquiries.*', 'instructor.trial-sessions.*', 'instructor.payment-gateways.*', 'membership.*', 'referral.*') ? 'active' : '' }}">
-                <a href="{{ route('instructor.setting.index') }}">
-                    <span class="sb-icon"><i class="bi bi-gear"></i></span>
-                    {{ __('Settings') }}
-                </a>
-            </li>
-        </ul>
-    </details>
+        </nav>
+    </div>
 
     <div class="sb-divider" style="margin-top:8px;"></div>
 

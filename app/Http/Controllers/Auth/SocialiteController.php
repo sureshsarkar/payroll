@@ -45,24 +45,10 @@ class SocialiteController extends Controller {
             $callbackUser = Socialite::driver($provider_name)->stateless()->user();
             $user = User::where('email', $callbackUser->getEmail())->first();
 
-            // TENANT ISOLATION (2026-06-16) — coach surface this OAuth callback
-            // landed on (0 = platform). Used to (a) block an existing student of
-            // another coach from social-logging-in here, and (b) auto-attribute
-            // a brand-new social user to this coach. See \App\Support\TenantAccess.
-            $coachId = (int) (request()->attributes->get('resolved_coach_id') ?? 0);
-
-            // PLATFORM CONFINEMENT (2026-06-16) — an existing student who belongs
-            // to a coach may not sign in on the bare platform; send them to their
-            // coach website. (New users / platform-native students fall through.)
-            if ($user && $coachId === 0 && (string) ($user->role ?? '') === 'student') {
-                $confineUrl = \App\Support\TenantAccess::confineUrlForStudent($user);
-                if ($confineUrl) {
-                    return redirect()->to($confineUrl)->with([
-                        'messege'    => __('Please sign in on your coach\'s website to access your dashboard.'),
-                        'alert-type' => 'info',
-                    ]);
-                }
-            }
+            // LMS removal phase 2 (2026-08-27) — dropped the two white-label
+            // OAuth guards (\App\Support\TenantAccess): the coach-surface tenant
+            // check, and the confinement redirect that sent an existing student
+            // to their coach's own site instead of signing them in here.
             if ($user) {
                 $findDriver = $user
                     ->socialite()
@@ -81,12 +67,6 @@ class SocialiteController extends Controller {
                                     ->with($notification);
                             }
                             if ($findDriver) {
-                                if ($coachId > 0 && ! \App\Support\TenantAccess::userMayAccessCoach($user, $coachId)) {
-                                    return redirect()->to('/')->with([
-                                        'messege'    => __('These credentials are not authorized for this website.'),
-                                        'alert-type' => 'error',
-                                    ]);
-                                }
                                 Auth::guard('web')->login($user, true);
                                 // SECURITY (audit 2026-05-22) — regenerate
                                 // session ID on every login to prevent
@@ -97,7 +77,7 @@ class SocialiteController extends Controller {
                                 $notification = ['messege' => $notification, 'alert-type' => 'success'];
 
                                 return redirect()
-                                    ->intended(route('student.dashboard'))
+                                    ->intended(route('employee.overview'))
                                     ->with($notification);
                             }
                         } else {
@@ -120,12 +100,6 @@ class SocialiteController extends Controller {
                     $socialite = $this->createNewUser(callbackUser: $callbackUser, provider_name: $provider_name, user: $user);
 
                     if ($socialite) {
-                        if ($coachId > 0 && ! \App\Support\TenantAccess::userMayAccessCoach($user, $coachId)) {
-                            return redirect()->to('/')->with([
-                                'messege'    => __('These credentials are not authorized for this website.'),
-                                'alert-type' => 'error',
-                            ]);
-                        }
                         Auth::guard('web')->login($user, true);
                         // SECURITY (audit 2026-05-22) — see L65 comment.
                         request()->session()->regenerate();
@@ -133,10 +107,12 @@ class SocialiteController extends Controller {
                         $notification = ['messege' => $notification, 'alert-type' => 'success'];
 
                         // user.dashboard route doesn't exist; pick the correct
-                        // dashboard from the user's role.
+                        // dashboard from the user's role. LMS→HR conversion —
+                        // this install has no LMS features exposed any more,
+                        // so employees/HR land on their own dashboards.
                         $dashboard = $user->role === 'student'
-                            ? route('student.dashboard')
-                            : route('instructor.dashboard');
+                            ? route('employee.overview')
+                            : route('hr.overview');
 
                         return redirect()->intended($dashboard)->with($notification);
                     }
@@ -153,9 +129,6 @@ class SocialiteController extends Controller {
                     $socialite = $this->createNewUser(callbackUser: $callbackUser, provider_name: $provider_name, user: false);
                     if ($socialite) {
                         $user = User::find($socialite->user_id);
-                        // Brand-new social user on a coach surface → attribute
-                        // them to that coach (mirrors coach-site registration).
-                        \App\Support\TenantAccess::autoLinkIfStudent($user, $coachId, 'invite');
                         Auth::guard('web')->login($user, true);
                         // SECURITY (audit 2026-05-22) — see L65 comment.
                         request()->session()->regenerate();
@@ -163,7 +136,7 @@ class SocialiteController extends Controller {
                         $notification = ['messege' => $notification, 'alert-type' => 'success'];
 
                         return redirect()
-                            ->intended(route('student.dashboard'))
+                            ->intended(route('employee.overview'))
                             ->with($notification);
                     }
 

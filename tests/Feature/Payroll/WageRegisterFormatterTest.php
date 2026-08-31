@@ -76,6 +76,26 @@ class WageRegisterFormatterTest extends TestCase
         $this->assertSame(15000.0, $d['pf_wages']);    // Basic 23,711 capped to ceiling
     }
 
+    /** LWF and Loss-of-Pay each get their own column instead of falling into "Others". */
+    public function test_lwf_and_loss_of_pay_get_dedicated_columns(): void
+    {
+        $item = $this->item(
+            earnings: [['name' => 'Basic', 'amount' => 30000]],
+            deductions: [
+                ['name' => 'LWF', 'amount' => 20],
+                ['name' => 'Loss of Pay (2d)', 'amount' => 1935.48],
+                ['name' => 'Professional Tax', 'amount' => 200],
+            ],
+            totals: ['total_earnings' => 30000, 'total_deductions' => 2155.48, 'net_pay' => 27844.52],
+        );
+
+        $d = (new WageRegisterFormatter())->build(collect([$item]), collect([19 => []]), collect())['rows'][0]['deductions'];
+
+        $this->assertSame(20.0, $d['lwf']);
+        $this->assertSame(1935.48, $d['lop']);
+        $this->assertSame(200.0, $d['others'], 'PT still has no dedicated column');
+    }
+
     public function test_attendance_maps_worked_and_pay_days(): void
     {
         $item = $this->item([], [], ['total_earnings' => 0, 'total_deductions' => 0, 'net_pay' => 0]);

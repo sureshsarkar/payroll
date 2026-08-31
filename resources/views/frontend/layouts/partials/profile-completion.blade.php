@@ -36,14 +36,9 @@
         ['label' => __('Set a job title'),         'done' => !empty($u->job_title)],
     ];
 
-    if ($isCoach) {
-        $hasInstructorReq = false;
-        try {
-            $hasInstructorReq = \Modules\InstructorRequest\app\Models\InstructorRequest::where('user_id', $u->id)
-                ->whereNotNull('payout_account')->exists();
-        } catch (\Throwable $e) { /* ignore */ }
-        $checks[] = ['label' => __('Configure payout method'), 'done' => $hasInstructorReq];
-    }
+    {{-- LMS removal phase 2 (2026-08-27) — dropped the coach-only "Configure
+         payout method" check. It read InstructorRequest.payout_account, the
+         withdrawal account for course-sale earnings. --}}
 
     $total = count($checks);
     $done = count(array_filter($checks, fn($c) => $c['done']));
