@@ -17,7 +17,7 @@
     $isCoach = $u->role === 'instructor';
     // LMS removal phase 2 (2026-08-27) — these pointed at the course/order
     // dashboards, which no longer exist. HR & employee surfaces now.
-    $dashRoute    = $isCoach ? 'hr.overview' : 'employee.overview';
+    $dashRoute    = $isCoach ? 'hr.dashboard' : 'employee.overview';
     $profileRoute = $isCoach ? 'instructor.setting.index' : 'student.setting.index';
     $tasksRoute   = $isCoach ? 'hr.leave.index' : 'employee.leave.index';
 

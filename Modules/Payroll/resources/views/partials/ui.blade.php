@@ -13,6 +13,22 @@
     .pv *{box-sizing:border-box;}
     .pv a{text-decoration:none;}
 
+    /* Dark theme — only active when the user has opted into dark on the panel.
+       Mirrors html[data-theme="dark"] used by _dashboard-dark.blade.php. */
+    html[data-theme="dark"] .pv{
+        --pv-bg:#0f172a;--pv-card:#1e293b;--pv-ink:#e2e8f0;--pv-sub:#94a3b8;--pv-mut:#64748b;
+        --pv-line:#334155;--pv-line2:#26344a;}
+    html[data-theme="dark"] .pv-stat,
+    html[data-theme="dark"] .pv-card{box-shadow:0 1px 2px rgba(0,0,0,.35);}
+    html[data-theme="dark"] .pv-table tbody tr:hover td{background:#22304a;}
+    html[data-theme="dark"] .pv-btn{background:#1e293b;color:var(--pv-ink);border-color:var(--pv-line);}
+    html[data-theme="dark"] .pv-btn.d{background:#1e293b;color:#f87171;border-color:#7f1d1d;}
+    html[data-theme="dark"] .pv-input,
+    html[data-theme="dark"] .pv-select,
+    html[data-theme="dark"] .pv-textarea{background:#0f172a;color:var(--pv-ink);border-color:var(--pv-line);}
+    html[data-theme="dark"] .pv-linkrow{background:#1e293b;border-color:var(--pv-line);}
+    html[data-theme="dark"] .pv-linkrow:hover{background:#22304a;}
+
     /* header */
     .pv-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:2px 0 22px;}
     .pv-head .t{font-size:22px;font-weight:700;margin:0;letter-spacing:-.01em;}

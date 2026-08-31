@@ -1009,6 +1009,7 @@ if (! function_exists('panelModuleTitle')) {
         // Replaced with the HR & payroll surface; unmapped segments still fall
         // back to a Title Case of the segment.
         $map = [
+            'hr'                 => 'Dashboard',
             'overview'           => 'Overview',
             'employees'          => 'Employees',
             'departments'        => 'Departments',

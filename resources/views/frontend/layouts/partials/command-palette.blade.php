@@ -12,20 +12,20 @@
     // batch / order / website-builder commands. Those routes no longer exist;
     // this is now the HR & Payroll surface for coaches (HR) and employees.
     $cmds = $isCoach ? [
-        ['Dashboard',          'Home',            route('hr.overview'),               'fa-home'],
+        ['Dashboard',          'Home',            route('hr.dashboard'),              'fa-home'],
         ['Employees',          'Directory',       route('hr.employees.index'),        'fa-users'],
         ['Add Employee',       'Create',          route('hr.employees.create'),       'fa-user-plus'],
         ['Departments',        'Teams',           route('hr.departments.index'),      'fa-sitemap'],
         ['Attendance Sheet',   'Monthly grid',    route('hr.attendance.sheet'),       'fa-calendar-check'],
         ['Team Attendance',    'Today',           route('hr.attendance.team'),        'fa-user-clock'],
         ['Leave Requests',     'Approve / reject',route('hr.leave.index'),            'fa-plane-departure'],
-        ['Payroll Runs',       'Prepare & submit',route('hr.payroll.index'),          'fa-money-check-dollar'],
+        ['Payroll Runs',       'Prepare & submit',route('hr.payroll.index'),          'fa-money-check-alt'],
         ['Salary Structures',  'CTC templates',   route('hr.salary.index'),           'fa-file-invoice-dollar'],
         ['Companies',          'Establishments',  route('hr.companies.index'),        'fa-building'],
         ['Profile Settings',   'Account',         route('instructor.setting.index'),  'fa-cog'],
         ['Notifications',      'Bell inbox',      route('notifications.index'),       'fa-bell'],
         ['Toggle Dark Mode',   'Theme',           '#toggle-dark',                     'fa-moon'],
-        ['Logout',             'Sign out',        '#logout',                          'fa-arrow-right-from-bracket'],
+        ['Logout',             'Sign out',        '#logout',                          'fa-sign-out-alt'],
     ] : [
         ['Dashboard',          'Home',            route('employee.overview'),         'fa-home'],
         ['My Attendance',      'Attendance sheet',route('employee.attendance.my'),     'fa-calendar-check'],
@@ -34,7 +34,7 @@
         ['Profile Settings',   'Account',         route('student.setting.index'),     'fa-cog'],
         ['Notifications',      'Bell inbox',      route('notifications.index'),       'fa-bell'],
         ['Toggle Dark Mode',   'Theme',           '#toggle-dark',                     'fa-moon'],
-        ['Logout',             'Sign out',        '#logout',                          'fa-arrow-right-from-bracket'],
+        ['Logout',             'Sign out',        '#logout',                          'fa-sign-out-alt'],
     ];
 @endphp
 

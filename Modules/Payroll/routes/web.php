@@ -31,6 +31,9 @@ Route::middleware(['web', 'auth', 'instructorrole', 'companycontext'])
     ->prefix('hr')
     ->name('hr.')
     ->group(function () {
+        // Bare /hr is the HR landing dashboard; /hr/overview kept as an alias
+        // for the many existing links that still point at it.
+        Route::get('/', [DashboardController::class, 'hr'])->name('dashboard');
         Route::get('overview', [DashboardController::class, 'hr'])->name('overview');
 
         Route::get('salary-structures', [SalaryStructureController::class, 'index'])->name('salary.index');

@@ -53,7 +53,7 @@ Route::group(['middleware' => 'maintenance.mode'], function () {
         }
         if ($user = auth('web')->user()) {
             $isHr = $user->role === 'instructor' || !empty($user->coach_id);
-            return redirect()->route($isHr ? 'hr.overview' : 'employee.overview');
+            return redirect()->route($isHr ? 'hr.dashboard' : 'employee.overview');
         }
         return redirect()->route('login');
     })->name('home');

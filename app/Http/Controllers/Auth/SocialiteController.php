@@ -112,7 +112,7 @@ class SocialiteController extends Controller {
                         // so employees/HR land on their own dashboards.
                         $dashboard = $user->role === 'student'
                             ? route('employee.overview')
-                            : route('hr.overview');
+                            : route('hr.dashboard');
 
                         return redirect()->intended($dashboard)->with($notification);
                     }

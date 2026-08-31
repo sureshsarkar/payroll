@@ -30,7 +30,7 @@ class TwoFactorController extends Controller
         // LMS removal phase 2 (2026-08-27) — the LMS dashboards these named
         // are gone; land users on the HR / employee dashboards instead.
         $isCoach = $user->role === 'instructor' || !empty($user->coach_id);
-        return $isCoach ? 'hr.overview' : 'employee.overview';
+        return $isCoach ? 'hr.dashboard' : 'employee.overview';
     }
 
     /* =================================== Setup =================================== */

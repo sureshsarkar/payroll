@@ -77,7 +77,7 @@ class CompanyController extends Controller
 
         session([EnsureCompanyContext::SESSION_KEY => $company->id]);
 
-        return redirect()->route('hr.overview')
+        return redirect()->route('hr.dashboard')
             ->with('success', __(':name is ready.', ['name' => $company->name]));
     }
 

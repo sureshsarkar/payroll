@@ -149,7 +149,7 @@ class AuthenticatedSessionController extends Controller
         $intendedUrl = session()->get('url.intended');
         if ($intendedUrl && \Str::contains($intendedUrl, '/admin')) {
             if ($user->role == 'instructor') {
-                return redirect()->route('hr.overview');
+                return redirect()->route('hr.dashboard');
             }
 
             return redirect()->route('employee.overview');
@@ -165,7 +165,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('employee.overview');
         }
 
-        return redirect()->route('hr.overview');
+        return redirect()->route('hr.dashboard');
     }
 
     /**
