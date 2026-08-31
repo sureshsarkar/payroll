@@ -88,26 +88,17 @@
 
     <!-- header-area -->
 
-    {{-- Public header on non-dashboard pages. Dashboards (/instructor/*, /student/*,
-         and the HR surfaces /hr/*, /employee/*) render their own modern topbar via
-         frontend/layouts/partials/dashboard-topbar which is injected by their
-         respective master layouts.
-         LMS removal phase 2 (2026-08-27) — added hr*/employee*. The HR modules
-         reuse the instructor/student master layouts but live under their own URL
-         prefixes, so they were falling through this guard and rendering the public
-         marketing header/footer on top of their own topbar. --}}
-    @if (!request()->is('instructor*') && !request()->is('student*') && !request()->is('hr*') && !request()->is('employee*') && !request()->is('notifications*') && !request()->is('referral*'))
-        {{-- 2026-06-11 — On a coach domain (resolved_coach_id stamped by
-             ResolveCoachByDomain) a platform-themed page like /course/{slug}
-             must show the COACH's branded header, not the platform tgmenu with
-             the platform nav. Swap only the header; the body keeps the platform
-             theme it was built for. Platform domain (id 0) is unchanged. --}}
-        @if ((int) request()->attributes->get('resolved_coach_id') > 0)
-            @include('frontend.layouts.coach-public-header')
-        @else
-            @include('frontend.layouts.header')
-        @endif
-    @endif
+    {{-- LMS removal phase 2 (2026-08-31) — removed the public marketing header
+         include entirely (both the coach-branded and platform variants —
+         frontend/layouts/coach-public-header.blade.php and
+         frontend/layouts/header.blade.php are both deleted). This layout's
+         only remaining direct consumers are the standalone auth-card pages
+         (login/register/forgot-password/reset-password/2FA) and the error
+         pages, none of which need a nav header — each one is a self-contained
+         centered card. Dashboards (/instructor/*, /student/*, /hr/*,
+         /employee/*) render their own topbar via
+         frontend/layouts/partials/dashboard-topbar from their own master
+         layouts and never reached this include anyway. --}}
 
     <!-- header-area-end -->
 
@@ -119,25 +110,20 @@
 
     <!-- modal-area -->
     @include('frontend.partials.modal')
-    @if (request()->is('instructor*'))
-        @include('frontend.instructor-dashboard.course.partials.add-new-section-modal')
-    @endif
+    {{-- LMS removal phase 2 (2026-08-31) — removed the "add new section"
+         modal include (it belonged to the deleted course-content builder;
+         instructor.setting.* is the only surviving instructor* route and
+         doesn't use it). --}}
     <!-- modal-area -->
 
     <!-- footer-area -->
 
-      @if (!request()->is('instructor*') && !request()->is('student*') && !request()->is('hr*') && !request()->is('employee*') && !request()->is('notifications*') && !request()->is('referral*'))
-        {{-- 2026-07-16 — On a coach domain, show the coach's GLOBAL footer (same
-             as every other coach page) instead of the platform footer, so pages
-             like /course/{slug} stay consistent. Falls back to the platform
-             footer on the platform domain (id 0) or when the coach set none. --}}
-        @if ((int) request()->attributes->get('resolved_coach_id') > 0 && !empty($globalFooterHtml))
-            {!! $globalFooterHtml !!}
-        @else
-            @include('frontend.layouts.footer')
-        @endif
-    @endif
- 
+    {{-- LMS removal phase 2 (2026-08-31) — removed the public marketing
+         footer include (frontend/layouts/footer.blade.php is deleted, along
+         with the coach global-footer variant). Same reasoning as the header
+         above: every remaining consumer of this layout is a self-contained
+         auth-card or error page. --}}
+
     <!-- footer-area-end -->
 
 

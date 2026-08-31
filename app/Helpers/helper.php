@@ -747,7 +747,9 @@ if (! function_exists('adminSearchRouteList')) {
             (object) ['name' => __('SEO Setting'),         'route' => route('admin.seo-setting'),       'permission' => 'setting.management'],
             (object) ['name' => __('Marketing Setting'),   'route' => route('admin.marketing-setting'), 'permission' => 'setting.management'],
             (object) ['name' => __('Credential Setting'),  'route' => route('admin.credential-setting'), 'permission' => 'setting.management'],
-            (object) ['name' => __('Custom Code'),         'route' => route('admin.custom-code'),       'permission' => 'setting.management'],
+            // admin.custom-code requires a {type} segment (css/js) — not a
+            // single destination, so it can't sit in this flat nav-search
+            // list the way the other settings pages do.
             (object) ['name' => __('Languages'),           'route' => route('admin.languages.index'),   'permission' => 'language.management'],
             (object) ['name' => __('Currencies'),          'route' => route('admin.currency.index'),    'permission' => 'currency.management'],
             (object) ['name' => __('Countries'),           'route' => route('admin.country.index'),     'permission' => 'location.management'],

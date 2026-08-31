@@ -31,11 +31,9 @@
             @if (Module::isEnabled('GlobalSetting') && checkAdminHasPermission('setting.view'))
                 @include('globalsetting::sidebar')
             @endif
-            @if (checkAdminHasPermission('basic.payment.view'))
-                @if (Module::isEnabled('BasicPayment') && checkAdminHasPermission('basic.payment.view'))
-                    @include('basicpayment::sidebar')
-                @endif
-            @endif
+            {{-- LMS removal phase 2 (2026-08-31) — removed the BasicPayment
+                 sidebar include. The module and its permission group are
+                 both deleted; nothing is sold any more. --}}
 
             @adminCan('currency.view')
                 @include('currency::sidebar')
