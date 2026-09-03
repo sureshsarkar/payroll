@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
@@ -23,21 +25,144 @@ use Modules\HrEmployee\app\Models\EmployeeProfile;
  */
 class HrEmployeeController extends Controller
 {
-    /** List the HR's employees with their profiles + onboarding form. */
+    /** Employees shown per page on the list. */
+    private const PER_PAGE = 50;
+
+    /**
+     * List the HR's employees with their profiles + onboarding form.
+     *
+     * Supports ?q= (partial, case-insensitive match on code / name / email /
+     * designation / department), ?sort= + ?dir= (any list column; defaults to
+     * newest-added first) and ?page= (50 per page).
+     */
     public function index(Request $request): View
     {
-        $hr        = $request->user();
-        $employees = $this->linkedEmployees($hr);
-        $profiles  = EmployeeProfile::whereIn('user_id', $employees->pluck('id'))
-            ->get()->keyBy('user_id');
+        $hr = $request->user();
+
+        $search       = trim((string) $request->input('q', ''));
+        [$sort, $dir] = $this->resolveEmployeeSort($request);
+
+        // The HR's whole team (already company-scoped by linkedEmployees) plus
+        // every profile in one query — search + sort both read from these.
+        $team     = $this->linkedEmployees($hr);
+        $profiles = EmployeeProfile::whereIn('user_id', $team->pluck('id'))
+            ->with('department')->get()->keyBy('user_id');
+
+        $matches = $this->sortEmployees(
+            $this->filterEmployees($team, $profiles, $search),
+            $profiles, $sort, $dir,
+        );
+
+        $page      = Paginator::resolveCurrentPage();
+        $employees = (new LengthAwarePaginator(
+            $matches->forPage($page, self::PER_PAGE)->values(),
+            $matches->count(),
+            self::PER_PAGE,
+            $page,
+            ['path' => Paginator::resolveCurrentPath()],
+        ))->withQueryString();
+
+        // Soft-deleted employees stay recoverable — surface them so HR can
+        // restore an accidental delete without a DBA.
+        $deleted = EmployeeProfile::onlyTrashed()
+            ->where('reporting_hr_id', $hr->id)
+            ->with('user:id,name,email')
+            ->orderByDesc('deleted_at')
+            ->get();
 
         return view('hremployee::employees', [
             'hr'          => $hr,
             'employees'   => $employees,
             'profiles'    => $profiles,
+            'search'      => $search,
+            'sort'        => $sort,
+            'dir'         => $dir,
+            'deleted'     => $deleted,
             'departments' => Department::where('is_active', true)->orderBy('name')->get(),
             'statuses'    => [EmployeeProfile::ACTIVE, EmployeeProfile::ONBOARDING, EmployeeProfile::EXITED, EmployeeProfile::SUSPENDED],
         ]);
+    }
+
+    /**
+     * Column + direction the employee list is ordered by. Defaults to
+     * "newest added first" (created_at desc); a hand-edited ?sort= that isn't a
+     * column we know how to sort falls back to that default rather than erroring.
+     *
+     * @return array{0: string, 1: string}  [sort key, 'asc'|'desc']
+     */
+    private function resolveEmployeeSort(Request $request): array
+    {
+        $allowed   = ['created', 'name', 'email', 'code', 'department', 'designation', 'joining', 'status'];
+        $requested = $request->input('sort');
+
+        $sort = in_array($requested, $allowed, true) ? $requested : 'created';
+        $dir  = $request->input('dir') === 'asc' ? 'asc' : 'desc';
+
+        // Fall back to the natural direction (newest-first for the default
+        // column, A–Z for a text column) unless the user explicitly asked for
+        // a direction on a column we recognise.
+        if ($sort !== $requested || ! $request->filled('dir')) {
+            $dir = $sort === 'created' ? 'desc' : 'asc';
+        }
+
+        return [$sort, $dir];
+    }
+
+    /**
+     * Partial, case-insensitive match of $search against employee code, name,
+     * email, designation or department. A blank search returns the team as-is.
+     *
+     * @param  Collection<int, User>            $team
+     * @param  Collection<int, EmployeeProfile> $profiles  keyed by user_id
+     * @return Collection<int, User>
+     */
+    private function filterEmployees(Collection $team, Collection $profiles, string $search): Collection
+    {
+        if ($search === '') {
+            return $team;
+        }
+
+        return $team->filter(function (User $emp) use ($profiles, $search) {
+            $p = $profiles->get($emp->id);
+
+            foreach ([$emp->name, $emp->email, $p?->employee_code, $p?->designation, $p?->department?->name] as $field) {
+                if ($field !== null && $field !== '' && Str::contains((string) $field, $search, ignoreCase: true)) {
+                    return true;
+                }
+            }
+
+            return false;
+        })->values();
+    }
+
+    /**
+     * Order the employee collection by the resolved column + direction, with
+     * the user id as a stable tie-breaker.
+     *
+     * @param  Collection<int, User>            $employees
+     * @param  Collection<int, EmployeeProfile> $profiles  keyed by user_id
+     * @return Collection<int, User>
+     */
+    private function sortEmployees(Collection $employees, Collection $profiles, string $sort, string $dir): Collection
+    {
+        $keyers = [
+            'name'        => fn (User $e) => Str::lower((string) $e->name),
+            'email'       => fn (User $e) => Str::lower((string) $e->email),
+            'code'        => fn (User $e) => Str::lower((string) $profiles->get($e->id)?->employee_code),
+            'department'  => fn (User $e) => Str::lower((string) $profiles->get($e->id)?->department?->name),
+            'designation' => fn (User $e) => Str::lower((string) $profiles->get($e->id)?->designation),
+            'joining'     => fn (User $e) => optional($profiles->get($e->id)?->date_of_joining)->getTimestamp() ?? 0,
+            'status'      => fn (User $e) => (string) $profiles->get($e->id)?->status,
+            // "Newest added" = when the employee was put on this HR's books
+            // (profile row), falling back to the user account's own age.
+            'created'     => fn (User $e) => optional($profiles->get($e->id)?->created_at)->getTimestamp()
+                ?? $e->created_at?->getTimestamp() ?? 0,
+        ];
+        $keyer = $keyers[$sort] ?? $keyers['created'];
+
+        $method = $dir === 'asc' ? 'sortBy' : 'sortByDesc';
+
+        return $employees->{$method}(fn (User $e) => [$keyer($e), $e->id])->values();
     }
 
     public function create(): View
@@ -214,6 +339,42 @@ class HrEmployeeController extends Controller
             : 'Employee profile saved.';
 
         return redirect()->route('hr.employees.edit', $employee)->with('success', $saved);
+    }
+
+    /**
+     * Soft-delete an employee. Only the HR profile is flagged deleted — the
+     * login account (users row) is left intact — which is enough to drop the
+     * person from every team-scoped screen (attendance, leave, payroll, salary)
+     * while keeping all history recoverable and auditable in the database.
+     */
+    public function destroyEmployee(Request $request, User $employee): RedirectResponse
+    {
+        $hr = $request->user();
+        if (! $this->linkedEmployees($hr)->pluck('id')->contains($employee->id)) {
+            abort(403);
+        }
+
+        EmployeeProfile::where('user_id', $employee->id)->get()->each->delete();
+
+        return redirect()->route('hr.employees.index')
+            ->with('success', "{$employee->name} removed. You can restore them from “Deleted employees”.");
+    }
+
+    /** Restore a soft-deleted employee back onto this HR's team. */
+    public function restoreEmployee(Request $request, User $employee): RedirectResponse
+    {
+        $hr = $request->user();
+
+        $profile = EmployeeProfile::onlyTrashed()
+            ->where('user_id', $employee->id)
+            ->where('reporting_hr_id', $hr->id)
+            ->first();
+
+        abort_unless($profile, 404);
+        $profile->restore();
+
+        return redirect()->route('hr.employees.index')
+            ->with('success', "{$employee->name} restored.");
     }
 
     /** List + create departments for the active company. */

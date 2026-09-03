@@ -6,6 +6,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Attendance\app\Models\Attendance;
 use Modules\Company\app\Concerns\BelongsToCompany;
 use Modules\Leave\app\Models\Leave;
@@ -13,6 +14,7 @@ use Modules\Leave\app\Models\Leave;
 class PayrollItem extends Model
 {
     use BelongsToCompany;
+    use SoftDeletes;
 
     protected $fillable = [
         'payroll_run_id', 'user_id', 'payable_days', 'lop_days',

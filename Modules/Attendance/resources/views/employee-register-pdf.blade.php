@@ -73,14 +73,15 @@
                 <td><div class="entry">
                     <div>{{ $record?->check_in ? \Carbon\Carbon::parse($record->check_in)->format('H:i') : '' }}</div>
                     <div>{{ $record?->check_out ? \Carbon\Carbon::parse($record->check_out)->format('H:i') : '' }}</div>
-                    <div class="status">{{ $record ? match($record->status) { 'Present' => 'P', 'Absent' => 'A', 'HalfDay' => 'HD', 'Leave' => 'L', 'WFH' => 'WFH', 'Holiday' => 'H', default => '-' } : ($day['date']->dayOfWeek === (int) config('payroll.attendance.weekly_off_day', \Carbon\Carbon::SUNDAY) ? 'WO' : '-') }}</div>
+                    <div class="status">{{ $record ? $record->shortCode() : ($day['date']->dayOfWeek === (int) config('payroll.attendance.weekly_off_day', \Carbon\Carbon::SUNDAY) ? 'WO' : '-') }}</div>
                 </div></td>
             @endforeach
             <td>
                 <div class="summary-box">
                     Present: <b>{{ $summary['present'] }}</b><br>
                     Absent: <b>{{ $summary['absent'] }}</b><br>
-                    Half Day: <b>{{ $summary['half_day'] }}</b><br>
+                    Half Day: <b>{{ $summary['half_day'] }}</b>
+                        <span style="font-size:8px">({{ $summary['first_half_absent'] }} AP / {{ $summary['second_half_absent'] }} PA)</span><br>
                     Leave: <b>{{ $summary['leave'] }}</b><br>
                     Holiday: <b>{{ $summary['holiday'] }}</b><br>
                     WFH: <b>{{ $summary['wfh'] }}</b><br>
@@ -90,6 +91,6 @@
             </td>
         </tr></tbody>
     </table>
-    <div class="foot">Codes: P Present, A Absent, HD Half day, L Leave, WFH Work from home, H Holiday, WO Weekly off.</div>
+    <div class="foot">Codes: PP Present all day, AP 1st half off, PA 2nd half off, AA Absent all day, H Holiday, WFH Work from home, WO Weekly off.</div>
 </body>
 </html>

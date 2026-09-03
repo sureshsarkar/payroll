@@ -46,5 +46,17 @@
         </div></div></div>
         <div class="pv-actions" style="justify-content:flex-end"><a href="{{ route('hr.employees.index') }}" class="pv-btn">Cancel</a><button class="pv-btn p"><i class="fas fa-save"></i> Save employee</button></div>
     </form>
+
+    <div class="pv-card" style="border-color:#f6caca">
+        <div class="h" style="color:var(--pv-red)"><i class="fas fa-triangle-exclamation"></i> Danger zone</div>
+        <div class="b" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div class="pv-mut2" style="max-width:520px">Deleting removes {{ $employee->name }} from attendance, leave, payroll and salary screens. It is a soft delete — the record stays in the database and can be restored from the Employees list.</div>
+            <form method="POST" action="{{ route('hr.employees.destroy', $employee) }}"
+                  onsubmit="return confirm('Delete {{ $employee->name }}? This is reversible from “Deleted employees”.')">
+                @csrf @method('DELETE')
+                <button class="pv-btn d"><i class="fas fa-trash"></i> Delete employee</button>
+            </form>
+        </div>
+    </div>
 </div>
 @endsection

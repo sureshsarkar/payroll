@@ -32,11 +32,11 @@ class SlipAttendance
         $leaveDays = $this->leaveDays($userId, $year, $month);
         $rows      = $this->monthRows($userId, $year, $month);
 
-        // Approving an unpaid leave writes the same Attendance::ABSENT status
-        // as a plain unexplained absence (see LeaveService::writeAttendance) —
-        // the only way to tell them apart is by cross-referencing the Leave
-        // module. Whatever absence isn't covered by an approved unpaid leave
-        // is a plain absence.
+        // Both an approved unpaid leave and a plain unexplained absence land in
+        // the summary's `absent` bucket as a full-day AA (see
+        // LeaveService::writeAttendance) — the only way to tell them apart is by
+        // cross-referencing the Leave module. Whatever absence isn't covered by
+        // an approved unpaid leave is a plain absence.
         $unpaidLeave = $leaveDays['unpaid'];
         $absent      = max(0.0, (float) $summary['absent'] - $unpaidLeave);
 

@@ -32,7 +32,9 @@ Route::middleware(['web', 'auth', 'instructorrole', 'companycontext'])
         Route::post('mark', [AttendanceController::class, 'bulkStore'])->name('mark');
         Route::get('sheet', [AttendanceController::class, 'teamSheet'])->name('sheet');
         Route::post('sheet/day', [AttendanceController::class, 'storeIndividualDay'])->name('sheet.day.store');
+        Route::delete('sheet/day/{attendance}', [AttendanceController::class, 'destroyDay'])->name('sheet.day.destroy');
         Route::post('sheet/month/random-fill', [AttendanceController::class, 'fillMonthWithRandomTimes'])->name('sheet.month.random-fill');
+        Route::post('sheet/month/random-fill-all', [AttendanceController::class, 'fillMonthAllWithRandomTimes'])->name('sheet.month.random-fill-all');
         Route::get('sheet/employee/export', [AttendanceController::class, 'exportEmployeeSheet'])->name('sheet.employee.export');
         Route::get('sheet/export', [AttendanceController::class, 'exportTeamSheet'])->name('sheet.export');
     });

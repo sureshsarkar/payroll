@@ -49,6 +49,7 @@ class LeaveController extends Controller
             'end_date'      => ['required', 'date'],
             'reason'        => ['nullable', 'string', 'max:500'],
             'half_day'      => ['nullable', 'boolean'],
+            'half_session'  => ['nullable', 'in:first,second'],
         ]);
 
         $type = LeaveType::active()->findOrFail($data['leave_type_id']);
@@ -58,6 +59,7 @@ class LeaveController extends Controller
                 $request->user()->id, $type,
                 $data['start_date'], $data['end_date'],
                 $data['reason'] ?? null, (bool) ($data['half_day'] ?? false),
+                $data['half_session'] ?? null,
             );
         } catch (\Throwable $e) {
             return back()->with('error', $e->getMessage())->withInput();

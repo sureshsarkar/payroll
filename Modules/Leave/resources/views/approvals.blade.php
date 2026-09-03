@@ -32,6 +32,7 @@
                         <td class="pv-r" style="white-space:nowrap">
                             <form method="POST" action="{{ route('hr.leave.approve',$lv) }}" style="display:inline">@csrf<button class="pv-btn g sm">Approve</button></form>
                             <form method="POST" action="{{ route('hr.leave.reject',$lv) }}" style="display:inline">@csrf<button class="pv-btn d sm">Reject</button></form>
+                            <form method="POST" action="{{ route('hr.leave.destroy',$lv) }}" style="display:inline" onsubmit="return confirm('Delete this leave request? It is hidden everywhere but kept in the database.')">@csrf @method('DELETE')<button class="pv-btn sm" title="Delete"><i class="fas fa-trash"></i></button></form>
                         </td>
                     </tr>
                 @endforeach
@@ -50,7 +51,7 @@
             @else
             <div class="pv-tw">
             <table class="pv-table" style="min-width:auto">
-                <thead><tr><th>Employee</th><th>Type</th><th>Dates</th><th class="pv-c">Days</th><th>Status</th></tr></thead>
+                <thead><tr><th>Employee</th><th>Type</th><th>Dates</th><th class="pv-c">Days</th><th>Status</th><th class="pv-r"></th></tr></thead>
                 <tbody>
                 @foreach($recent as $lv)
                     <tr>
@@ -59,6 +60,7 @@
                         <td class="pv-muted">{{ $lv->start_date->format('d M') }} – {{ $lv->end_date->format('d M Y') }}</td>
                         <td class="pv-c">{{ $lv->days }}</td>
                         <td><span class="pv-badge {{ $lv->status }}">{{ $lv->status }}</span></td>
+                        <td class="pv-r"><form method="POST" action="{{ route('hr.leave.destroy',$lv) }}" style="display:inline" onsubmit="return confirm('Delete this leave record? It is hidden everywhere but kept in the database.')">@csrf @method('DELETE')<button class="pv-btn sm" title="Delete"><i class="fas fa-trash"></i></button></form></td>
                     </tr>
                 @endforeach
                 </tbody>

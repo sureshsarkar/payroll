@@ -23,7 +23,8 @@ class SalaryStructureController extends Controller
     public function index(Request $request): View
     {
         $team = $this->teamMembers($request->user());
-        $current = SalaryStructure::whereIn('user_id', $team->pluck('id'))
+        $current = SalaryStructure::with('components')
+            ->whereIn('user_id', $team->pluck('id'))
             ->where('is_current', true)->get()->keyBy('user_id');
 
         return view('payroll::structures', compact('team', 'current'));

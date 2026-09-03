@@ -41,7 +41,8 @@ class PayslipController extends Controller
     public function download(Request $request, PayrollItem $item): StreamedResponse
     {
         abort_unless($item->user_id === $request->user()->id, 403);
-        abort_unless(in_array($item->run->status, [PayrollRun::ADMIN_APPROVED, PayrollRun::PAID], true), 403);
+        // $item->run is null when HR has deleted the whole run.
+        abort_unless($item->run && in_array($item->run->status, [PayrollRun::ADMIN_APPROVED, PayrollRun::PAID], true), 403);
 
         // regenerate on the fly if the stored file is missing
         $disk = config('payroll.payslip.storage_disk', 'public');
@@ -58,7 +59,7 @@ class PayslipController extends Controller
     public function formXi(Request $request, PayrollItem $item, FormXiPayslip $payslip)
     {
         abort_unless($item->user_id === $request->user()->id, 403);
-        abort_unless(in_array($item->run->status, [PayrollRun::ADMIN_APPROVED, PayrollRun::PAID], true), 403);
+        abort_unless($item->run && in_array($item->run->status, [PayrollRun::ADMIN_APPROVED, PayrollRun::PAID], true), 403);
 
         return response($payslip->render($item), 200, [
             'Content-Type' => 'application/pdf',

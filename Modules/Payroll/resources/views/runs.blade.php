@@ -43,10 +43,19 @@
                 @foreach($runs as $run)
                     <tr>
                         <td><strong>{{ $run->periodLabel() }}</strong></td>
-                        <td><span class="pv-badge {{ $run->status }}">{{ str_replace('_',' ',$run->status) }}</span></td>
+                        <td><span class="pv-badge {{ $run->status }}">{{ $run->statusLabel() }}</span></td>
                         <td class="pv-c">{{ $run->employee_count }}</td>
                         <td class="pv-r">₹{{ number_format($run->total_net,2) }}</td>
-                        <td class="pv-r"><a href="{{ route('hr.payroll.show',$run) }}" class="pv-btn sm">Open</a></td>
+                        <td class="pv-r" style="white-space:nowrap">
+                            <a href="{{ route('hr.payroll.show',$run) }}" class="pv-btn sm">Open</a>
+                            @if($run->isDeletable())
+                                <form method="POST" action="{{ route('hr.payroll.destroy',$run) }}" style="display:inline"
+                                      onsubmit="return confirm('Delete the {{ $run->periodLabel() }} payroll run? It is removed from the list and from employees\' payslips, but can be restored from “Deleted runs”.')">
+                                    @csrf @method('DELETE')
+                                    <button class="pv-btn d sm" title="Delete run"><i class="fas fa-trash"></i></button>
+                                </form>
+                            @endif
+                        </td>
                     </tr>
                 @endforeach
                 </tbody>
@@ -55,5 +64,36 @@
             @endif
         </div>
     </div>
+
+    @if(isset($deleted) && $deleted->isNotEmpty())
+    <div class="pv-card">
+        <div class="h"><i class="fas fa-trash-can pv-muted"></i> Deleted runs ({{ $deleted->count() }})
+            <span class="pv-mut2">Hidden from the list and reports — still in the database</span></div>
+        <div class="b tight">
+            <div class="pv-tw">
+            <table class="pv-table" style="min-width:520px">
+                <thead><tr><th>Period</th><th>Status</th><th class="pv-c">Employees</th><th class="pv-r">Total Net</th><th>Deleted</th><th class="pv-r"></th></tr></thead>
+                <tbody>
+                @foreach($deleted as $run)
+                    <tr>
+                        <td><strong>{{ $run->periodLabel() }}</strong></td>
+                        <td><span class="pv-badge {{ $run->status }}">{{ $run->statusLabel() }}</span></td>
+                        <td class="pv-c">{{ $run->employee_count }}</td>
+                        <td class="pv-r">₹{{ number_format($run->total_net,2) }}</td>
+                        <td class="pv-mut2">{{ optional($run->deleted_at)->diffForHumans() }}</td>
+                        <td class="pv-r">
+                            <form method="POST" action="{{ route('hr.payroll.restore',$run) }}" style="display:inline">
+                                @csrf
+                                <button class="pv-btn g sm"><i class="fas fa-rotate-left"></i> Restore</button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 @endsection

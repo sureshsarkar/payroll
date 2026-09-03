@@ -15,7 +15,7 @@
         <div class="b tight">
             @if($items->isEmpty())
                 <div class="pv-empty"><div class="ic"><i class="fas fa-file-invoice-dollar"></i></div>
-                    No payslips yet. They appear once your monthly payroll is approved.</div>
+                    No payslips yet. They appear once your monthly payroll is finalized.</div>
             @else
             <div class="pv-tw">
             <table class="pv-table" style="min-width:560px">

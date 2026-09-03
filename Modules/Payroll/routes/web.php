@@ -41,13 +41,19 @@ Route::middleware(['web', 'auth', 'instructorrole', 'companycontext'])
 
         Route::get('payroll', [PayrollController::class, 'index'])->name('payroll.index');
         Route::post('payroll/prepare', [PayrollController::class, 'prepare'])->name('payroll.prepare');
+        Route::post('payroll/{run}/restore', [PayrollController::class, 'restoreRun'])->name('payroll.restore')->withTrashed();
         Route::get('payroll/{run}', [PayrollController::class, 'show'])->name('payroll.show');
+        Route::delete('payroll/{run}', [PayrollController::class, 'destroyRun'])->name('payroll.destroy');
         Route::get('payroll/{run}/export', [PayrollController::class, 'exportRun'])->name('payroll.export');
+        Route::get('payroll/{run}/ecr', [PayrollController::class, 'exportEcr'])->name('payroll.ecr');
         Route::get('payroll/{run}/slip/{employee}', [PayrollController::class, 'exportEmployee'])->name('payroll.slip');
         Route::get('payroll/{run}/payslip/{employee}', [PayrollController::class, 'exportPayslip'])->name('payroll.payslip');
         Route::get('payroll/{run}/payslips', [PayrollController::class, 'exportPayslips'])->name('payroll.payslips');
+        Route::get('payroll/{run}/salary-slips', [PayrollController::class, 'exportSalarySlips'])->name('payroll.slips');
+        Route::delete('payroll/{run}/items/{item}', [PayrollController::class, 'destroyItem'])->name('payroll.item.destroy');
         Route::post('payroll/{run}/submit', [PayrollController::class, 'submit'])->name('payroll.submit');
         Route::post('payroll/{run}/reopen', [PayrollController::class, 'reopen'])->name('payroll.reopen');
+        Route::post('payroll/{run}/recalculate', [PayrollController::class, 'recalculate'])->name('payroll.recalculate');
     });
 
 // ---- Super Admin: approval ------------------------------------------------
@@ -59,9 +65,11 @@ Route::middleware(['web', 'auth:admin'])
         Route::get('/', [PayrollController::class, 'adminIndex'])->name('index');
         Route::get('{run}', [PayrollController::class, 'adminShow'])->name('show');
         Route::get('{run}/export', [PayrollController::class, 'exportRun'])->name('export');
+        Route::get('{run}/ecr', [PayrollController::class, 'exportEcr'])->name('ecr');
         Route::get('{run}/slip/{employee}', [PayrollController::class, 'exportEmployee'])->name('slip');
         Route::get('{run}/payslip/{employee}', [PayrollController::class, 'exportPayslip'])->name('payslip');
         Route::get('{run}/payslips', [PayrollController::class, 'exportPayslips'])->name('payslips');
+        Route::get('{run}/salary-slips', [PayrollController::class, 'exportSalarySlips'])->name('slips');
         Route::post('{run}/approve', [PayrollController::class, 'approve'])->name('approve');
         Route::post('{run}/recalculate', [PayrollController::class, 'recalculate'])->name('recalculate');
     });

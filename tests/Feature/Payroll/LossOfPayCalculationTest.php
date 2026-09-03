@@ -86,7 +86,7 @@ class LossOfPayCalculationTest extends TestCase
             (new Attendance())->forceFill([
                 'user_id'         => $userId,
                 'attendance_date' => Carbon::create($year, $month, $day)->toDateString(),
-                'status'          => Attendance::ABSENT,
+                'status'          => Attendance::AA,
             ])->save();
         }
     }
@@ -129,7 +129,7 @@ class LossOfPayCalculationTest extends TestCase
         $userId = 970003;
         $this->structure($userId, 31000);
         (new Attendance())->forceFill([
-            'user_id' => $userId, 'attendance_date' => '2026-08-10', 'status' => Attendance::HALF_DAY,
+            'user_id' => $userId, 'attendance_date' => '2026-08-10', 'status' => Attendance::PA,
         ])->save();
 
         $result = app(PayrollCalculator::class)->compute($userId, 2026, 8);

@@ -24,10 +24,25 @@ class PayrollRunService
 
     public function createOrGetRun(int $year, int $month, ?int $preparedBy = null): PayrollRun
     {
-        return PayrollRun::firstOrCreate(
-            ['year' => $year, 'month' => $month],
-            ['status' => PayrollRun::DRAFT, 'prepared_by' => $preparedBy],
-        );
+        // withTrashed(): the (year, month) unique index means we can't just
+        // insert a new row if HR deleted this month's run from the list —
+        // resurrect that row as a fresh draft instead (its old payslips are
+        // cleared; use "restore" on the deleted-runs list to get them back).
+        $run = PayrollRun::withTrashed()->firstOrNew(['year' => $year, 'month' => $month]);
+
+        if ($run->trashed()) {
+            $run->items()->delete();
+            $run->fill(['status' => PayrollRun::DRAFT, 'prepared_by' => $preparedBy]);
+            $run->submitted_at = null;
+            $run->approved_by = null;
+            $run->approved_at = null;
+            $run->deleted_at = null;
+            $run->save();
+        } elseif (! $run->exists) {
+            $run->fill(['status' => PayrollRun::DRAFT, 'prepared_by' => $preparedBy])->save();
+        }
+
+        return $run;
     }
 
     /**
@@ -54,20 +69,25 @@ class PayrollRunService
                     continue;
                 }
 
-                PayrollItem::updateOrCreate(
-                    ['payroll_run_id' => $run->id, 'user_id' => $userId],
-                    [
-                        'payable_days'     => (int) round($breakup['payable_days']),
-                        'lop_days'         => $breakup['lop_days'],
-                        'gross'            => $breakup['gross'],
-                        'total_earnings'   => $breakup['total_earnings'],
-                        'total_deductions' => $breakup['total_deductions'],
-                        'lop_amount'       => $breakup['lop_amount'],
-                        'net_pay'          => $breakup['net_pay'],
-                        'earnings'         => $breakup['earnings'],
-                        'deductions'       => $breakup['deductions'],
-                    ],
-                );
+                // withTrashed(): if HR soft-deleted this employee's payslip and
+                // then re-prepares the run, resurrect the same row rather than
+                // hitting the (run_id, user_id) unique index with an INSERT.
+                $item = PayrollItem::withTrashed()->firstOrNew([
+                    'payroll_run_id' => $run->id,
+                    'user_id'        => $userId,
+                ]);
+                $item->deleted_at = null;
+                $item->fill([
+                    'payable_days'     => (int) round($breakup['payable_days']),
+                    'lop_days'         => $breakup['lop_days'],
+                    'gross'            => $breakup['gross'],
+                    'total_earnings'   => $breakup['total_earnings'],
+                    'total_deductions' => $breakup['total_deductions'],
+                    'lop_amount'       => $breakup['lop_amount'],
+                    'net_pay'          => $breakup['net_pay'],
+                    'earnings'         => $breakup['earnings'],
+                    'deductions'       => $breakup['deductions'],
+                ])->save();
                 $prepared++;
             }
 
@@ -81,9 +101,12 @@ class PayrollRunService
     }
 
     /**
-     * Send a submitted-but-not-yet-approved run back to draft so HR can fix
-     * attendance and re-prepare it. The items are left as-is (re-preparing
-     * overwrites them); nothing is deleted.
+     * Send a run back to draft so HR can fix attendance and re-prepare it. Now
+     * that HR finalises directly (no admin gate), this also un-finalises an
+     * already-approved run — its payslip PDFs stay on disk but employees can no
+     * longer download them until the run is finalised again. A PAID run is
+     * never reopenable. The items are left as-is (re-preparing overwrites
+     * them); nothing is deleted.
      */
     public function reopen(PayrollRun $run): bool
     {
@@ -91,7 +114,12 @@ class PayrollRunService
             return false;
         }
 
-        $run->update(['status' => PayrollRun::DRAFT, 'submitted_at' => null]);
+        $run->update([
+            'status'       => PayrollRun::DRAFT,
+            'submitted_at' => null,
+            'approved_by'  => null,
+            'approved_at'  => null,
+        ]);
 
         return true;
     }
@@ -154,6 +182,33 @@ class PayrollRunService
             'prepared_by'  => $run->prepared_by ?: $hrId,
             'submitted_at' => now(),
         ]);
+
+        return true;
+    }
+
+    /**
+     * HR finalises the run in one step — no Super Admin approval gate. The
+     * draft is locked, payslip PDFs are generated and employees can see their
+     * payslips immediately. Mirrors what submit()+approve() did together.
+     */
+    public function finalize(PayrollRun $run, ?int $hrId = null): bool
+    {
+        if (! in_array($run->status, [PayrollRun::DRAFT, PayrollRun::HR_SUBMITTED], true)
+            || $run->items()->count() === 0) {
+            return false;
+        }
+
+        $run->update([
+            'status'       => PayrollRun::ADMIN_APPROVED,
+            'prepared_by'  => $run->prepared_by ?: $hrId,
+            'submitted_at' => $run->submitted_at ?: now(),
+            'approved_by'  => $hrId,
+            'approved_at'  => now(),
+        ]);
+
+        foreach ($run->items()->with('employee')->get() as $item) {
+            $this->generatePayslip($item);
+        }
 
         return true;
     }

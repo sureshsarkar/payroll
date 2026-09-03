@@ -49,7 +49,7 @@ class LeaveService
     /**
      * Employee applies for leave. Throws on overlap or insufficient paid balance.
      */
-    public function apply(int $userId, LeaveType $type, Carbon|string $start, Carbon|string $end, ?string $reason, bool $halfDay = false): Leave
+    public function apply(int $userId, LeaveType $type, Carbon|string $start, Carbon|string $end, ?string $reason, bool $halfDay = false, ?string $halfSession = null): Leave
     {
         $start = Carbon::parse($start)->toDateString();
         $end   = Carbon::parse($end)->toDateString();
@@ -77,6 +77,7 @@ class LeaveService
             'start_date'    => $start,
             'end_date'      => $end,
             'days'          => $days,
+            'half_session'  => ($days === 0.5) ? ($halfSession === Leave::HALF_FIRST ? Leave::HALF_FIRST : Leave::HALF_SECOND) : null,
             'reason'        => $reason,
             'status'        => Leave::PENDING,
         ]);
@@ -154,13 +155,18 @@ class LeaveService
         $cursor = $leave->start_date->copy();
         $isHalf = ((float) $leave->days === 0.5);
 
-        while ($cursor->lte($leave->end_date)) {
-            $status = $isHalf ? Attendance::HALF_DAY
-                : ($isPaid ? Attendance::LEAVE : Attendance::ABSENT);
+        // Half day: AP if the first half is taken, PA if the second half is.
+        // Full day: AA (the day-type tag keeps paid leave from causing LOP).
+        $status = $isHalf
+            ? ($leave->half_session === Leave::HALF_FIRST ? Attendance::AP : Attendance::PA)
+            : Attendance::AA;
+        $dayType = $isPaid ? Attendance::DAY_PAID_LEAVE : Attendance::DAY_UNPAID_LEAVE;
 
+        while ($cursor->lte($leave->end_date)) {
             $this->attendance->mark($leave->user_id, $cursor->toDateString(), $status, [
                 'marked_by' => $markedBy,
                 'source'    => 'leave',
+                'day_type'  => $dayType,
                 'remarks'   => 'Auto from approved leave #'.$leave->id,
             ]);
             $cursor->addDay();

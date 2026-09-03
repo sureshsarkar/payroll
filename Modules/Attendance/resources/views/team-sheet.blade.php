@@ -89,7 +89,8 @@
                         @csrf
                         <input type="hidden" name="employee_id" value="{{ $selected->id }}"><input type="hidden" name="year" value="{{ $year }}"><input type="hidden" name="month" value="{{ $month }}">
                         <div class="pv-field"><label class="pv-label">Selected date</label><input type="date" name="date" value="{{ $selectedDate->format('Y-m-d') }}" class="pv-input"></div>
-                        <div class="pv-field"><label class="pv-label">Attendance status</label><select name="status" class="pv-select">@foreach(\Modules\Attendance\app\Models\Attendance::STATUSES as $status)<option value="{{ $status }}" {{ ($selectedRecord?->status ?? 'Present') === $status ? 'selected' : '' }}>{{ $status }}</option>@endforeach</select></div>
+                        <div class="pv-field"><label class="pv-label">Attendance status</label><select name="status" class="pv-select">@foreach(\Modules\Attendance\app\Models\Attendance::STATUS_LABELS as $code => $label)<option value="{{ $code }}" {{ ($selectedRecord?->status ?? 'PP') === $code ? 'selected' : '' }}>{{ $label }}</option>@endforeach</select></div>
+                        <div class="pv-field"><label class="pv-label">Day type</label><select name="day_type" class="pv-select"><option value="">Ordinary day</option>@foreach(\Modules\Attendance\app\Models\Attendance::DAY_TYPE_LABELS as $code => $label)<option value="{{ $code }}" {{ ($selectedRecord?->day_type) === $code ? 'selected' : '' }}>{{ $label }}</option>@endforeach</select></div>
                         <div class="pv-field"><label class="pv-label">Remarks</label><input name="remarks" value="{{ $selectedRecord?->remarks ?? '' }}" class="pv-input" placeholder="Optional note"></div>
                         <div class="pv-field"><label class="pv-label">Check in</label><input type="time" name="check_in" value="{{ $checkIn }}" class="pv-input"></div>
                         <div class="pv-field"><label class="pv-label">Check out</label><input type="time" name="check_out" value="{{ $checkOut }}" class="pv-input"></div>
@@ -100,12 +101,29 @@
                             <button class="pv-btn g sm" type="submit" name="quick_preset" value="0940_1900">09:40 in · 19:00 out</button>
                         </div>
                     </form>
-                    <form method="POST" action="{{ route('hr.attendance.sheet.month.random-fill') }}" class="att-month-fill" onsubmit="return confirm('Fill every unmarked day (including Saturdays) in {{ $first->format('F Y') }} for {{ $selected->name }}? Sundays are left blank. Existing attendance will not be changed.')">
-                        @csrf
-                        <input type="hidden" name="employee_id" value="{{ $selected->id }}"><input type="hidden" name="year" value="{{ $year }}"><input type="hidden" name="month" value="{{ $month }}">
-                        <span class="copy"><strong>Fill the whole month</strong><br>Each unmarked day (Saturdays included) becomes Present with a random check-in from 09:30–09:40 and check-out from 18:30–19:00. Sundays are left blank — mark one manually above if needed. Existing entries are kept.</span>
-                        <button class="pv-btn g" type="submit"><i class="fas fa-magic"></i> Fill month with random times</button>
-                    </form>
+                    @if($selectedRecord)
+                        <form method="POST" action="{{ route('hr.attendance.sheet.day.destroy', $selectedRecord) }}" style="margin-top:10px"
+                              onsubmit="return confirm('Delete the attendance record for {{ $selected->name }} on {{ $selectedDate->format('d M Y') }}? It is hidden from all reports but stays recoverable in the database.')">
+                            @csrf @method('DELETE')
+                            <input type="hidden" name="year" value="{{ $year }}"><input type="hidden" name="month" value="{{ $month }}">
+                            <button class="pv-btn d sm" type="submit"><i class="fas fa-trash"></i> Delete this day's attendance</button>
+                        </form>
+                    @endif
+                    <div class="att-month-fill">
+                        <span class="copy"><strong>Fill the whole month with random times</strong><br>Each blank working day (Saturdays included) becomes Present with a random check-in 09:30–09:40 and check-out 18:30–19:00. Sundays and days that already have attendance are left as they are.</span>
+                        <form method="POST" action="{{ route('hr.attendance.sheet.month.random-fill') }}" style="display:inline"
+                              onsubmit="return confirm('Fill every blank working day in {{ $first->format('F Y') }} for {{ $selected->name }}? Sundays and existing entries are left unchanged.')">
+                            @csrf
+                            <input type="hidden" name="employee_id" value="{{ $selected->id }}"><input type="hidden" name="year" value="{{ $year }}"><input type="hidden" name="month" value="{{ $month }}">
+                            <button class="pv-btn g" type="submit"><i class="fas fa-magic"></i> Fill for {{ \Illuminate\Support\Str::of($selected->name)->explode(' ')->first() }}</button>
+                        </form>
+                        <form method="POST" action="{{ route('hr.attendance.sheet.month.random-fill-all') }}" style="display:inline"
+                              onsubmit="return confirm('Fill every blank working day in {{ $first->format('F Y') }} for ALL {{ $team->count() }} employees on your team, in one bulk operation? Sundays and days that already have attendance are left unchanged.')">
+                            @csrf
+                            <input type="hidden" name="year" value="{{ $year }}"><input type="hidden" name="month" value="{{ $month }}">
+                            <button class="pv-btn p" type="submit"><i class="fas fa-users"></i> Fill for all {{ $team->count() }} employees</button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -118,7 +136,7 @@
                         @php $date = Carbon::create($year, $month, $day); $record = $map->get($day); @endphp
                         <a class="att-day {{ $date->isWeekend() ? 'weekend' : '' }} {{ $selectedDate->isSameDay($date) ? 'selected' : '' }}" href="{{ route('hr.attendance.sheet', ['year'=>$year,'month'=>$month,'employee_id'=>$selected->id,'date'=>$date->format('Y-m-d')]) }}">
                             <span class="att-date">{{ $day }} <span class="pv-mut2">{{ $date->format('D') }}</span></span>
-                            @if($record)<span class="pv-badge {{ $statusClass($record->status) }}">{{ $record->status }}</span>@else<span class="pv-mut2">Not marked</span>@endif
+                            @if($record)<span class="pv-badge {{ $record->badgeClass() }}" title="{{ $record->label() }}">{{ $record->shortCode() }}</span>@else<span class="pv-mut2">Not marked</span>@endif
                             @if($record?->check_in || $record?->check_out)<span class="att-time">{{ $record->check_in ? substr((string) $record->check_in, 0, 5) : '—' }} – {{ $record->check_out ? substr((string) $record->check_out, 0, 5) : '—' }}</span>@endif
                         </a>
                     @endfor

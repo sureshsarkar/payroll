@@ -82,9 +82,9 @@
 
     /* badges */
     .pv-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:650;letter-spacing:.01em;}
-    .pv-badge.present,.pv-badge.approved,.pv-badge.admin_approved,.pv-badge.active,.pv-badge.paid{background:#e7f7ef;color:#067a4b;}
-    .pv-badge.absent,.pv-badge.rejected{background:#fdeaea;color:#c0322c;}
-    .pv-badge.halfday,.pv-badge.pending,.pv-badge.hr_submitted,.pv-badge.onboarding{background:#fef4e6;color:#b26a05;}
+    .pv-badge.present,.pv-badge.pp,.pv-badge.approved,.pv-badge.admin_approved,.pv-badge.active,.pv-badge.paid{background:#e7f7ef;color:#067a4b;}
+    .pv-badge.absent,.pv-badge.aa,.pv-badge.rejected{background:#fdeaea;color:#c0322c;}
+    .pv-badge.halfday,.pv-badge.ap,.pv-badge.pa,.pv-badge.pending,.pv-badge.hr_submitted,.pv-badge.onboarding{background:#fef4e6;color:#b26a05;}
     .pv-badge.leave,.pv-badge.wfh{background:#eef0fe;color:#4b45c7;}
     .pv-badge.holiday,.pv-badge.draft,.pv-badge.cancelled{background:#eef1f5;color:#5b6472;}
 

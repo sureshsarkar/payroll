@@ -46,10 +46,12 @@ class DashboardController extends Controller
             ->get();
 
         $marked        = $todayRows->count();
-        $presentToday  = $todayRows->whereIn('status', [Attendance::PRESENT, Attendance::WFH])->count()
-                         + $todayRows->where('status', Attendance::HALF_DAY)->count();
-        $onLeaveToday  = $todayRows->where('status', Attendance::LEAVE)->count();
-        $absentToday   = $todayRows->where('status', Attendance::ABSENT)->count();
+        // Anyone who worked any part of the day (PP/AP/PA), leave/holiday aside.
+        $presentToday  = $todayRows->where('status', '!=', Attendance::AA)
+                         ->whereNotIn('day_type', [Attendance::DAY_PAID_LEAVE, Attendance::DAY_UNPAID_LEAVE])
+                         ->count();
+        $onLeaveToday  = $todayRows->whereIn('day_type', [Attendance::DAY_PAID_LEAVE, Attendance::DAY_UNPAID_LEAVE])->count();
+        $absentToday   = $todayRows->where('status', Attendance::AA)->whereNull('day_type')->count();
         $teamCount     = $teamIds->count();
         $activeCount   = $profiles->where('status', EmployeeProfile::ACTIVE)->count();
 
@@ -120,15 +122,15 @@ class DashboardController extends Controller
 
         $rows = Attendance::whereIn('user_id', $teamIds)
             ->whereBetween('attendance_date', [$start->toDateString(), today()->toDateString()])
-            ->get(['attendance_date', 'status'])
+            ->get(['attendance_date', 'status', 'day_type'])
             ->groupBy(fn ($r) => $r->attendance_date->toDateString());
 
         $out = [];
         for ($i = 0; $i < $days; $i++) {
             $date  = $start->copy()->addDays($i);
             $day   = $rows->get($date->toDateString(), collect());
-            $score = $day->whereIn('status', [Attendance::PRESENT, Attendance::WFH])->count()
-                     + 0.5 * $day->where('status', Attendance::HALF_DAY)->count();
+            $score = $day->where('status', Attendance::PP)->count()
+                     + 0.5 * $day->whereIn('status', [Attendance::AP, Attendance::PA])->count();
             $rate  = $teamIds->isEmpty() ? 0 : min(100, round($score / $teamCount * 100, 1));
 
             $out[] = [
@@ -153,16 +155,17 @@ class DashboardController extends Controller
      */
     private function todayBreakdown(\Illuminate\Support\Collection $todayRows, int $teamCount): array
     {
-        $c = fn (string $s) => $todayRows->where('status', $s)->count();
+        $byStatus = fn (string $s) => $todayRows->where('status', $s)->whereNull('day_type')->count();
+        $byType   = fn (string $t) => $todayRows->where('day_type', $t)->count();
 
         $rows = [
-            ['label' => 'Present',   'value' => $c(Attendance::PRESENT),  'color' => '#059669'],
-            ['label' => 'Work from home', 'value' => $c(Attendance::WFH), 'color' => '#0ea5e9'],
-            ['label' => 'Half day',  'value' => $c(Attendance::HALF_DAY), 'color' => '#d97706'],
-            ['label' => 'On leave',  'value' => $c(Attendance::LEAVE),    'color' => '#7c3aed'],
-            ['label' => 'Absent',    'value' => $c(Attendance::ABSENT),   'color' => '#dc2626'],
-            ['label' => 'Holiday',   'value' => $c(Attendance::HOLIDAY),  'color' => '#94a3b8'],
-            ['label' => 'Not marked','value' => max(0, $teamCount - $todayRows->count()), 'color' => '#e2e8f0'],
+            ['label' => 'Present',        'value' => $byStatus(Attendance::PP), 'color' => '#059669'],
+            ['label' => 'Work from home', 'value' => $byType(Attendance::DAY_WFH), 'color' => '#0ea5e9'],
+            ['label' => 'Half day',       'value' => $todayRows->whereIn('status', [Attendance::AP, Attendance::PA])->count(), 'color' => '#d97706'],
+            ['label' => 'On leave',       'value' => $byType(Attendance::DAY_PAID_LEAVE) + $byType(Attendance::DAY_UNPAID_LEAVE), 'color' => '#7c3aed'],
+            ['label' => 'Absent',         'value' => $byStatus(Attendance::AA), 'color' => '#dc2626'],
+            ['label' => 'Holiday',        'value' => $byType(Attendance::DAY_HOLIDAY), 'color' => '#94a3b8'],
+            ['label' => 'Not marked',     'value' => max(0, $teamCount - $todayRows->count()), 'color' => '#e2e8f0'],
         ];
 
         return array_values(array_filter($rows, fn ($r) => $r['value'] > 0));

@@ -6,27 +6,39 @@
 
     <div class="pv-head">
         <div>
-            <h1 class="t">{{ $run->periodLabel() }} <span class="pv-badge {{ $run->status }}" style="font-size:12px;vertical-align:middle">{{ str_replace('_',' ',$run->status) }}</span></h1>
+            <h1 class="t">{{ $run->periodLabel() }} <span class="pv-badge {{ $run->status }}" style="font-size:12px;vertical-align:middle">{{ $run->statusLabel() }}</span></h1>
             <p class="s">Payroll run detail</p>
         </div>
         <div class="pv-actions">
             <a href="{{ route('hr.payroll.payslips', $run) }}" class="pv-btn sm d" {{ $items->isEmpty()?'hidden':'' }}>
                 <i class="fas fa-file-pdf"></i> All payslips
             </a>
+            <a href="{{ route('hr.payroll.slips', $run) }}" class="pv-btn sm d" {{ $items->isEmpty()?'hidden':'' }}>
+                <i class="fas fa-file-invoice"></i> All salary slips
+            </a>
             <span class="pv-btngrp">
                 <a href="{{ route('hr.payroll.export', ['run'=>$run,'format'=>'xlsx']) }}" class="pv-btn sm g">Excel</a>
                 <a href="{{ route('hr.payroll.export', ['run'=>$run,'format'=>'pdf']) }}" class="pv-btn sm d">PDF</a>
                 <a href="{{ route('hr.payroll.export', ['run'=>$run,'format'=>'csv']) }}" class="pv-btn sm">CSV</a>
             </span>
-            @if($run->status === 'draft')
-                <form method="POST" action="{{ route('hr.payroll.submit',$run) }}" style="display:inline">@csrf
-                    <button class="pv-btn p" {{ $items->isEmpty()?'disabled':'' }}><i class="fas fa-paper-plane"></i> Submit for approval</button></form>
-            @elseif($run->status === 'hr_submitted')
-                <span class="pv-muted" style="font-size:13px">Awaiting Super Admin approval</span>
-                <form method="POST" action="{{ route('hr.payroll.reopen',$run) }}" style="display:inline" onsubmit="return confirm('Send this run back to draft? You will need to prepare it again before resubmitting.')">@csrf
+            <span class="pv-btngrp" title="EPF ECR salary sheet — every employee, one row each" {{ $items->isEmpty()?'hidden':'' }}>
+                <a href="{{ route('hr.payroll.ecr', ['run'=>$run,'format'=>'xlsx']) }}" class="pv-btn sm g"><i class="fas fa-file-excel"></i> ECR Excel</a>
+                <a href="{{ route('hr.payroll.ecr', ['run'=>$run,'format'=>'csv']) }}" class="pv-btn sm">ECR CSV</a>
+            </span>
+            @if(in_array($run->status, ['draft','hr_submitted']))
+                <form method="POST" action="{{ route('hr.payroll.submit',$run) }}" style="display:inline"
+                      onsubmit="return confirm('Finalize payroll for {{ $run->periodLabel() }}? Payslips will be generated and become visible to employees immediately.')">@csrf
+                    <button class="pv-btn p" {{ $items->isEmpty()?'disabled':'' }}><i class="fas fa-check-circle"></i> Finalize &amp; generate payslips</button></form>
+            @elseif($run->status === 'admin_approved')
+                <span style="color:var(--pv-green);font-size:13px;font-weight:600"><i class="fas fa-check-circle"></i> Finalized · payslips available to employees</span>
+                <form method="POST" action="{{ route('hr.payroll.recalculate',$run) }}" style="display:inline"
+                      onsubmit="return confirm('Recompute every payslip in this run from current attendance/leave data and regenerate the PDFs?')">@csrf
+                    <button class="pv-btn sm"><i class="fas fa-rotate"></i> Recalculate</button></form>
+                <form method="POST" action="{{ route('hr.payroll.reopen',$run) }}" style="display:inline"
+                      onsubmit="return confirm('Reopen this finalized run for correction? Employees will not be able to download payslips until you finalize it again.')">@csrf
                     <button class="pv-btn sm"><i class="fas fa-undo"></i> Reopen for correction</button></form>
             @else
-                <span style="color:var(--pv-green);font-size:13px;font-weight:600"><i class="fas fa-check-circle"></i> Approved</span>
+                <span style="color:var(--pv-green);font-size:13px;font-weight:600"><i class="fas fa-check-circle"></i> Paid</span>
             @endif
             <a href="{{ route('hr.payroll.index') }}" class="pv-btn sm">‹ Runs</a>
         </div>
@@ -69,9 +81,16 @@
                         <td class="pv-r">₹{{ number_format($it->total_earnings,2) }}</td>
                         <td class="pv-r">₹{{ number_format($it->total_deductions,2) }}</td>
                         <td class="pv-r" style="font-weight:700">₹{{ number_format($it->net_pay,2) }}</td>
-                        <td class="pv-c">
-                            <a href="{{ route('hr.payroll.payslip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="pv-btn sm">Payslip</a>
-                            <a href="{{ route('hr.payroll.slip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="pv-btn sm d">Form IV</a>
+                        <td class="pv-c" style="white-space:nowrap">
+                            <a href="{{ route('hr.payroll.payslip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="pv-btn sm">Pay Slip</a>
+                            <a href="{{ route('hr.payroll.slip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="pv-btn sm d">Salary Slip</a>
+                            @if($run->status !== 'paid')
+                                <form method="POST" action="{{ route('hr.payroll.item.destroy', ['run'=>$run, 'item'=>$it->id]) }}" style="display:inline"
+                                      onsubmit="return confirm('Delete {{ $it->employee->name ?? 'this employee' }}\'s payslip from this run? It is removed from totals and exports but kept in the database.')">
+                                    @csrf @method('DELETE')
+                                    <button class="pv-btn sm" title="Delete payslip"><i class="fas fa-trash"></i></button>
+                                </form>
+                            @endif
                         </td>
                     </tr>
                 @endforeach

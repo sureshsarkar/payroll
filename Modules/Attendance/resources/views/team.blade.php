@@ -44,18 +44,25 @@
                         <tr>
                             <td><input class="pv-cb" type="checkbox" name="user_ids[]" value="{{ $emp->id }}"></td>
                             <td><strong>{{ $emp->name }}</strong> <span class="pv-mut2">#{{ $emp->id }}</span></td>
-                            <td>@if($rec)<span class="pv-badge {{ strtolower($rec->status) }}">{{ $rec->status }}</span>@else<span class="pv-muted">—</span>@endif</td>
+                            <td>@if($rec)<span class="pv-badge {{ $rec->badgeClass() }}" title="{{ $rec->label() }}">{{ $rec->shortCode() }}</span>@else<span class="pv-muted">—</span>@endif</td>
                         </tr>
                     @endforeach
                     </tbody>
                 </table>
                 </div>
                 <div class="pv-inline" style="margin-top:16px">
-                    <select name="status" class="pv-select" style="width:auto">
-                        @foreach($statuses as $s)<option value="{{ $s }}">{{ $s }}</option>@endforeach
-                    </select>
+                    <div class="pv-field" style="margin:0"><label class="pv-label">Status</label>
+                        <select name="status" class="pv-select" style="width:auto">
+                            @foreach($statuses as $code => $label)<option value="{{ $code }}">{{ $label }}</option>@endforeach
+                        </select></div>
+                    <div class="pv-field" style="margin:0"><label class="pv-label">Day type</label>
+                        <select name="day_type" class="pv-select" style="width:auto">
+                            <option value="">Ordinary day</option>
+                            @foreach($dayTypes as $code => $label)<option value="{{ $code }}">{{ $label }}</option>@endforeach
+                        </select></div>
                     <button class="pv-btn g"><i class="fas fa-check"></i> Mark selected</button>
                 </div>
+                <p class="pv-mut2" style="margin:8px 4px 0">Codes: <b>PP</b> present all day · <b>AP</b> first half off · <b>PA</b> second half off · <b>AA</b> absent all day. Day type marks the reason (WFH, holiday, leave) — paid types never cause loss of pay.</p>
                 @endif
             </div>
         </div>

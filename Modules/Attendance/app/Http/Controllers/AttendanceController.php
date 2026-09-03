@@ -78,7 +78,8 @@ class AttendanceController extends Controller
             'date'     => $date,
             'team'     => $team,
             'marked'   => $marked,
-            'statuses' => Attendance::STATUSES,
+            'statuses' => Attendance::STATUS_LABELS,
+            'dayTypes' => Attendance::DAY_TYPE_LABELS,
         ]);
     }
 
@@ -88,12 +89,17 @@ class AttendanceController extends Controller
         $data = $request->validate([
             'date'       => ['required', 'date'],
             'status'     => ['required', 'string'],
+            'day_type'   => ['nullable', 'string'],
             'user_ids'   => ['required', 'array', 'min:1'],
             'user_ids.*' => ['integer'],
         ]);
 
         if (! in_array($data['status'], Attendance::STATUSES, true)) {
             return back()->with('error', 'Invalid status.');
+        }
+        $dayType = ($data['day_type'] ?? null) ?: null;
+        if ($dayType !== null && ! in_array($dayType, Attendance::DAY_TYPES, true)) {
+            return back()->with('error', 'Invalid day type.');
         }
 
         $hr      = $request->user();
@@ -104,7 +110,7 @@ class AttendanceController extends Controller
             return back()->with('error', 'None of the selected employees are in your team.');
         }
 
-        $n = $this->service->bulkMark($targets, $data['date'], $data['status'], $hr->id);
+        $n = $this->service->bulkMark($targets, $data['date'], $data['status'], $hr->id, $dayType);
 
         return back()->with('success', "Attendance marked for {$n} employee(s).");
     }
@@ -154,6 +160,7 @@ class AttendanceController extends Controller
             'employee_id' => ['required', 'integer'],
             'date' => ['required', 'date'],
             'status' => ['required', 'string'],
+            'day_type' => ['nullable', 'string'],
             'check_in' => ['nullable', 'date_format:H:i'],
             'check_out' => ['nullable', 'date_format:H:i'],
             'remarks' => ['nullable', 'string', 'max:255'],
@@ -170,14 +177,20 @@ class AttendanceController extends Controller
         if (! in_array($data['status'], Attendance::STATUSES, true)) {
             return back()->with('error', 'Invalid attendance status.');
         }
+        $dayType = ($data['day_type'] ?? null) ?: null;
+        if ($dayType !== null && ! in_array($dayType, Attendance::DAY_TYPES, true)) {
+            return back()->with('error', 'Invalid day type.');
+        }
 
         $employee = $this->teamMembers($request->user())->firstWhere('id', (int) $data['employee_id']);
         if (! $employee) {
             return back()->with('error', 'That employee is not assigned to you.');
         }
 
+        // A quick-preset button always means "present all day, standard hours".
         $preset = $quickTimes[$data['quick_preset'] ?? ''] ?? null;
-        $this->service->mark($employee->id, $data['date'], $preset ? Attendance::PRESENT : $data['status'], [
+        $this->service->mark($employee->id, $data['date'], $preset ? Attendance::PP : $data['status'], [
+            'day_type' => $preset ? null : $dayType,
             'check_in' => $preset['check_in'] ?? ($data['check_in'] ?? null),
             'check_out' => $preset['check_out'] ?? ($data['check_out'] ?? null),
             'remarks' => $data['remarks'] ?? null,
@@ -194,9 +207,33 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Fill all unmarked days in a month with realistic random office times.
-     * Saturdays are filled like any working day; Sundays are left blank by
-     * default (HR can still mark one manually via the single-day endpoint).
+     * HR: soft-delete one employee's attendance row for one day. The row is
+     * kept (deleted_at flag) but excluded from the sheet, every report/export
+     * and payroll's loss-of-pay calc — a finalized payroll run that included
+     * the day is flagged stale so HR can recalculate it.
+     */
+    public function destroyDay(Request $request, Attendance $attendance): RedirectResponse
+    {
+        $employee = $this->teamMembers($request->user())->firstWhere('id', $attendance->user_id);
+        if (! $employee) {
+            return back()->with('error', 'That attendance record is not for one of your team members.');
+        }
+
+        $date = $attendance->attendance_date;
+        $attendance->delete();
+
+        return redirect()->route('hr.attendance.sheet', [
+            'year'        => (int) $request->input('year', $date->year),
+            'month'       => (int) $request->input('month', $date->month),
+            'employee_id' => $employee->id,
+            'date'        => $date->toDateString(),
+        ])->with('success', "Attendance for {$employee->name} on {$date->format('d M Y')} deleted. It stays recoverable in the database.");
+    }
+
+    /**
+     * Fill all unmarked days in a month with realistic random office times for
+     * ONE employee. Saturdays are filled like any working day; Sundays and days
+     * that already have an attendance row are left as they are.
      */
     public function fillMonthWithRandomTimes(Request $request): RedirectResponse
     {
@@ -211,35 +248,39 @@ class AttendanceController extends Controller
             return back()->with('error', 'That employee is not assigned to you.');
         }
 
-        $first = Carbon::create($data['year'], $data['month'], 1)->startOfMonth();
-        $existingDates = Attendance::where('user_id', $employee->id)
-            ->whereBetween('attendance_date', [$first->toDateString(), (clone $first)->endOfMonth()->toDateString()])
-            ->pluck('attendance_date')
-            ->map(fn ($date) => Carbon::parse($date)->toDateString())
-            ->flip();
-
-        $created = 0;
-        for ($day = 1; $day <= $first->daysInMonth; $day++) {
-            $date = Carbon::create($data['year'], $data['month'], $day);
-            if ($date->isSunday() || $existingDates->has($date->toDateString())) {
-                continue;
-            }
-
-            $checkInMinutes = (9 * 60) + random_int(30, 40);
-            $checkOutMinutes = (18 * 60) + random_int(30, 60);
-            $this->service->mark($employee->id, $date, Attendance::PRESENT, [
-                'check_in' => sprintf('%02d:%02d', intdiv($checkInMinutes, 60), $checkInMinutes % 60),
-                'check_out' => sprintf('%02d:%02d', intdiv($checkOutMinutes, 60), $checkOutMinutes % 60),
-                'marked_by' => $request->user()->id,
-                'source' => 'manual',
-                'remarks' => 'Monthly attendance quick fill',
-            ]);
-            $created++;
-        }
+        $result = $this->service->fillMonthForUsers(
+            [$employee->id], (int) $data['year'], (int) $data['month'], $request->user()->id,
+        );
 
         return redirect()->route('hr.attendance.sheet', [
             'year' => $data['year'], 'month' => $data['month'], 'employee_id' => $employee->id,
-        ])->with('success', "Monthly attendance added for {$employee->name}: {$created} day(s) filled with random office times (Sundays left blank).");
+        ])->with('success', "Monthly attendance added for {$employee->name}: {$result['days_filled']} day(s) filled with random office times (Sundays left blank).");
+    }
+
+    /**
+     * Bulk version of fillMonthWithRandomTimes(): fill the month for EVERY
+     * employee on this HR's team, in one batched operation. Same rules as the
+     * single-employee fill (Sundays skipped, existing days untouched).
+     */
+    public function fillMonthAllWithRandomTimes(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'year' => ['required', 'integer', 'between:2000,2100'],
+            'month' => ['required', 'integer', 'between:1,12'],
+        ]);
+
+        $teamIds = $this->teamMembers($request->user())->pluck('id')->all();
+        if (empty($teamIds)) {
+            return back()->with('error', 'No employees are assigned to you yet.');
+        }
+
+        $result = $this->service->fillMonthForUsers(
+            $teamIds, (int) $data['year'], (int) $data['month'], $request->user()->id,
+        );
+
+        return redirect()->route('hr.attendance.sheet', [
+            'year' => $data['year'], 'month' => $data['month'],
+        ])->with('success', "Monthly attendance filled for {$result['employees']} employee(s): {$result['days_filled']} day(s) added with random office times. Sundays and days that already had attendance were left unchanged.");
     }
 
     /** HR: export the team monthly sheet as csv/xls/pdf. */
@@ -326,7 +367,9 @@ class AttendanceController extends Controller
             $date = Carbon::create($year, $month, $day);
             $record = $map->get($day);
             $rows[] = [
-                $date->format('d M Y'), $date->format('D'), $record->status ?? 'Not marked',
+                $date->format('d M Y'), $date->format('D'),
+                $record?->shortCode() ?? 'Not marked',
+                $record ? $record->label() : '',
                 $record->check_in ?? '', $record->check_out ?? '', $record->remarks ?? '',
             ];
         }
@@ -334,7 +377,7 @@ class AttendanceController extends Controller
         return $exporter->download(
             $format,
             $employee->name.' Attendance '.$first->format('F Y'),
-            ['Date', 'Day', 'Status', 'Check in', 'Check out', 'Remarks'],
+            ['Date', 'Day', 'Code', 'Status', 'Check in', 'Check out', 'Remarks'],
             $rows,
         );
     }
@@ -349,13 +392,14 @@ class AttendanceController extends Controller
         $map    = $this->service->monthMap($user->id, $year, $month);
 
         $start = Carbon::create($year, $month, 1);
-        $headers = ['Date', 'Day', 'Status', 'Check In', 'Check Out'];
+        $headers = ['Date', 'Day', 'Code', 'Status', 'Check In', 'Check Out'];
         $rows = [];
         for ($d = 1; $d <= $start->daysInMonth; $d++) {
             $date = Carbon::create($year, $month, $d);
             $rec  = $map->get($d);
             $rows[] = [$date->format('d M Y'), $date->format('D'),
-                $rec->status ?? '-', $rec->check_in ?? '', $rec->check_out ?? ''];
+                $rec?->shortCode() ?? '-', $rec ? $rec->label() : '',
+                $rec->check_in ?? '', $rec->check_out ?? ''];
         }
 
         $title = $user->name.' Attendance '.$start->format('F Y');

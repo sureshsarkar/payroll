@@ -37,7 +37,14 @@
                         <div class="pv-field"><label class="pv-label">From</label><input type="date" name="start_date" class="pv-input" required></div>
                         <div class="pv-field"><label class="pv-label">To</label><input type="date" name="end_date" class="pv-input" required></div>
                     </div>
-                    <label class="pv-check pv-field"><input type="checkbox" name="half_day" value="1"> Half day (same-day only)</label>
+                    <div class="pv-cols c2">
+                        <label class="pv-check pv-field" style="align-self:end"><input type="checkbox" name="half_day" value="1"> Half day (same-day only)</label>
+                        <div class="pv-field"><label class="pv-label">Which half</label>
+                            <select name="half_session" class="pv-select">
+                                <option value="second">Second half off — present in the morning (PA)</option>
+                                <option value="first">First half off — present in the afternoon (AP)</option>
+                            </select></div>
+                    </div>
                     <div class="pv-field"><label class="pv-label">Reason</label><textarea name="reason" rows="2" class="pv-textarea"></textarea></div>
                     <button class="pv-btn g"><i class="fas fa-paper-plane"></i> Submit request</button>
                 </form>

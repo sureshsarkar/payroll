@@ -52,4 +52,27 @@ class SalaryStructure extends Model
 
         return (float) ($basic->value ?? 0);
     }
+
+    /**
+     * The HRA component's stored percentage-of-basic. This is what the user
+     * actually typed when the structure was saved — the salary form must show
+     * this back, not a hard-coded 40, otherwise a manually entered figure looks
+     * like it never saved.
+     */
+    public function hraPercent(): ?float
+    {
+        $hra = $this->components->firstWhere('code', 'HRA')
+            ?? $this->components->firstWhere('name', 'HRA');
+
+        return $hra ? (float) $hra->value : null;
+    }
+
+    /** The Special Allowance component's stored monthly amount. */
+    public function special(): ?float
+    {
+        $spl = $this->components->firstWhere('code', 'SPL')
+            ?? $this->components->firstWhere('name', 'Special Allowance');
+
+        return $spl ? (float) $spl->value : null;
+    }
 }

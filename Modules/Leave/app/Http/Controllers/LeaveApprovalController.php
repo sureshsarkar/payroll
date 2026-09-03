@@ -56,6 +56,20 @@ class LeaveApprovalController extends Controller
             $ok ? 'Leave rejected.' : 'This request is no longer pending.');
     }
 
+    /**
+     * Soft-delete a leave record. It is hidden from the employee's history, HR
+     * approvals and every report, but kept in the database (deleted_at flag)
+     * for recovery and audit. Attendance rows already written from an approved
+     * leave are left as-is — delete those from the attendance sheet if needed.
+     */
+    public function destroy(Request $request, Leave $leave): RedirectResponse
+    {
+        $this->authorizeTeam($request, $leave);
+        $leave->delete();
+
+        return back()->with('success', 'Leave record deleted. It can be restored from the database if needed.');
+    }
+
     private function authorizeTeam(Request $request, Leave $leave): void
     {
         abort_unless(

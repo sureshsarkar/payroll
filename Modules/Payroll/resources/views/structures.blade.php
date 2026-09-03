@@ -33,8 +33,8 @@
                                 @csrf
                                 <input type="hidden" name="user_id" value="{{ $emp->id }}">
                                 <input name="basic" class="pv-input" style="width:100px" placeholder="Basic" value="{{ $s?->basic() }}">
-                                <input name="hra_percent" class="pv-input" style="width:82px" placeholder="HRA %" value="40">
-                                <input name="special" class="pv-input" style="width:96px" placeholder="Special" value="0">
+                                <input name="hra_percent" class="pv-input" style="width:82px" placeholder="HRA %" value="{{ $s?->hraPercent() ?? 40 }}">
+                                <input name="special" class="pv-input" style="width:96px" placeholder="Special" value="{{ $s?->special() ?? 0 }}">
                                 <button class="pv-btn g sm">Save</button>
                             </form>
                         </td>

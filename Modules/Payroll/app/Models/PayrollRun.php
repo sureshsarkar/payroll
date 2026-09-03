@@ -7,16 +7,30 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Company\app\Concerns\BelongsToCompany;
 
 class PayrollRun extends Model
 {
     use BelongsToCompany;
+    use SoftDeletes;
 
     public const DRAFT          = 'draft';
     public const HR_SUBMITTED   = 'hr_submitted';
     public const ADMIN_APPROVED = 'admin_approved';
     public const PAID           = 'paid';
+
+    /**
+     * Human labels for each stored status. HR now finalises payroll directly
+     * (no Super Admin approval step), so the stored `admin_approved` value is
+     * surfaced as "Finalized" everywhere it faces a user.
+     */
+    public const STATUS_LABELS = [
+        self::DRAFT          => 'Draft',
+        self::HR_SUBMITTED   => 'Submitted',
+        self::ADMIN_APPROVED => 'Finalized',
+        self::PAID           => 'Paid',
+    ];
 
     protected $fillable = [
         'year', 'month', 'status', 'employee_count', 'total_net',
@@ -44,15 +58,24 @@ class PayrollRun extends Model
         return Carbon::create($this->year, $this->month, 1)->format('F Y');
     }
 
+    /** Display label for the run's current status (see STATUS_LABELS). */
+    public function statusLabel(): string
+    {
+        return self::STATUS_LABELS[$this->status] ?? str_replace('_', ' ', $this->status);
+    }
+
     public function isEditable(): bool
     {
         return in_array($this->status, [self::DRAFT], true);
     }
 
-    /** HR may send a submitted-but-not-yet-approved run back to draft to fix attendance. */
+    /**
+     * HR may pull a run back to draft to fix attendance — both a still-open
+     * submitted run and an already-finalised one (but never a PAID run).
+     */
     public function isReopenable(): bool
     {
-        return $this->status === self::HR_SUBMITTED;
+        return in_array($this->status, [self::HR_SUBMITTED, self::ADMIN_APPROVED], true);
     }
 
     /**
@@ -64,6 +87,15 @@ class PayrollRun extends Model
     public function isRecalculable(): bool
     {
         return $this->status === self::ADMIN_APPROVED;
+    }
+
+    /**
+     * HR may delete a run from the list unless wages have actually been paid —
+     * a PAID run is audit history and must not disappear.
+     */
+    public function isDeletable(): bool
+    {
+        return $this->status !== self::PAID;
     }
 
     /** Any item whose stored numbers predate a later attendance/leave edit. */

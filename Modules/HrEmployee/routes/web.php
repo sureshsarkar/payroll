@@ -19,6 +19,8 @@ Route::middleware(['web', 'auth', 'instructorrole', 'companycontext'])
         Route::post('employees', [HrEmployeeController::class, 'storeEmployee'])->name('employees.store');
         Route::get('employees/{employee}/edit', [HrEmployeeController::class, 'edit'])->name('employees.edit');
         Route::put('employees/{employee}', [HrEmployeeController::class, 'updateEmployee'])->name('employees.update');
+        Route::delete('employees/{employee}', [HrEmployeeController::class, 'destroyEmployee'])->name('employees.destroy');
+        Route::post('employees/{employee}/restore', [HrEmployeeController::class, 'restoreEmployee'])->name('employees.restore');
         Route::post('employees/profile', [HrEmployeeController::class, 'storeProfile'])->name('employees.profile');
 
         Route::get('departments', [HrEmployeeController::class, 'departments'])->name('departments.index');

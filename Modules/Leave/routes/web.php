@@ -30,4 +30,5 @@ Route::middleware(['web', 'auth', 'instructorrole', 'companycontext'])
         Route::get('/', [LeaveApprovalController::class, 'index'])->name('index');
         Route::post('{leave}/approve', [LeaveApprovalController::class, 'approve'])->name('approve');
         Route::post('{leave}/reject', [LeaveApprovalController::class, 'reject'])->name('reject');
+        Route::delete('{leave}', [LeaveApprovalController::class, 'destroy'])->name('destroy');
     });

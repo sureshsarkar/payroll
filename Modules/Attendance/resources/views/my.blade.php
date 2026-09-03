@@ -64,7 +64,7 @@
                     <div class="cell">
                         <div class="d">{{ $day }}</div>
                         @if($rec)
-                            <span class="pv-badge {{ strtolower($rec->status) }}" style="margin-top:4px;font-size:10px">{{ $rec->status }}</span>
+                            <span class="pv-badge {{ $rec->badgeClass() }}" style="margin-top:4px;font-size:10px" title="{{ $rec->label() }}">{{ $rec->shortCode() }}</span>
                             @if($rec->check_in)<div class="pv-mut2" style="margin-top:3px">{{ \Carbon\Carbon::parse($rec->check_in)->format('H:i') }}</div>@endif
                         @endif
                     </div>

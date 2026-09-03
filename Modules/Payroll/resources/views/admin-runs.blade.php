@@ -18,7 +18,7 @@
             @php $map=['draft'=>'secondary','hr_submitted'=>'warning','admin_approved'=>'success','paid'=>'info']; @endphp
             <tr>
                 <td>{{ $run->periodLabel() }}</td>
-                <td><span class="badge bg-{{ $map[$run->status] ?? 'secondary' }}">{{ str_replace('_',' ',$run->status) }}</span></td>
+                <td><span class="badge bg-{{ $map[$run->status] ?? 'secondary' }}">{{ $run->statusLabel() }}</span></td>
                 <td class="text-center">{{ $run->employee_count }}</td>
                 <td class="text-end">{{ number_format($run->total_net,2) }}</td>
                 <td class="text-end" style="white-space:nowrap">

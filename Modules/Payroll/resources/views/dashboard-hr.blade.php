@@ -10,10 +10,7 @@
         if ($n >= 1000)     return '₹'.rtrim(rtrim(number_format($n / 1000, 1), '0'), '.').'k';
         return '₹'.number_format($n);
     };
-    $statusLabel = [
-        'draft' => 'Draft', 'hr_submitted' => 'Submitted',
-        'admin_approved' => 'Approved', 'paid' => 'Paid',
-    ];
+    $statusLabel = \Modules\Payroll\app\Models\PayrollRun::STATUS_LABELS;
 
     /* ---------- KPI tiles ---------- */
     $k = $kpis;
