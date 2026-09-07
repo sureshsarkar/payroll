@@ -16,11 +16,6 @@
             <a href="{{ route('hr.payroll.slips', $run) }}" class="pv-btn sm d" {{ $items->isEmpty()?'hidden':'' }}>
                 <i class="fas fa-file-invoice"></i> All salary slips
             </a>
-            <span class="pv-btngrp">
-                <a href="{{ route('hr.payroll.export', ['run'=>$run,'format'=>'xlsx']) }}" class="pv-btn sm g">Excel</a>
-                <a href="{{ route('hr.payroll.export', ['run'=>$run,'format'=>'pdf']) }}" class="pv-btn sm d">PDF</a>
-                <a href="{{ route('hr.payroll.export', ['run'=>$run,'format'=>'csv']) }}" class="pv-btn sm">CSV</a>
-            </span>
             <span class="pv-btngrp" title="EPF ECR salary sheet — every employee, one row each" {{ $items->isEmpty()?'hidden':'' }}>
                 <a href="{{ route('hr.payroll.ecr', ['run'=>$run,'format'=>'xlsx']) }}" class="pv-btn sm g"><i class="fas fa-file-excel"></i> ECR Excel</a>
                 <a href="{{ route('hr.payroll.ecr', ['run'=>$run,'format'=>'csv']) }}" class="pv-btn sm">ECR CSV</a>
