@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 08, 2026 at 02:54 PM
+-- Generation Time: Sep 03, 2026 at 02:31 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -173,8 +173,7 @@ INSERT INTO `activity_logs` (`id`, `actor_id`, `actor_type`, `actor_name`, `acto
 (121, 1278, 'user', 'Cockroach', 'instructor', 'login', 'auth', 'App\\Models\\User', 1278, 'Signed in (web)', NULL, NULL, '127.0.0.1', 'Symfony', '2026-08-31 12:04:21'),
 (122, 1278, 'user', 'Cockroach', 'instructor', 'login', 'auth', 'App\\Models\\User', 1278, 'Signed in (web)', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', '2026-09-02 13:09:46'),
 (123, 1278, 'user', 'Cockroach', 'instructor', 'login', 'auth', 'App\\Models\\User', 1278, 'Signed in (web)', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', '2026-09-03 06:59:47'),
-(124, 1278, 'user', 'Cockroach', 'instructor', 'login', 'auth', 'App\\Models\\User', 1278, 'Signed in (web)', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', '2026-09-03 09:17:49'),
-(125, 1278, 'user', 'Cockroach', 'instructor', 'login', 'auth', 'App\\Models\\User', 1278, 'Signed in (web)', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', '2026-09-07 05:49:58');
+(124, 1278, 'user', 'Cockroach', 'instructor', 'login', 'auth', 'App\\Models\\User', 1278, 'Signed in (web)', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', '2026-09-03 09:17:49');
 
 -- --------------------------------------------------------
 
@@ -3259,7 +3258,6 @@ INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, 
 ('3OMNay0jZBDHMAX4BxYpLN0XHuZFiTDkgj114nG8', 1278, '127.0.0.1', 'Symfony', 'YTo1OntzOjE3OiJhY3RpdmVfY29tcGFueV9pZCI7aToxO3M6NjoiX3Rva2VuIjtzOjQwOiJ2QnFSM3ZTd0NXZ1d6cTNhVzFjRWM0YlM2N3h6NVZndGFMWDRTUlcyIjtzOjQ6ImxhbmciO3M6MjoiZW4iO3M6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjQ1OiJodHRwOi8vbG9jYWxob3N0L2hyL3BheXJvbGwvNC9lY3I/Zm9ybWF0PXhsc3giO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1788436151),
 ('lcCqlkKeBE573p4YojIhfAO2SqdZJPdCR6nB51QN', 1278, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'YTo3OntzOjY6Il90b2tlbiI7czo0MDoieldxMEswSTRibkRSRXh0b3JiY2NhMHVKakJwTGtSSmxaRVI0aXpkWCI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czo1MzoiaHR0cDovL2xvY2FsaG9zdC9sYXJhdmVsL2VycHN5c3RlbS9pbnN0cnVjdG9yL3NldHRpbmciO31zOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo2MzoiaHR0cDovL2xvY2FsaG9zdC9sYXJhdmVsL2VycHN5c3RlbS9oci9wYXlyb2xsLzQvZWNyP2Zvcm1hdD14bHN4Ijt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo0OiJsYW5nIjtzOjI6ImVuIjtzOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxMjc4O3M6MTc6ImFjdGl2ZV9jb21wYW55X2lkIjtpOjE7fQ==', 1788438639),
 ('QEHNpQNdwQ9igIKkmc2Mo5QbYicsPp5SLjlCBrEn', 1278, '127.0.0.1', 'Symfony', 'YTo1OntzOjE3OiJhY3RpdmVfY29tcGFueV9pZCI7aToxO3M6NjoiX3Rva2VuIjtzOjQwOiIyOUNHVDZreDg0VzF4Yk1UVlJFT245SEViWGpPTkk3Y1RjMWY0bDJCIjtzOjQ6ImxhbmciO3M6MjoiZW4iO3M6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjI5OiJodHRwOi8vbG9jYWxob3N0L2hyL2VtcGxveWVlcyI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1788433218),
-('w1H6hWTF2G2ZVKbqEBDtR8e18rUkWXlR16VRIbvK', 1278, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'YTo2OntzOjY6Il90b2tlbiI7czo0MDoiUWJYY1p4RVBDSmFvckM3RkU3czJUM0VoTmJIdXV6bzRyaHB0MHRQZiI7czo0OiJsYW5nIjtzOjI6ImVuIjtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo5NDoiaHR0cDovL2xvY2FsaG9zdC9sYXJhdmVsL2VycHN5c3RlbS91cGxvYWRzL2N1c3RvbS1pbWFnZXMvd3N1cy1pbWctMjAyNi0wNC0wMy0wNC0wOS0yNy00ODkxLnBuZyI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjEyNzg7czoxNzoiYWN0aXZlX2NvbXBhbnlfaWQiO2k6MTt9', 1788760585),
 ('yAIZ3wSyL2ypNOyoXnMypc0KDSin1XAO3ke39vc5', 1278, '127.0.0.1', 'Symfony', 'YTo1OntzOjE3OiJhY3RpdmVfY29tcGFueV9pZCI7aToxO3M6NjoiX3Rva2VuIjtzOjQwOiJJYVR5anllcWxUNG5WVHA1T2liQWFNRkZHUDk0b0xqTDRrM2ZudGoxIjtzOjQ6ImxhbmciO3M6MjoiZW4iO3M6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjI5OiJodHRwOi8vbG9jYWxob3N0L2hyL2VtcGxveWVlcyI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1788432711);
 
 -- --------------------------------------------------------
@@ -3791,7 +3789,7 @@ INSERT INTO `user_login_devices` (`id`, `user_id`, `fingerprint`, `ip`, `user_ag
 (166, 1280, '86c2afd1700b9698fbf78267d72a8dcbd809f9f2', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36', '2026-08-18 10:44:26', '2026-08-18 10:44:26', '2026-08-18 10:44:26'),
 (167, 1278, '21074262408ef8396c03d8742d2a90359bc8bd79', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/1.34493.1 Chrome/148.0.7778.280 Electron/42.9.2 Safari/537.36', '2026-08-25 13:17:50', '2026-08-24 13:14:22', '2026-08-25 13:17:50'),
 (168, 1286, '17be0a89c1b0e2cbca82e8efdfd1db8fc48498d2', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:154.0) Gecko/20100101 Firefox/154.0', '2026-08-25 13:30:19', '2026-08-25 13:30:19', '2026-08-25 13:30:19'),
-(169, 1278, '4632f51f31d07db358e170a8becb7cb56d85dbae', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', '2026-09-07 05:49:58', '2026-08-31 08:18:55', '2026-09-07 05:49:58'),
+(169, 1278, '4632f51f31d07db358e170a8becb7cb56d85dbae', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', '2026-09-03 09:17:49', '2026-08-31 08:18:55', '2026-09-03 09:17:49'),
 (170, 1182, '85cd447062a006dc56478d871aa24110582dfb9b', '127.0.0.1', 'Symfony', '2026-08-31 08:26:28', '2026-08-31 08:25:15', '2026-08-31 08:26:28'),
 (171, 1286, '4632f51f31d07db358e170a8becb7cb56d85dbae', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', '2026-08-31 08:25:26', '2026-08-31 08:25:26', '2026-08-31 08:25:26'),
 (172, 1278, '85cd447062a006dc56478d871aa24110582dfb9b', '127.0.0.1', 'Symfony', '2026-08-31 12:04:21', '2026-08-31 08:27:05', '2026-08-31 12:04:21'),
@@ -4205,7 +4203,7 @@ ALTER TABLE `user_login_devices`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=126;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=125;
 
 --
 -- AUTO_INCREMENT for table `admins`
