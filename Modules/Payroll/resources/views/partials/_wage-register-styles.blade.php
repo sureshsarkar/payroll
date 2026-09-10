@@ -9,45 +9,52 @@
      while the statutory column headings ride in the table's <thead> so dompdf
      repeats those too. The row list then flows across as many pages as needed. --}}
 <style>
-{{-- 34mm top margin = the reserved letterhead strip (~10mm..30mm) plus the
-     "Page X of Y" line the controller stamps above it (~5mm). --}}
-@page { margin: 34mm 3mm 8mm; }
+{{-- 44mm top margin = the reserved letterhead strip (dompdf renders the block
+     ~32mm tall at these font sizes) plus the "Page X of Y" line stamped above
+     it. The strip must clear the table's <thead> or the fixed header overpaints
+     the first column headings on page 1. --}}
+@page { margin: 44mm 3mm 8mm; }
 * { box-sizing: border-box; }
-body { margin: 0; color: #000; font-family: DejaVu Sans, sans-serif; font-size: 7.5px; }
+body { margin: 0; color: #000; font-family: DejaVu Sans, sans-serif; font-size: 9.5px; }
 .sheet { padding: 0; }
 .running-header {
     position: fixed;
-    top: -24mm;            /* climb out of the content box, up into the top margin */
+    top: -37mm;            /* climb out of the content box, up into the top margin */
     left: 0; right: 0;
     background: #fff;
     border: 1px solid #000;
-    padding: 2px 4px 2px;
+    padding: 3px 4px;
 }
 .hdr { width: 100%; border-collapse: collapse; }
 .hdr td { vertical-align: top; padding: 0; }
-.title { text-align: center; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: .3px; }
-.subtitle { text-align: center; font-size: 7.5px; }
-.form-meta { text-align: right; font-size: 7.5px; line-height: 10px; }
+.title { text-align: center; font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: .3px; }
+.subtitle { text-align: center; font-size: 9.5px; }
+.form-meta { text-align: right; font-size: 9.5px; line-height: 13px; }
 .form-meta .strong { font-weight: bold; }
-.estab { font-size: 8.5px; line-height: 11px; margin-top: 2px; }
-.estab .lbl { display: inline-block; min-width: 82px; }
-.reg-for { font-size: 8.5px; font-weight: bold; margin: 2px 0 1px; }
-.stat-no { font-size: 8px; line-height: 11px; text-align: right; }
+.estab { font-size: 11.5px; line-height: 15px; margin-top: 3px; }
+.estab .lbl { display: inline-block; min-width: 96px; }
+.reg-for { font-size: 11.5px; font-weight: bold; margin: 4px 0 1px; }
+.stat-no { font-size: 10.5px; line-height: 14px; text-align: right; }
 
 table.reg { border-collapse: collapse; width: 100%; table-layout: fixed; margin-top: 0; }
-.reg th, .reg td { border: 1px solid #000; padding: 0.5px 1px; vertical-align: top; text-align: center; overflow-wrap: break-word; }
-.reg th { font-weight: bold; font-size: 7px; line-height: 8.5px; background: #fff; }
-.reg td { font-size: 7px; }
+.reg th, .reg td { border: 1px solid #000; padding: 1.5px 2px; vertical-align: top; text-align: center; overflow-wrap: break-word; }
+{{-- Header labels: center them and only break at spaces so a word like
+     "Signature" is never split mid-word. --}}
+.reg th { font-weight: bold; font-size: 9px; line-height: 11.5px; background: #fff; vertical-align: middle; overflow-wrap: normal; }
+.reg td { font-size: 8.5px; }
 .reg .l { text-align: left; }
-.reg .r { text-align: right; }
-{{-- Identity/attendance/rate text is kept close to the 7px numeric size so a
-     page holds as many employee rows as the reference register does; only the
-     name is nudged up and bolded to stay scannable. --}}
-.reg .ident { line-height: 9px; }
-.reg .ident .nm { font-weight: bold; font-size: 8px; }
-.reg .ident .sub { font-size: 6.5px; }
+{{-- Money columns are right-aligned and kept on one line: the identity text is
+     what needed enlarging for readability, and letting "1,234.56" wrap to two
+     lines in a narrow statutory column looks worse than a hair of overflow. --}}
+.reg .r { text-align: right; white-space: nowrap; }
+{{-- Identity/attendance/rate text was formerly shrunk to ~6.5px to pack rows;
+     the register almost always fits well within a page, so it is sized for
+     readability instead. --}}
+.reg .ident { line-height: 12.5px; }
+.reg .ident .nm { font-weight: bold; font-size: 10.5px; }
+.reg .ident .sub { font-size: 9px; }
 .mini { width: 100%; border-collapse: collapse; }
-.mini td { border: none; padding: 0 0.5px; font-size: 6.5px; line-height: 8.5px; }
+.mini td { border: none; padding: 0 1px; font-size: 9px; line-height: 12px; }
 .mini td.k { text-align: left; }
 .mini td.v { text-align: right; font-weight: bold; }
 /* Not bolding every totals cell on purpose: bold DejaVu Sans is measurably
@@ -56,5 +63,5 @@ table.reg { border-collapse: collapse; width: 100%; table-layout: fixed; margin-
    the data row above — a font-weight side effect, not a column-width one.
    Keep bold only on the label and the two figures that matter most. */
 .reg tr.totals td.l, .reg tr.totals td.emph { font-weight: bold; }
-.foot { font-size: 7px; margin-top: 3px; text-align: right; color: #333; }
+.foot { font-size: 9px; margin-top: 4px; text-align: right; color: #333; }
 </style>

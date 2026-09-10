@@ -96,12 +96,12 @@ class EcrExportRouteTest extends TestCase
         $lines = array_values(array_filter(explode("\n", trim($body))));
 
         $this->assertCount(3, $lines, 'header + 2 employees');
-        $this->assertStringContainsString('"EMP ID",UAN,NAME,"EARN GROSS"', $lines[0]);
+        $this->assertStringContainsString('UAN,NAME,"EARN GROSS"', $lines[0]);
         $this->assertStringContainsString('"NCP ",DED', $lines[0]);
-        // full month, capped — matches reference row SPY01
-        $this->assertStringContainsString('SPY01,102349976607,"HETAL AGGARWAL",85000,15000,15000,15000,1800,1250,550,0,0', $body);
+        // full month, capped — matches reference row SPY01 (EMP ID column removed)
+        $this->assertStringContainsString('102349976607,"HETAL AGGARWAL",85000,15000,15000,15000,1800,1250,550,0,0', $body);
         // 1 NCP day in a 31-day month — wage & contributions pro-rated, matches reference row SPY07
-        $this->assertStringContainsString('SPY07,102349994868,AKANKSHA,20968,14516,14516,14516,1742,1209,533,1,0', $body);
+        $this->assertStringContainsString('102349994868,AKANKSHA,20968,14516,14516,14516,1742,1209,533,1,0', $body);
     }
 
     public function test_excel_export_is_served_as_an_xls_table(): void

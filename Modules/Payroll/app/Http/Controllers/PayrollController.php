@@ -161,10 +161,9 @@ class PayrollController extends Controller
 
     /**
      * Export the run as a monthly EPF ECR salary sheet — one row per employee
-     * in the standard 12-column PF-portal layout (EMP ID / UAN / NAME / gross /
-     * EPF-EPS-EDLI wages / employee & employer shares / NCP / DED). Excel
-     * (?format=xls|xlsx) or CSV (?format=csv). Every employee in the run is
-     * included in a single sheet.
+     * in the PF-portal layout (UAN / NAME / gross / EPF-EPS-EDLI wages /
+     * employee & employer shares / NCP / DED). Excel (?format=xls|xlsx) or CSV
+     * (?format=csv). Every employee in the run is included in a single sheet.
      */
     public function exportEcr(Request $request, PayrollRun $run)
     {
@@ -199,7 +198,7 @@ class PayrollController extends Controller
         $items = $run->items()->with('employee')->where('user_id', $employee->id)->get();
         abort_if($items->isEmpty(), 404);
 
-        $filename = 'Salary Slip - '.($employee->name ?: 'Employee '.$employee->id).' - '.$run->periodLabel().'.pdf';
+        $filename = 'Salary Sheet - '.($employee->name ?: 'Employee '.$employee->id).' - '.$run->periodLabel().'.pdf';
 
         return response($this->registerPdf($run, $items), 200, [
             'Content-Type' => 'application/pdf',
@@ -254,7 +253,7 @@ class PayrollController extends Controller
         $items = $this->slipItemsFor($request, $run);
         abort_if($items->isEmpty(), 404);
 
-        $filename = 'Salary Slips - '.$run->periodLabel().'.pdf';
+        $filename = 'Salary Sheets - '.$run->periodLabel().'.pdf';
 
         return response($this->registerPdf($run, $items), 200, [
             'Content-Type' => 'application/pdf',
@@ -355,9 +354,9 @@ class PayrollController extends Controller
         $pdf->getCanvas()->page_script(static function ($pageNumber, $pageCount, $canvas, $fontMetrics): void {
             $font = $fontMetrics->getFont('DejaVu Sans', 'normal');
             $text = 'Page '.$pageNumber.' of '.$pageCount;
-            $size = 8;
+            $size = 9;
             $x = $canvas->get_width() - $fontMetrics->getTextWidth($text, $font, $size) - 12;
-            $canvas->text($x, 14, $text, $font, $size, [0, 0, 0]);
+            $canvas->text($x, 12, $text, $font, $size, [0, 0, 0]);
         });
 
         return $pdf->output();

@@ -13,7 +13,6 @@ use Modules\Payroll\app\Models\PayrollRun;
  * (see the reference file ECRPF_SPY.xls).
  *
  * Column semantics — matching the EPFO ECR wage sheet:
- *   EMP ID      employee_profiles.employee_code
  *   UAN         employee_profiles.uan_number  (12-digit, kept as text)
  *   NAME        employee name, upper-cased as EPFO member records hold it
  *   EARN GROSS  gross wages actually earned in the month (full gross − loss of pay)
@@ -36,11 +35,12 @@ use Modules\Payroll\app\Models\PayrollRun;
 class EcrSheet
 {
     /**
-     * The reference sheet's exact header row — "EARN BASIC" repeats three times
-     * and "NCP " carries a trailing space, both preserved verbatim.
+     * The reference sheet's header row, minus the "EMP ID" column (dropped per
+     * client request). "EARN BASIC" repeats three times and "NCP " carries a
+     * trailing space, both preserved verbatim.
      */
     public const HEADERS = [
-        'EMP ID', 'UAN', 'NAME', 'EARN GROSS',
+        'UAN', 'NAME', 'EARN GROSS',
         'EARN BASIC', 'EARN BASIC', 'EARN BASIC',
         'EMP-SHARE', 'EMPR-SHARE', 'EMPR SHARE', 'NCP ', 'DED',
     ];
@@ -97,7 +97,6 @@ class EcrSheet
                 $earnGross = (int) round(max(0.0, (float) $item->total_earnings - (float) $item->lop_amount));
 
                 return [
-                    (string) ($profile?->employee_code ?? ''),
                     (string) ($profile?->uan_number ?? ''),
                     Str::upper(trim((string) ($item->employee?->name ?: ('Employee #'.$item->user_id)))),
                     $earnGross,
@@ -134,8 +133,8 @@ class EcrSheet
 
     /**
      * Excel-readable .xls as a styled HTML table (house convention — no
-     * PhpSpreadsheet). EMP ID / UAN / NAME are pinned to text format so a
-     * 12-digit UAN never renders as 1.02E+11.
+     * PhpSpreadsheet). UAN / NAME are pinned to text format so a 12-digit UAN
+     * never renders as 1.02E+11.
      */
     public function xls(): string
     {
@@ -151,7 +150,7 @@ class EcrSheet
         foreach ($this->rows() as $row) {
             $body .= '<tr>';
             foreach ($row as $i => $cell) {
-                $style = $i <= 2 ? " style=\"{$textFmt}\"" : '';
+                $style = $i <= 1 ? " style=\"{$textFmt}\"" : '';
                 $body .= "<td{$style}>".$esc($cell).'</td>';
             }
             $body .= '</tr>';

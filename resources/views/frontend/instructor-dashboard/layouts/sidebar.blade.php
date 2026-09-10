@@ -1001,10 +1001,16 @@ html[data-theme="dark"] .dashboard__aread { background: #17233a; }
                     <span>{{ __('Departments') }}</span>
                 </a>
             </li>
-            <li class="{{ Route::is('hr.attendance.*') ? 'active' : '' }}">
+            <li class="{{ Route::is('hr.attendance.*') && ! Route::is('hr.attendance.holidays.*') ? 'active' : '' }}">
                 <a href="{{ route('hr.attendance.team') }}">
                     <span class="sb-icon"><i class="bi bi-calendar-check"></i></span>
                     <span>{{ __('Team Attendance') }}</span>
+                </a>
+            </li>
+            <li class="{{ Route::is('hr.attendance.holidays.*') ? 'active' : '' }}">
+                <a href="{{ route('hr.attendance.holidays.index') }}">
+                    <span class="sb-icon"><i class="bi bi-calendar-event"></i></span>
+                    <span>{{ __('Holidays') }}</span>
                 </a>
             </li>
             <li class="{{ Route::is('hr.leave.*') ? 'active' : '' }}">

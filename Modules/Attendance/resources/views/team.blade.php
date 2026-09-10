@@ -3,6 +3,7 @@
 @section('dashboard-contents')
 <div class="pv">
     @include('payroll::partials.ui')
+    @include('attendance::partials._sheet-fonts')
 
     <div class="pv-head">
         <div>
@@ -26,7 +27,9 @@
         @csrf
         <input type="hidden" name="date" value="{{ $date }}">
         <div class="pv-card">
-            <div class="h"><i class="fas fa-calendar-check pv-muted"></i> {{ \Carbon\Carbon::parse($date)->format('l, d M Y') }}</div>
+            <div class="h"><i class="fas fa-calendar-check pv-muted"></i> {{ \Carbon\Carbon::parse($date)->format('l, d M Y') }}
+                @if($holiday)<span class="pv-badge holiday" style="margin-left:8px" title="Company holiday">HD · {{ $holiday }}</span>@endif
+            </div>
             <div class="b">
                 @if($team->isEmpty())
                     <div class="pv-empty"><div class="ic"><i class="fas fa-user-friends"></i></div>
@@ -62,7 +65,7 @@
                         </select></div>
                     <button class="pv-btn g"><i class="fas fa-check"></i> Mark selected</button>
                 </div>
-                <p class="pv-mut2" style="margin:8px 4px 0">Codes: <b>PP</b> present all day · <b>AP</b> first half off · <b>PA</b> second half off · <b>AA</b> absent all day. Day type marks the reason (WFH, holiday, leave) — paid types never cause loss of pay.</p>
+                <p class="pv-mut2" style="margin:8px 4px 0">Codes: <b>PP</b> present all day · <b>AP</b> first half off · <b>PA</b> second half off · <b>AA</b> absent all day. Day type: <b>EL</b> earned leave · <b>CL</b> casual leave · <b>SL</b> sick leave · <b>OD</b> on duty · <b>WO</b> week off (all fully paid) · <b>H</b> half day (½ day loss of pay).</p>
                 @endif
             </div>
         </div>

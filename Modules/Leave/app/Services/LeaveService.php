@@ -160,7 +160,14 @@ class LeaveService
         $status = $isHalf
             ? ($leave->half_session === Leave::HALF_FIRST ? Attendance::AP : Attendance::PA)
             : Attendance::AA;
-        $dayType = $isPaid ? Attendance::DAY_PAID_LEAVE : Attendance::DAY_UNPAID_LEAVE;
+
+        // Paid leave carries its own leave-head tag (EL / CL / SL) so it never
+        // scores loss of pay; an unrecognised paid head falls back to CL. An
+        // unpaid leave has no tag — the AP/PA/AA status alone drives the LOP.
+        $code    = strtoupper((string) ($leave->type->code ?? ''));
+        $dayType = $isPaid
+            ? (in_array($code, [Attendance::DAY_EL, Attendance::DAY_CL, Attendance::DAY_SL], true) ? $code : Attendance::DAY_CL)
+            : null;
 
         while ($cursor->lte($leave->end_date)) {
             $this->attendance->mark($leave->user_id, $cursor->toDateString(), $status, [

@@ -47,10 +47,11 @@ class DashboardController extends Controller
 
         $marked        = $todayRows->count();
         // Anyone who worked any part of the day (PP/AP/PA), leave/holiday aside.
+        $leaveHeads    = [Attendance::DAY_EL, Attendance::DAY_CL, Attendance::DAY_SL];
         $presentToday  = $todayRows->where('status', '!=', Attendance::AA)
-                         ->whereNotIn('day_type', [Attendance::DAY_PAID_LEAVE, Attendance::DAY_UNPAID_LEAVE])
+                         ->whereNotIn('day_type', $leaveHeads)
                          ->count();
-        $onLeaveToday  = $todayRows->whereIn('day_type', [Attendance::DAY_PAID_LEAVE, Attendance::DAY_UNPAID_LEAVE])->count();
+        $onLeaveToday  = $todayRows->whereIn('day_type', $leaveHeads)->count();
         $absentToday   = $todayRows->where('status', Attendance::AA)->whereNull('day_type')->count();
         $teamCount     = $teamIds->count();
         $activeCount   = $profiles->where('status', EmployeeProfile::ACTIVE)->count();
@@ -159,13 +160,13 @@ class DashboardController extends Controller
         $byType   = fn (string $t) => $todayRows->where('day_type', $t)->count();
 
         $rows = [
-            ['label' => 'Present',        'value' => $byStatus(Attendance::PP), 'color' => '#059669'],
-            ['label' => 'Work from home', 'value' => $byType(Attendance::DAY_WFH), 'color' => '#0ea5e9'],
-            ['label' => 'Half day',       'value' => $todayRows->whereIn('status', [Attendance::AP, Attendance::PA])->count(), 'color' => '#d97706'],
-            ['label' => 'On leave',       'value' => $byType(Attendance::DAY_PAID_LEAVE) + $byType(Attendance::DAY_UNPAID_LEAVE), 'color' => '#7c3aed'],
-            ['label' => 'Absent',         'value' => $byStatus(Attendance::AA), 'color' => '#dc2626'],
-            ['label' => 'Holiday',        'value' => $byType(Attendance::DAY_HOLIDAY), 'color' => '#94a3b8'],
-            ['label' => 'Not marked',     'value' => max(0, $teamCount - $todayRows->count()), 'color' => '#e2e8f0'],
+            ['label' => 'Present',    'value' => $byStatus(Attendance::PP), 'color' => '#059669'],
+            ['label' => 'On duty',    'value' => $byType(Attendance::DAY_OD), 'color' => '#0ea5e9'],
+            ['label' => 'Half day',   'value' => $todayRows->whereIn('status', [Attendance::AP, Attendance::PA])->count(), 'color' => '#d97706'],
+            ['label' => 'On leave',   'value' => $byType(Attendance::DAY_EL) + $byType(Attendance::DAY_CL) + $byType(Attendance::DAY_SL), 'color' => '#7c3aed'],
+            ['label' => 'Absent',     'value' => $byStatus(Attendance::AA), 'color' => '#dc2626'],
+            ['label' => 'Week off',   'value' => $byType(Attendance::DAY_WO), 'color' => '#94a3b8'],
+            ['label' => 'Not marked', 'value' => max(0, $teamCount - $todayRows->count()), 'color' => '#e2e8f0'],
         ];
 
         return array_values(array_filter($rows, fn ($r) => $r['value'] > 0));

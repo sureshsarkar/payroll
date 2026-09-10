@@ -15,12 +15,17 @@
 
 <div class="pv att-workspace">
     @include('payroll::partials.ui')
+    @include('attendance::partials._sheet-fonts')
 
     <style>
         .att-workspace .att-layout{display:grid;grid-template-columns:270px minmax(0,1fr);gap:18px;align-items:start}
         .att-workspace .att-roster{position:sticky;top:14px;max-height:calc(100vh - 120px);overflow:auto}
-        .att-workspace .att-person{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--pv-line2);color:var(--pv-ink)}
-        .att-workspace .att-person:hover{background:#fafbff}.att-workspace .att-person.active{background:#eef2ff;color:#3730a3;box-shadow:inset 3px 0 0 var(--pv-brand)}
+        .att-workspace .att-person{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--pv-line2)}
+        .att-workspace .att-person:hover{background:#fafbff}.att-workspace .att-person.active{background:#eef2ff;box-shadow:inset 3px 0 0 var(--pv-brand)}
+        .att-workspace .att-person.active .att-person-link{color:#3730a3}
+        .att-workspace .att-person-link{display:flex;align-items:center;gap:10px;flex:1;min-width:0;color:var(--pv-ink)}
+        .att-workspace .att-pick{flex:0 0 auto;width:15px;height:15px;cursor:pointer}
+        .att-workspace .att-pickall{display:flex;align-items:center;gap:7px;padding:8px 12px;font-size:12px;color:var(--pv-sub);border-bottom:1px solid var(--pv-line2);cursor:pointer;user-select:none}
         .att-workspace .att-avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#e9edff;color:#4f46e5;font-weight:750;flex:0 0 auto;overflow:hidden}
         .att-workspace .att-avatar img{width:100%;height:100%;object-fit:cover}.att-workspace .att-person .name{font-weight:650;font-size:13px;line-height:1.25}.att-workspace .att-person .meta{font-size:11px;color:var(--pv-mut);margin-top:2px}
         .att-workspace .att-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:16px 0}.att-workspace .att-summary .item{padding:13px;border:1px solid var(--pv-line);border-radius:10px;background:#fff}.att-workspace .att-summary .num{font-size:22px;font-weight:750;line-height:1}.att-workspace .att-summary .label{font-size:11px;color:var(--pv-sub);margin-top:4px}
@@ -28,7 +33,7 @@
         .att-workspace .att-editor{display:grid;grid-template-columns:1.35fr 1fr 1fr .9fr .9fr;gap:10px;align-items:end}.att-workspace .att-editor .pv-field{margin:0}
         .att-workspace .att-quick{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px dashed var(--pv-line)}.att-workspace .att-quick .hint{font-size:12px;color:var(--pv-sub);font-weight:600;margin-right:2px}
         .att-workspace .att-month-fill{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px;padding:12px;border-radius:10px;background:#f8fafc;border:1px solid var(--pv-line)}.att-workspace .att-month-fill .copy{font-size:12px;color:var(--pv-sub);flex:1 1 260px}.att-workspace .att-month-fill strong{color:var(--pv-ink)}
-        @media(max-width:1050px){.att-workspace .att-layout{grid-template-columns:1fr}.att-workspace .att-roster{position:static;max-height:none}.att-workspace .att-roster-list{display:flex;overflow:auto}.att-workspace .att-person{min-width:185px;border-right:1px solid var(--pv-line2);border-bottom:0}.att-workspace .att-summary{grid-template-columns:repeat(3,1fr)}.att-workspace .att-editor{grid-template-columns:repeat(2,1fr)}}
+        @media(max-width:1050px){.att-workspace .att-layout{grid-template-columns:1fr}.att-workspace .att-roster{position:static;max-height:none}.att-workspace .att-roster-list{display:flex;overflow:auto}.att-workspace .att-person{min-width:215px;border-right:1px solid var(--pv-line2);border-bottom:0}.att-workspace .att-summary{grid-template-columns:repeat(3,1fr)}.att-workspace .att-editor{grid-template-columns:repeat(2,1fr)}}
         @media(max-width:620px){.att-workspace .att-summary{grid-template-columns:repeat(2,1fr)}.att-workspace .att-editor{grid-template-columns:1fr}.att-workspace .att-calendar{grid-template-columns:repeat(7,minmax(58px,1fr));overflow:auto}.att-workspace .att-day{min-height:82px;padding:6px}.att-workspace .att-time{display:none}}
     </style>
 
@@ -39,7 +44,16 @@
         </div>
         <div class="pv-actions">
             <a class="pv-btn sm" aria-label="Previous month" href="{{ route('hr.attendance.sheet', ['year'=>$prev->year, 'month'=>$prev->month, 'employee_id'=>$selected?->id]) }}"><i class="fas fa-chevron-left"></i></a>
-            <span class="pv-btn sm" style="cursor:default">{{ $first->format('F Y') }}</span>
+            <form method="GET" action="{{ route('hr.attendance.sheet') }}" style="display:inline-flex;gap:4px;align-items:center">
+                @if($selected)<input type="hidden" name="employee_id" value="{{ $selected->id }}">@endif
+                <select name="month" class="pv-select" style="width:auto" onchange="this.form.submit()" aria-label="Month">
+                    @foreach(range(1, 12) as $m)<option value="{{ $m }}" @selected($m === (int) $month)>{{ Carbon::create($year, $m, 1)->format('F') }}</option>@endforeach
+                </select>
+                <select name="year" class="pv-select" style="width:auto" onchange="this.form.submit()" aria-label="Year">
+                    @foreach(range($first->year - 4, max($first->year + 1, now()->year + 1)) as $y)<option value="{{ $y }}" @selected($y === (int) $year)>{{ $y }}</option>@endforeach
+                </select>
+                <noscript><button class="pv-btn sm" type="submit">Go</button></noscript>
+            </form>
             <a class="pv-btn sm" aria-label="Next month" href="{{ route('hr.attendance.sheet', ['year'=>$next->year, 'month'=>$next->month, 'employee_id'=>$selected?->id]) }}"><i class="fas fa-chevron-right"></i></a>
             <a href="{{ route('hr.attendance.sheet.export', ['format'=>'xlsx','year'=>$year,'month'=>$month]) }}" class="pv-btn sm">Team Excel</a>
             @if($selected)
@@ -58,14 +72,33 @@
     @else
     <div class="att-layout">
         <aside class="pv-card att-roster">
-            <div class="h"><i class="fas fa-users pv-muted"></i> Employees <span class="pv-mut2">{{ $team->count() }}</span></div>
+            <form method="GET" action="{{ route('hr.attendance.sheet.employees.register') }}" id="regPdfForm"
+                  onsubmit="return document.querySelectorAll('.att-pick:checked').length > 0 || (alert('Tick at least one employee to include in the PDF.'), false)">
+                <input type="hidden" name="year" value="{{ $year }}">
+                <input type="hidden" name="month" value="{{ $month }}">
+            </form>
+            <div class="h">
+                <i class="fas fa-users pv-muted"></i> Employees <span class="pv-mut2">{{ $team->count() }}</span>
+                <button type="submit" form="regPdfForm" class="pv-btn sm d" style="margin-left:auto"
+                        title="Download one Attendance Register PDF for every ticked employee">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+            </div>
+            <label class="att-pickall">
+                <input type="checkbox" onclick="this.closest('.att-roster').querySelectorAll('.att-pick').forEach(c => c.checked = this.checked)">
+                Select all for PDF
+            </label>
             <div class="att-roster-list">
             @foreach($team as $employee)
                 @php $profile = $profiles->get($employee->id); @endphp
-                <a class="att-person {{ $selected?->id === $employee->id ? 'active' : '' }}" href="{{ route('hr.attendance.sheet', ['year'=>$year,'month'=>$month,'employee_id'=>$employee->id]) }}">
-                    <span class="att-avatar">@if($profile?->photo_path)<img src="{{ asset($profile->photo_path) }}" alt="">@else{{ strtoupper(substr($employee->name, 0, 1)) }}@endif</span>
-                    <span><span class="name">{{ $employee->name }}</span><span class="meta">{{ $profile?->employee_code ?? 'Employee #'.$employee->id }}</span></span>
-                </a>
+                <div class="att-person {{ $selected?->id === $employee->id ? 'active' : '' }}">
+                    <input class="att-pick" type="checkbox" name="employee_ids[]" value="{{ $employee->id }}" form="regPdfForm"
+                           aria-label="Include {{ $employee->name }} in the PDF">
+                    <a class="att-person-link" href="{{ route('hr.attendance.sheet', ['year'=>$year,'month'=>$month,'employee_id'=>$employee->id]) }}">
+                        <span class="att-avatar">@if($profile?->photo_path)<img src="{{ asset($profile->photo_path) }}" alt="">@else{{ strtoupper(substr($employee->name, 0, 1)) }}@endif</span>
+                        <span><span class="name">{{ $employee->name }}</span><span class="meta">{{ $profile?->employee_code ?? 'Employee #'.$employee->id }}</span></span>
+                    </a>
+                </div>
             @endforeach
             </div>
         </aside>
@@ -133,11 +166,13 @@
                     @foreach(['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] as $day)<div class="dow">{{ $day }}</div>@endforeach
                     @for($i = 0; $i < $leading; $i++)<div class="att-day blank"></div>@endfor
                     @for($day = 1; $day <= $daysInMonth; $day++)
-                        @php $date = Carbon::create($year, $month, $day); $record = $map->get($day); @endphp
+                        @php $date = Carbon::create($year, $month, $day); $record = $map->get($day); $holiday = $holidays->get($day); @endphp
                         <a class="att-day {{ $date->isWeekend() ? 'weekend' : '' }} {{ $selectedDate->isSameDay($date) ? 'selected' : '' }}" href="{{ route('hr.attendance.sheet', ['year'=>$year,'month'=>$month,'employee_id'=>$selected->id,'date'=>$date->format('Y-m-d')]) }}">
                             <span class="att-date">{{ $day }} <span class="pv-mut2">{{ $date->format('D') }}</span></span>
-                            @if($record)<span class="pv-badge {{ $record->badgeClass() }}" title="{{ $record->label() }}">{{ $record->shortCode() }}</span>@else<span class="pv-mut2">Not marked</span>@endif
-                            @if($record?->check_in || $record?->check_out)<span class="att-time">{{ $record->check_in ? substr((string) $record->check_in, 0, 5) : '—' }} – {{ $record->check_out ? substr((string) $record->check_out, 0, 5) : '—' }}</span>@endif
+                            @if($holiday)<span class="pv-badge holiday" title="Holiday — {{ $holiday }}">HD</span>
+                            @elseif($record)<span class="pv-badge {{ $record->badgeClass() }}" title="{{ $record->label() }}">{{ $record->shortCode() }}</span>
+                            @else<span class="pv-mut2">Not marked</span>@endif
+                            @if(! $holiday && ($record?->check_in || $record?->check_out))<span class="att-time">{{ $record->check_in ? substr((string) $record->check_in, 0, 5) : '—' }} – {{ $record->check_out ? substr((string) $record->check_out, 0, 5) : '—' }}</span>@endif
                         </a>
                     @endfor
                 </div></div></div>

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Attendance\app\Http\Controllers\AttendanceController;
+use Modules\Attendance\app\Http\Controllers\HolidayController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,5 +37,11 @@ Route::middleware(['web', 'auth', 'instructorrole', 'companycontext'])
         Route::post('sheet/month/random-fill', [AttendanceController::class, 'fillMonthWithRandomTimes'])->name('sheet.month.random-fill');
         Route::post('sheet/month/random-fill-all', [AttendanceController::class, 'fillMonthAllWithRandomTimes'])->name('sheet.month.random-fill-all');
         Route::get('sheet/employee/export', [AttendanceController::class, 'exportEmployeeSheet'])->name('sheet.employee.export');
+        Route::get('sheet/employees/register', [AttendanceController::class, 'exportTeamRegister'])->name('sheet.employees.register');
         Route::get('sheet/export', [AttendanceController::class, 'exportTeamSheet'])->name('sheet.export');
+
+        // Company holiday master — auto-applied to the Attendance Register PDF.
+        Route::get('holidays', [HolidayController::class, 'index'])->name('holidays.index');
+        Route::post('holidays', [HolidayController::class, 'store'])->name('holidays.store');
+        Route::delete('holidays/{holiday}', [HolidayController::class, 'destroy'])->name('holidays.destroy');
     });

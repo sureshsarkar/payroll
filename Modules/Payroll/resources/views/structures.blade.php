@@ -21,7 +21,7 @@
             @else
             <div class="pv-tw">
             <table class="pv-table" style="min-width:640px">
-                <thead><tr><th>Employee</th><th class="pv-r">Current Gross</th><th style="width:46%">Set / update structure</th></tr></thead>
+                <thead><tr><th>Employee</th><th class="pv-r">Current Gross</th><th style="width:56%">Set / update structure</th></tr></thead>
                 <tbody>
                 @foreach($team as $emp)
                     @php $s = $current->get($emp->id); @endphp
@@ -29,12 +29,13 @@
                         <td><strong>{{ $emp->name }}</strong> <span class="pv-mut2">#{{ $emp->id }}</span></td>
                         <td class="pv-r">{{ $s ? '₹'.number_format($s->gross_monthly,2) : '—' }}</td>
                         <td>
-                            <form method="POST" action="{{ route('hr.salary.store') }}" class="pv-inline" style="gap:6px">
+                            <form method="POST" action="{{ route('hr.salary.store') }}" class="pv-inline" style="gap:6px;flex-wrap:wrap">
                                 @csrf
                                 <input type="hidden" name="user_id" value="{{ $emp->id }}">
-                                <input name="basic" class="pv-input" style="width:100px" placeholder="Basic" value="{{ $s?->basic() }}">
-                                <input name="hra_percent" class="pv-input" style="width:82px" placeholder="HRA %" value="{{ $s?->hraPercent() ?? 40 }}">
-                                <input name="special" class="pv-input" style="width:96px" placeholder="Special" value="{{ $s?->special() ?? 0 }}">
+                                <input name="basic" class="pv-input" style="width:96px" placeholder="Basic" value="{{ $s?->basic() }}">
+                                <input name="hra" class="pv-input" style="width:96px" placeholder="HRA" value="{{ $s?->hraAmount() }}">
+                                <input name="convenience" class="pv-input" style="width:110px" placeholder="Convenience" value="{{ $s?->convenience() }}">
+                                <input name="other_balance" class="pv-input" style="width:110px" placeholder="Other Balance" value="{{ $s?->otherBalance() }}">
                                 <button class="pv-btn g sm">Save</button>
                             </form>
                         </td>
@@ -43,7 +44,7 @@
                 </tbody>
             </table>
             </div>
-            <p class="pv-mut2" style="margin:12px 4px 0">PF / ESIC / Professional Tax are computed automatically — no need to enter them here.</p>
+            <p class="pv-mut2" style="margin:12px 4px 0">Enter each amount in ₹. Gross = Basic + HRA + Convenience + Other Balance. PF / ESIC / Professional Tax are computed automatically — no need to enter them here.</p>
             @endif
         </div>
     </div>

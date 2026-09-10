@@ -13,9 +13,10 @@ use Modules\HrEmployee\app\Models\EmployeeProfile;
 use Modules\Payroll\app\Models\SalaryStructure;
 
 /**
- * HR sets each employee's salary structure. A simple Basic + HRA% + Special
- * allowance form covers the common case; statutory deductions are auto-applied
- * by the engine, so they are not entered here.
+ * HR sets each employee's salary structure. A simple form of four
+ * manually-entered monthly amounts — Basic, HRA, Convenience and Other Balance —
+ * covers the common case; statutory deductions are auto-applied by the engine,
+ * so they are not entered here.
  */
 class SalaryStructureController extends Controller
 {
@@ -34,10 +35,11 @@ class SalaryStructureController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'user_id'     => ['required', 'integer'],
-            'basic'       => ['required', 'numeric', 'min:0'],
-            'hra_percent' => ['required', 'numeric', 'min:0', 'max:100'],
-            'special'     => ['required', 'numeric', 'min:0'],
+            'user_id'       => ['required', 'integer'],
+            'basic'         => ['required', 'numeric', 'min:0'],
+            'hra'           => ['required', 'numeric', 'min:0'],
+            'convenience'   => ['nullable', 'numeric', 'min:0'],
+            'other_balance' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         // access guard — HR may only set structures for their own team
@@ -45,11 +47,13 @@ class SalaryStructureController extends Controller
             return back()->with('error', 'That employee is not in your team.');
         }
 
-        $basic = (float) $data['basic'];
-        $hra   = round($basic * (float) $data['hra_percent'] / 100, 2);
-        $gross = round($basic + $hra + (float) $data['special'], 2);
+        $basic       = (float) $data['basic'];
+        $hra         = (float) $data['hra'];
+        $convenience = (float) ($data['convenience'] ?? 0);
+        $other       = (float) ($data['other_balance'] ?? 0);
+        $gross       = round($basic + $hra + $convenience + $other, 2);
 
-        DB::transaction(function () use ($data, $basic, $gross, $request) {
+        DB::transaction(function () use ($data, $basic, $hra, $convenience, $other, $gross, $request) {
             SalaryStructure::where('user_id', $data['user_id'])->update(['is_current' => false]);
 
             $structure = SalaryStructure::create([
@@ -63,8 +67,9 @@ class SalaryStructureController extends Controller
 
             $structure->components()->createMany([
                 ['type' => 'earning', 'name' => 'Basic', 'code' => 'BASIC', 'calc_type' => 'fixed', 'value' => $basic, 'sort_order' => 1],
-                ['type' => 'earning', 'name' => 'HRA', 'code' => 'HRA', 'calc_type' => 'percent_of_basic', 'value' => $data['hra_percent'], 'sort_order' => 2],
-                ['type' => 'earning', 'name' => 'Special Allowance', 'code' => 'SPL', 'calc_type' => 'fixed', 'value' => $data['special'], 'sort_order' => 3],
+                ['type' => 'earning', 'name' => 'HRA', 'code' => 'HRA', 'calc_type' => 'fixed', 'value' => $hra, 'sort_order' => 2],
+                ['type' => 'earning', 'name' => 'Convenience', 'code' => 'CONV', 'calc_type' => 'fixed', 'value' => $convenience, 'sort_order' => 3],
+                ['type' => 'earning', 'name' => 'Other Balance', 'code' => 'OTHR', 'calc_type' => 'fixed', 'value' => $other, 'sort_order' => 4],
             ]);
         });
 

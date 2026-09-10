@@ -69,14 +69,15 @@ class EcrSheetTest extends TestCase
 
     public function test_header_row_matches_the_reference_exactly(): void
     {
+        // "EMP ID" was dropped per client request; the rest of the row is verbatim.
         $this->assertSame([
-            'EMP ID', 'UAN', 'NAME', 'EARN GROSS',
+            'UAN', 'NAME', 'EARN GROSS',
             'EARN BASIC', 'EARN BASIC', 'EARN BASIC',
             'EMP-SHARE', 'EMPR-SHARE', 'EMPR SHARE', 'NCP ', 'DED',
         ], EcrSheet::HEADERS);
 
         // "NCP " keeps its trailing space; "EARN BASIC" appears three times.
-        $this->assertSame('NCP ', EcrSheet::HEADERS[10]);
+        $this->assertSame('NCP ', EcrSheet::HEADERS[9]);
         $this->assertSame(3, collect(EcrSheet::HEADERS)->filter(fn ($h) => $h === 'EARN BASIC')->count());
     }
 
@@ -94,13 +95,13 @@ class EcrSheetTest extends TestCase
 
         $row = $this->sheet($items, $profiles)->rows()[0];
 
-        $this->assertSame(['SPY01', '102349976607', 'HETAL AGGARWAL', 85000], array_slice($row, 0, 4));
-        $this->assertSame([15000, 15000, 15000], array_slice($row, 4, 3), 'EPF/EPS/EDLI wages capped to 15,000');
-        $this->assertSame(1800, $row[7], 'employee EPF = 12% of 15,000');
-        $this->assertSame(1250, $row[8], 'employer EPS = 8.33% of 15,000');
-        $this->assertSame(550, $row[9], 'employer EPF balance = 1800 − 1250');
-        $this->assertSame(0, $row[10], 'NCP');
-        $this->assertSame(0, $row[11], 'DED');
+        $this->assertSame(['102349976607', 'HETAL AGGARWAL', 85000], array_slice($row, 0, 3));
+        $this->assertSame([15000, 15000, 15000], array_slice($row, 3, 3), 'EPF/EPS/EDLI wages capped to 15,000');
+        $this->assertSame(1800, $row[6], 'employee EPF = 12% of 15,000');
+        $this->assertSame(1250, $row[7], 'employer EPS = 8.33% of 15,000');
+        $this->assertSame(550, $row[8], 'employer EPF balance = 1800 − 1250');
+        $this->assertSame(0, $row[9], 'NCP');
+        $this->assertSame(0, $row[10], 'DED');
     }
 
     public function test_ncp_days_prorate_the_contributory_wage_and_contributions(): void
@@ -114,13 +115,13 @@ class EcrSheetTest extends TestCase
 
         $row = $this->sheet($items, $profiles)->rows()[0];
 
-        $this->assertSame(14516, $row[4], '15,000 × 30/31');
-        $this->assertSame([14516, 14516], array_slice($row, 5, 2));
-        $this->assertSame(1742, $row[7], '12% of 14,516');
-        $this->assertSame(1209, $row[8], '8.33% of 14,516');
-        $this->assertSame(533, $row[9], '1742 − 1209');
-        $this->assertSame(1, $row[10], 'NCP days');
-        $this->assertSame(20968, $row[3], 'EARN GROSS = 21,688 − 720 loss of pay');
+        $this->assertSame(14516, $row[3], '15,000 × 30/31');
+        $this->assertSame([14516, 14516], array_slice($row, 4, 2));
+        $this->assertSame(1742, $row[6], '12% of 14,516');
+        $this->assertSame(1209, $row[7], '8.33% of 14,516');
+        $this->assertSame(533, $row[8], '1742 − 1209');
+        $this->assertSame(1, $row[9], 'NCP days');
+        $this->assertSame(20968, $row[2], 'EARN GROSS = 21,688 − 720 loss of pay');
     }
 
     public function test_below_ceiling_employee_uses_actual_basic(): void
@@ -133,10 +134,10 @@ class EcrSheetTest extends TestCase
 
         $row = $this->sheet($items, $profiles)->rows()[0];
 
-        $this->assertSame([10161, 10161, 10161], array_slice($row, 4, 3));
-        $this->assertSame(1219, $row[7], 'round(10161 × 12%)');
-        $this->assertSame(846, $row[8], 'round(10161 × 8.33%)');
-        $this->assertSame(373, $row[9]);
+        $this->assertSame([10161, 10161, 10161], array_slice($row, 3, 3));
+        $this->assertSame(1219, $row[6], 'round(10161 × 12%)');
+        $this->assertSame(846, $row[7], 'round(10161 × 8.33%)');
+        $this->assertSame(373, $row[8]);
     }
 
     public function test_one_row_per_employee_ordered_by_employee_code(): void
@@ -152,8 +153,10 @@ class EcrSheetTest extends TestCase
 
         $rows = $this->sheet($items, $profiles)->rows();
 
+        // Still ordered by employee code (SPY03 before SPY30) even though the
+        // EMP ID column itself is no longer emitted — assert on the NAME column.
         $this->assertCount(2, $rows);
-        $this->assertSame(['SPY03', 'SPY30'], [$rows[0][0], $rows[1][0]]);
+        $this->assertSame(['AMY FIRST', 'ZOE LAST'], [$rows[0][1], $rows[1][1]]);
     }
 
     public function test_csv_has_a_header_line_then_one_line_per_employee(): void
@@ -171,8 +174,8 @@ class EcrSheetTest extends TestCase
         $lines = array_values(array_filter(explode("\n", trim($csv))));
 
         $this->assertCount(3, $lines, 'header + 2 employees');
-        $this->assertStringStartsWith('"EMP ID",UAN,NAME,"EARN GROSS"', $lines[0]);
-        $this->assertStringContainsString('SPY01,102349976607,"HETAL AGGARWAL",85000', $lines[1]);
+        $this->assertStringStartsWith('UAN,NAME,"EARN GROSS"', $lines[0]);
+        $this->assertStringContainsString('102349976607,"HETAL AGGARWAL",85000', $lines[1]);
     }
 
     public function test_xls_keeps_uan_as_text_so_it_is_not_mangled(): void

@@ -218,15 +218,17 @@ class AttendanceService
     /**
      * Roll a user's month up into counts + LOP + payable days.
      *
-     * The count keys keep their historical meaning so every downstream consumer
+     * The count keys keep their historical names so every downstream consumer
      * (payroll engine, Form IV/XI slips, dashboards) keeps working:
-     *   present            full worked days (PP, no reason tag)
+     *   present            full worked days (PP, no day-type tag)
      *   absent             full unpaid off days (AA that is a plain absence or unpaid leave)
-     *   half_day           any day with one absent half (AP or PA), any reason
+     *   half_day           days with one absent half (AP/PA) plus H (half-day) tagged days
      *   first_half_absent  AP days   second_half_absent  PA days
-     *   leave              paid-leave days       holiday  holiday days       wfh  WFH days
+     *   leave              EL/CL/SL/OD days      holiday  WO (week-off) days      wfh  always 0 (legacy key)
+     *   leave_days         leave counted in day fractions — a First/Second Half
+     *                      leave is 0.5, a full-day leave 1.0
      *
-     * @return array{present:int,absent:int,half_day:int,first_half_absent:int,second_half_absent:int,leave:int,holiday:int,wfh:int,marked_days:int,working_days:int,lop_days:float,payable_days:float}
+     * @return array{present:int,absent:int,half_day:int,first_half_absent:int,second_half_absent:int,leave:int,leave_days:float,holiday:int,wfh:int,marked_days:int,working_days:int,lop_days:float,payable_days:float}
      */
     public function monthlySummary(int $userId, int $year, int $month): array
     {
@@ -239,34 +241,51 @@ class AttendanceService
             ->get();
 
         $present = $absent = $firstHalf = $secondHalf = $leave = $holiday = $wfh = 0;
+        $halfDayTagOnly = 0;
+        $leaveDays = 0.0;
         $lop = 0.0;
 
         foreach ($rows as $row) {
             $lop += $row->lopWeight();
 
             match ($row->day_type) {
-                Attendance::DAY_WFH        => $wfh++,
-                Attendance::DAY_HOLIDAY    => $holiday++,
-                Attendance::DAY_PAID_LEAVE => $leave++,
-                default                    => null,
+                Attendance::DAY_EL, Attendance::DAY_CL,
+                Attendance::DAY_SL, Attendance::DAY_OD => $leave++,
+                Attendance::DAY_WO                     => $holiday++,
+                default                                => null,
             };
+
+            // A First Half / Second Half leave is half a day; a full-day leave
+            // (or a plain unpaid half-day leave sourced from an approved request)
+            // is scored against the same running total.
+            if ($row->isLeave()) {
+                $leaveDays += in_array($row->status, [Attendance::AP, Attendance::PA], true) ? 0.5 : 1.0;
+            }
 
             match ($row->status) {
                 Attendance::AP => $firstHalf++,
                 Attendance::PA => $secondHalf++,
                 Attendance::PP => ($row->day_type === null ? $present++ : null),
-                Attendance::AA => (! $row->isPaidDayType() ? $absent++ : null),
+                Attendance::AA => (! $row->isPaidDayType() && $row->day_type !== Attendance::DAY_HD ? $absent++ : null),
                 default        => null,
             };
+
+            // An H (half-day) tagged day counts as a half day even when its
+            // status isn't AP/PA — but don't double-count one that is.
+            if ($row->day_type === Attendance::DAY_HD
+                && ! in_array($row->status, [Attendance::AP, Attendance::PA], true)) {
+                $halfDayTagOnly++;
+            }
         }
 
         return [
             'present'            => $present,
             'absent'             => $absent,
-            'half_day'           => $firstHalf + $secondHalf,
+            'half_day'           => $firstHalf + $secondHalf + $halfDayTagOnly,
             'first_half_absent'  => $firstHalf,
             'second_half_absent' => $secondHalf,
             'leave'              => $leave,
+            'leave_days'         => round($leaveDays, 1),
             'holiday'            => $holiday,
             'wfh'               => $wfh,
             'marked_days'        => $rows->count(),

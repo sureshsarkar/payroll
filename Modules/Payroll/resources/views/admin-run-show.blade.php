@@ -72,7 +72,7 @@
                 <td class="text-end fw-bold">{{ number_format($it->net_pay,2) }}</td>
                 <td class="text-center text-nowrap">
                     <a href="{{ route('admin.payroll.payslip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="btn btn-sm btn-outline-primary py-0">Pay Slip</a>
-                    <a href="{{ route('admin.payroll.slip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="btn btn-sm btn-outline-danger py-0">Salary Slip</a>
+                    <a href="{{ route('admin.payroll.slip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="btn btn-sm btn-outline-danger py-0">Salary Sheet</a>
                 </td>
             </tr>
         @endforeach

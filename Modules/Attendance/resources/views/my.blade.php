@@ -12,6 +12,7 @@
 
 <div class="pv">
     @include('payroll::partials.ui')
+    @include('attendance::partials._sheet-fonts')
 
     <div class="pv-head">
         <div>
@@ -60,10 +61,12 @@
             <div class="pv-cal">
                 @for($b=0; $b<$leadBlanks; $b++)<div class="cell mut"></div>@endfor
                 @for($day=1; $day<=$daysInMonth; $day++)
-                    @php $rec = $map->get($day); @endphp
+                    @php $rec = $map->get($day); $holiday = $holidays->get($day); @endphp
                     <div class="cell">
                         <div class="d">{{ $day }}</div>
-                        @if($rec)
+                        @if($holiday)
+                            <span class="pv-badge holiday" style="margin-top:4px;font-size:10px" title="Holiday — {{ $holiday }}">HD</span>
+                        @elseif($rec)
                             <span class="pv-badge {{ $rec->badgeClass() }}" style="margin-top:4px;font-size:10px" title="{{ $rec->label() }}">{{ $rec->shortCode() }}</span>
                             @if($rec->check_in)<div class="pv-mut2" style="margin-top:3px">{{ \Carbon\Carbon::parse($rec->check_in)->format('H:i') }}</div>@endif
                         @endif

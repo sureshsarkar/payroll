@@ -54,25 +54,53 @@ class SalaryStructure extends Model
     }
 
     /**
-     * The HRA component's stored percentage-of-basic. This is what the user
-     * actually typed when the structure was saved — the salary form must show
-     * this back, not a hard-coded 40, otherwise a manually entered figure looks
-     * like it never saved.
+     * The HRA component's stored monthly amount. HRA is now a plain amount; a
+     * legacy structure that stored it as a percentage-of-basic is resolved to
+     * its rupee value so the salary form still shows a sane figure.
+     */
+    public function hraAmount(): ?float
+    {
+        return $this->earningAmount('HRA', 'HRA');
+    }
+
+    /** The Convenience component's stored monthly amount. */
+    public function convenience(): ?float
+    {
+        return $this->earningAmount('CONV', 'Convenience');
+    }
+
+    /**
+     * The Other Balance component's stored monthly amount. Falls back to a
+     * legacy "Special Allowance" (code SPL) component, which it replaced.
+     */
+    public function otherBalance(): ?float
+    {
+        return $this->earningAmount('OTHR', 'Other Balance')
+            ?? $this->earningAmount('SPL', 'Special Allowance');
+    }
+
+    /**
+     * The HRA component's stored percentage-of-basic, if it was saved that way.
+     * Retained for legacy views/reports; the salary form uses hraAmount().
      */
     public function hraPercent(): ?float
     {
         $hra = $this->components->firstWhere('code', 'HRA')
             ?? $this->components->firstWhere('name', 'HRA');
 
-        return $hra ? (float) $hra->value : null;
+        return $hra && $hra->calc_type === 'percent_of_basic' ? (float) $hra->value : null;
     }
 
-    /** The Special Allowance component's stored monthly amount. */
-    public function special(): ?float
+    /** Resolved ₹ amount of an earning component, matched by code then name. */
+    private function earningAmount(string $code, string $name): ?float
     {
-        $spl = $this->components->firstWhere('code', 'SPL')
-            ?? $this->components->firstWhere('name', 'Special Allowance');
+        $c = $this->components->firstWhere('code', $code)
+            ?? $this->components->firstWhere('name', $name);
 
-        return $spl ? (float) $spl->value : null;
+        if (! $c) {
+            return null;
+        }
+
+        return $c->resolveAmount($this->basic(), (float) $this->gross_monthly);
     }
 }

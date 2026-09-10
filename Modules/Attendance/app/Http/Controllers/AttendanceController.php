@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Modules\Attendance\app\Models\Attendance;
+use Modules\Attendance\app\Models\Holiday;
 use Modules\Attendance\app\Services\AttendanceService;
 use Modules\HrEmployee\app\Models\EmployeeProfile;
 
@@ -39,6 +40,7 @@ class AttendanceController extends Controller
             'month'   => $month,
             'summary' => $this->service->monthlySummary($user->id, $year, $month),
             'map'     => $this->service->monthMap($user->id, $year, $month),
+            'holidays' => Holiday::datesForMonth($year, $month),
             'today'   => Attendance::where('user_id', $user->id)
                 ->whereDate('attendance_date', today())->first(),
         ]);
@@ -73,11 +75,14 @@ class AttendanceController extends Controller
             ->whereDate('attendance_date', $date)
             ->get()->keyBy('user_id');
 
+        $holiday = Holiday::whereDate('holiday_date', $date)->value('name');
+
         return view('attendance::team', [
             'hr'       => $hr,
             'date'     => $date,
             'team'     => $team,
             'marked'   => $marked,
+            'holiday'  => $holiday,
             'statuses' => Attendance::STATUS_LABELS,
             'dayTypes' => Attendance::DAY_TYPE_LABELS,
         ]);
@@ -147,6 +152,7 @@ class AttendanceController extends Controller
             'selectedProfile' => $selected ? $profiles->get($selected->id) : null,
             'summary' => $selected ? $this->service->monthlySummary($selected->id, $year, $month) : null,
             'map' => $selected ? $this->service->monthMap($selected->id, $year, $month) : collect(),
+            'holidays' => Holiday::datesForMonth($year, $month),
             'selectedDate' => $selectedDate,
             'selectedRecord' => $selected ? Attendance::where('user_id', $selected->id)
                 ->whereDate('attendance_date', $selectedDate)->first() : null,
@@ -317,61 +323,36 @@ class AttendanceController extends Controller
         $map = $this->service->monthMap($employee->id, $year, $month);
         $first = Carbon::create($year, $month, 1);
 
+        // Company holidays for the month are auto-applied to every format: a
+        // holiday date reads HD whether or not day-level attendance was marked.
+        $holidays = Holiday::datesForMonth($year, $month);
+
         // The PDF is a biometric-style monthly register: all days across one
         // landscape page, with In / Out / status in each day cell. Other export
         // formats remain simple daily rows for spreadsheet use.
         if ($format === 'pdf') {
-            $profile = EmployeeProfile::where('user_id', $employee->id)->first();
-            $summary = $this->service->monthlySummary($employee->id, $year, $month);
-            $days = collect(range(1, $first->daysInMonth))->map(fn (int $day) => [
-                'date' => Carbon::create($year, $month, $day),
-                'record' => $map->get($day),
-            ]);
-
-            // Weekly-off count for the header summary block: the configured
-            // rest day of the week, on dates with no attendance row at all
-            // (an employee who worked their weekly off is marked Present that
-            // day and must not be double-counted as also off).
-            $offDay = (int) config('payroll.attendance.weekly_off_day', Carbon::SUNDAY);
-            $weeklyOffs = $days->filter(fn ($d) => $d['date']->dayOfWeek === $offDay && ! $d['record'])->count();
-
-            $company = currentCompany();
-
-            $options = new Options();
-            $options->set('defaultFont', 'DejaVu Sans');
-            $options->set('isRemoteEnabled', false);
-            $pdf = new Dompdf($options);
-            $pdf->loadHtml(view('attendance::employee-register-pdf', [
-                'employee'   => $employee,
-                'profile'    => $profile,
-                'summary'    => $summary,
-                'first'      => $first,
-                'days'       => $days,
-                'weeklyOffs' => $weeklyOffs,
-                'company'    => [
-                    'name'    => $company->name ?? config('app.name'),
-                    'address' => $company?->addressLine() ?? '',
-                ],
-            ])->render(), 'UTF-8');
-            $pdf->setPaper('A4', 'landscape');
-            $pdf->render();
-
-            return response($pdf->output(), 200, [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="'.$employee->name.' Attendance Register '.$first->format('F Y').'.pdf"',
-            ]);
+            return $this->renderRegisterPdf(
+                [$this->registerSheetData($employee, $year, $month, $holidays)],
+                $employee->name.' Attendance Register '.$first->format('F Y'),
+            );
         }
 
         $rows = [];
         for ($day = 1; $day <= $first->daysInMonth; $day++) {
             $date = Carbon::create($year, $month, $day);
             $record = $map->get($day);
-            $rows[] = [
-                $date->format('d M Y'), $date->format('D'),
-                $record?->shortCode() ?? 'Not marked',
-                $record ? $record->label() : '',
-                $record->check_in ?? '', $record->check_out ?? '', $record->remarks ?? '',
-            ];
+            $holidayName = $holidays->get($day);
+
+            // 'HD' in this column always means a company holiday; a half day is 'H'.
+            // A holiday reads HD with blank in/out times, marked or not.
+            [$code, $status, $in, $out, $remarks] = match (true) {
+                filled($holidayName)                => ['HD', 'Holiday — '.$holidayName, '', '', $holidayName],
+                $record && $record->isHalfDayLeave() => ['L', $record->label(), $record->check_in ?? '', $record->check_out ?? '', $record->remarks ?? ''],
+                (bool) $record                      => [$record->shortCode(), $record->label(), $record->check_in ?? '', $record->check_out ?? '', $record->remarks ?? ''],
+                default                             => ['Not marked', '', '', '', ''],
+            };
+
+            $rows[] = [$date->format('d M Y'), $date->format('D'), $code, $status, $in, $out, $remarks];
         }
 
         return $exporter->download(
@@ -379,6 +360,45 @@ class AttendanceController extends Controller
             $employee->name.' Attendance '.$first->format('F Y'),
             ['Date', 'Day', 'Code', 'Status', 'Check in', 'Check out', 'Remarks'],
             $rows,
+        );
+    }
+
+    /**
+     * HR: download ONE Attendance Register PDF covering several selected
+     * employees — each on its own page, in the same template as the single
+     * export. Only employees on this HR's team are included.
+     */
+    public function exportTeamRegister(Request $request)
+    {
+        $data = $request->validate([
+            'year'         => ['required', 'integer', 'between:2000,2100'],
+            'month'        => ['required', 'integer', 'between:1,12'],
+            'employee_ids'   => ['required', 'array', 'min:1'],
+            'employee_ids.*' => ['integer'],
+        ]);
+
+        $year  = (int) $data['year'];
+        $month = (int) $data['month'];
+
+        // Keep the roster order, drop anyone not on this HR's team (access guard).
+        $picked = $this->teamMembers($request->user())
+            ->whereIn('id', array_map('intval', $data['employee_ids']))
+            ->values();
+
+        if ($picked->isEmpty()) {
+            return back()->with('error', 'None of the selected employees are on your team.');
+        }
+
+        $holidays = Holiday::datesForMonth($year, $month);
+        $sheets = $picked->map(fn (User $u) => $this->registerSheetData($u, $year, $month, $holidays))->all();
+
+        $label = $picked->count() === 1
+            ? $picked->first()->name
+            : $picked->count().' employees';
+
+        return $this->renderRegisterPdf(
+            $sheets,
+            'Attendance Register '.$label.' '.Carbon::create($year, $month, 1)->format('F Y'),
         );
     }
 
@@ -390,6 +410,7 @@ class AttendanceController extends Controller
         $month  = (int) $request->input('month', now()->month);
         $user   = $request->user();
         $map    = $this->service->monthMap($user->id, $year, $month);
+        $holidays = Holiday::datesForMonth($year, $month);
 
         $start = Carbon::create($year, $month, 1);
         $headers = ['Date', 'Day', 'Code', 'Status', 'Check In', 'Check Out'];
@@ -397,9 +418,17 @@ class AttendanceController extends Controller
         for ($d = 1; $d <= $start->daysInMonth; $d++) {
             $date = Carbon::create($year, $month, $d);
             $rec  = $map->get($d);
-            $rows[] = [$date->format('d M Y'), $date->format('D'),
-                $rec?->shortCode() ?? '-', $rec ? $rec->label() : '',
-                $rec->check_in ?? '', $rec->check_out ?? ''];
+            $holidayName = $holidays->get($d);
+
+            // On a company holiday the day reads HD with no in/out times.
+            [$code, $status, $in, $out] = match (true) {
+                filled($holidayName)                => ['HD', 'Holiday — '.$holidayName, '', ''],
+                $rec && $rec->isHalfDayLeave()       => ['L', $rec->label(), $rec->check_in ?? '', $rec->check_out ?? ''],
+                (bool) $rec                          => [$rec->shortCode(), $rec->label(), $rec->check_in ?? '', $rec->check_out ?? ''],
+                default                              => ['-', '', '', ''],
+            };
+
+            $rows[] = [$date->format('d M Y'), $date->format('D'), $code, $status, $in, $out];
         }
 
         $title = $user->name.' Attendance '.$start->format('F Y');
@@ -408,6 +437,69 @@ class AttendanceController extends Controller
     }
 
     /* ------------------------------------------------------------------ */
+
+    /**
+     * Everything one employee's page of the Attendance Register PDF needs.
+     *
+     * @return array{employee:User, profile:?EmployeeProfile, summary:array, first:Carbon, days:Collection, weeklyOffs:int, holidayCount:int}
+     */
+    private function registerSheetData(User $employee, int $year, int $month, Collection $holidays): array
+    {
+        $first = Carbon::create($year, $month, 1);
+        $map   = $this->service->monthMap($employee->id, $year, $month);
+
+        $days = collect(range(1, $first->daysInMonth))->map(fn (int $day) => [
+            'date'    => Carbon::create($year, $month, $day),
+            'record'  => $map->get($day),
+            'holiday' => $holidays->get($day),
+        ]);
+
+        // Weekly-off count for the header summary block: the configured rest day
+        // of the week, on dates with no attendance row at all (an employee who
+        // worked their weekly off is marked Present that day and must not be
+        // double-counted as also off).
+        $offDay = (int) config('payroll.attendance.weekly_off_day', Carbon::SUNDAY);
+
+        return [
+            'employee'     => $employee,
+            'profile'      => EmployeeProfile::where('user_id', $employee->id)->first(),
+            'summary'      => $this->service->monthlySummary($employee->id, $year, $month),
+            'first'        => $first,
+            'days'         => $days,
+            'weeklyOffs'   => $days->filter(fn ($d) => $d['date']->dayOfWeek === $offDay && ! $d['record'])->count(),
+            'holidayCount' => $holidays->count(),
+        ];
+    }
+
+    /**
+     * Render one or many register sheets into a single landscape PDF download.
+     *
+     * @param  array<int, array>  $sheets  one entry per registerSheetData()
+     */
+    private function renderRegisterPdf(array $sheets, string $filename): \Illuminate\Http\Response
+    {
+        $company = currentCompany();
+
+        $options = new Options();
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('isRemoteEnabled', false);
+
+        $pdf = new Dompdf($options);
+        $pdf->loadHtml(view('attendance::employee-register-pdf', [
+            'sheets'  => $sheets,
+            'company' => [
+                'name'    => $company->name ?? config('app.name'),
+                'address' => $company?->addressLine() ?? '',
+            ],
+        ])->render(), 'UTF-8');
+        $pdf->setPaper('A4', 'landscape');
+        $pdf->render();
+
+        return response($pdf->output(), 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.str_replace('"', '', $filename).'.pdf"',
+        ]);
+    }
 
     /**
      * Employees an HR manages in the active company.

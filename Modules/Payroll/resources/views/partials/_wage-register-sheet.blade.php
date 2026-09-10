@@ -26,20 +26,23 @@
      (not nested in .sheet) or dompdf only paints it on the first page. Keeping
      it out of the table also leaves the table's fixed column layout untouched. --}}
 <div class="running-header">
-    <table class="hdr"><tr>
-        <td style="width:20%">&nbsp;</td>
-        <td style="width:60%">
-            <div class="title">Register of Payment of Wages / Salary</div>
-            <div class="subtitle">(With Employees State Insurance Column)</div>
-        </td>
-        <td style="width:20%">
-            <div class="form-meta">
-                <div class="strong">Form IV</div>
-                <div>Revised Under Delhi Province</div>
-                <div>Payment of Wages Rules, 1971</div>
-            </div>
-        </td>
-    </tr></table>
+    <table class="hdr">
+        <tr>
+            <td style="width:20%">&nbsp;</td>
+            <td style="width:60%">
+                <div class="title">Register of Payment of Wages / Salary</div>
+                <div class="subtitle">(With Employees State Insurance Column)</div>
+            </td>
+            <td style="width:20%">
+                <div class="form-meta">
+                    <div class="strong">Form IV</div>
+                    <div>Revised Under Delhi Province</div>
+                    <div>Payment of Wages Rules, 1971</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+    
 
     <table class="hdr"><tr>
         <td style="width:70%">
@@ -73,20 +76,20 @@
                  "0") and are sized just wide enough for their typical value;
                  totals/net-pay carry the longest numbers and get more back. --}}
             <tr>
-                <th rowspan="2" style="width:1.5%">S.<br>No</th>
-                <th rowspan="2" style="width:5%">Code<br>Card No</th>
-                <th rowspan="2" style="width:15%">Employee Name<br>Father/Husb. Name<br>Desig./Dept</th>
-                <th rowspan="2" style="width:9%">Attendance</th>
-                <th rowspan="2" style="width:9%">Rate of Salary</th>
+                <th rowspan="2" style="width:1.6%">S.<br>No</th>
+                <th rowspan="2" style="width:4.4%">Code<br>Card No</th>
+                <th rowspan="2" style="width:12.5%">Employee Name<br>Father/Husb. Name<br>Desig./Dept</th>
+                <th rowspan="2" style="width:7%">Attendance</th>
+                <th rowspan="2" style="width:7%">Rate of Salary</th>
                 <th colspan="7">Earnings / Arrear</th>
-                <th rowspan="2" style="width:3.6%">Gross<br>Salary</th>
+                <th rowspan="2" style="width:4.4%">Gross<br>Salary</th>
                 <th colspan="8">Deductions</th>
-                <th rowspan="2" style="width:5%">Net Pay<br>(in Rs.)</th>
-                <th rowspan="2" style="width:4%">Stamp &amp;<br>Signature</th>
+                <th rowspan="2" style="width:5.4%">Net Pay<br>(in Rs.)</th>
+                <th rowspan="2" style="width:5%">Stamp &amp;<br>Signature</th>
             </tr>
             <tr>
-                <th style="width:3.4%">Basic</th><th style="width:1.8%">VDA</th><th style="width:3.4%">HRA</th><th style="width:2%">Conv.<br>Allow.</th><th style="width:2%">Others</th><th style="width:1.8%">OT</th><th style="width:2%">Arrear</th>
-                <th style="width:2.6%">PF<br>Wages</th><th style="width:2.2%">PF</th><th style="width:1.4%">ESI</th><th style="width:1.4%">TDS</th><th style="width:1.6%">Loan/<br>Adv</th><th style="width:1.8%">Others</th><th style="width:1.6%">LWF</th><th style="width:4.8%">Total<br>Ded.</th>
+                <th style="width:3.8%">Basic</th><th style="width:2.4%">VDA</th><th style="width:3.8%">HRA</th><th style="width:2.6%">Conv.<br>Allow.</th><th style="width:2.6%">Others</th><th style="width:2.4%">OT</th><th style="width:2.6%">Arrear</th>
+                <th style="width:3%">PF<br>Wages</th><th style="width:2.8%">PF</th><th style="width:2.4%">ESI</th><th style="width:2.4%">TDS</th><th style="width:2.6%">Loan/<br>Adv</th><th style="width:2.6%">Others</th><th style="width:2.4%">LWF</th><th style="width:4.6%">Total<br>Ded.</th>
             </tr>
         </thead>
         <tbody>

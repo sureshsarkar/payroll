@@ -470,6 +470,8 @@ class HrEmployeeController extends Controller
             'aadhaar_number' => ['nullable', 'string', 'max:30'],
             'emergency_contact_name' => ['nullable', 'string', 'max:255'],
             'emergency_contact_phone' => ['nullable', 'string', 'max:30'],
+            'nominee_name' => ['nullable', 'string', 'max:255'],
+            'nominee_relation' => ['nullable', 'string', 'max:100'],
         ];
     }
 }

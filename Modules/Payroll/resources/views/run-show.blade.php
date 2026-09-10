@@ -14,7 +14,7 @@
                 <i class="fas fa-file-pdf"></i> All payslips
             </a>
             <a href="{{ route('hr.payroll.slips', $run) }}" class="pv-btn sm d" {{ $items->isEmpty()?'hidden':'' }}>
-                <i class="fas fa-file-invoice"></i> All salary slips
+                <i class="fas fa-file-invoice"></i> All salary sheets
             </a>
             <span class="pv-btngrp" title="EPF ECR salary sheet — every employee, one row each" {{ $items->isEmpty()?'hidden':'' }}>
                 <a href="{{ route('hr.payroll.ecr', ['run'=>$run,'format'=>'xlsx']) }}" class="pv-btn sm g"><i class="fas fa-file-excel"></i> ECR Excel</a>
@@ -78,7 +78,7 @@
                         <td class="pv-r" style="font-weight:700">₹{{ number_format($it->net_pay,2) }}</td>
                         <td class="pv-c" style="white-space:nowrap">
                             <a href="{{ route('hr.payroll.payslip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="pv-btn sm">Pay Slip</a>
-                            <a href="{{ route('hr.payroll.slip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="pv-btn sm d">Salary Slip</a>
+                            <a href="{{ route('hr.payroll.slip', ['run'=>$run, 'employee'=>$it->user_id]) }}" class="pv-btn sm d">Salary Sheet</a>
                             @if($run->status !== 'paid')
                                 <form method="POST" action="{{ route('hr.payroll.item.destroy', ['run'=>$run, 'item'=>$it->id]) }}" style="display:inline"
                                       onsubmit="return confirm('Delete {{ $it->employee->name ?? 'this employee' }}\'s payslip from this run? It is removed from totals and exports but kept in the database.')">

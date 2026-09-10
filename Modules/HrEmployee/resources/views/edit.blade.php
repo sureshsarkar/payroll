@@ -33,6 +33,8 @@
             <div class="pv-field"><label class="pv-label">Personal email</label><input type="email" name="personal_email" value="{{ old('personal_email', $profile->personal_email) }}" class="pv-input"></div>
             <div class="pv-field"><label class="pv-label">Emergency contact name</label><input name="emergency_contact_name" value="{{ old('emergency_contact_name', $profile->emergency_contact_name) }}" class="pv-input"></div>
             <div class="pv-field"><label class="pv-label">Emergency contact phone</label><input name="emergency_contact_phone" value="{{ old('emergency_contact_phone', $profile->emergency_contact_phone) }}" class="pv-input"></div>
+            <div class="pv-field"><label class="pv-label">Nominee name</label><input name="nominee_name" value="{{ old('nominee_name', $profile->nominee_name) }}" class="pv-input"></div>
+            <div class="pv-field"><label class="pv-label">Relation (to employee)</label><input name="nominee_relation" value="{{ old('nominee_relation', $profile->nominee_relation) }}" class="pv-input" placeholder="e.g. Spouse, Father, Mother"></div>
             <div class="pv-field"><label class="pv-label">Bank name</label><input name="bank_name" value="{{ old('bank_name', $profile->bank_name) }}" class="pv-input"></div>
             <div class="pv-field"><label class="pv-label">Bank account number</label><input name="bank_account_number" value="{{ old('bank_account_number', $profile->bank_account_number) }}" class="pv-input"></div>
             <div class="pv-field"><label class="pv-label">Bank IFSC code</label><input name="bank_ifsc_code" value="{{ old('bank_ifsc_code', $profile->bank_ifsc_code) }}" class="pv-input"></div>
